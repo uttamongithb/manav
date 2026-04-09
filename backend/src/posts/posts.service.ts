@@ -3,6 +3,11 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
+function resolveDataDir() {
+  const basePath = process.env.VERCEL ? '/tmp' : process.cwd();
+  return join(basePath, 'data');
+}
+
 type Visibility = 'public';
 
 export interface PostRecord {
@@ -16,7 +21,7 @@ export interface PostRecord {
 
 @Injectable()
 export class PostsService implements OnModuleInit {
-  private readonly dataDir = join(process.cwd(), 'data');
+  private readonly dataDir = resolveDataDir();
   private readonly dataFile = join(this.dataDir, 'posts.json');
 
   async onModuleInit() {

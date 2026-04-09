@@ -6,6 +6,11 @@ import * as path from 'path';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 
+function resolveDataDir() {
+  const basePath = process.env.VERCEL ? '/tmp' : process.cwd();
+  return path.join(basePath, 'data');
+}
+
 interface StoredUser {
   id: string;
   email: string;
@@ -19,7 +24,7 @@ interface StoredUser {
 
 @Injectable()
 export class AuthService {
-  private usersFile = path.join(process.cwd(), 'data', 'users.json');
+  private usersFile = path.join(resolveDataDir(), 'users.json');
 
   constructor(private prisma: PrismaService) {}
 

@@ -3,6 +3,11 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { PrismaService } from '../prisma/prisma.service';
 
+function resolveDataDir() {
+  const basePath = process.env.VERCEL ? '/tmp' : process.cwd();
+  return join(basePath, 'data');
+}
+
 export type ProfileRecord = {
   name: string;
   role: string;
@@ -28,7 +33,7 @@ const DEFAULT_PROFILE: ProfileRecord = {
 @Injectable()
 export class ProfileService {
   private readonly defaultUserId = 'demo-user';
-  private readonly dataDir = join(process.cwd(), 'data');
+  private readonly dataDir = resolveDataDir();
   private readonly fallbackFile = join(this.dataDir, 'profile.json');
 
   constructor(private readonly prisma: PrismaService) {}
