@@ -1,5 +1,20 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Environment Variables
+
+Create `frontend/.env`:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
+```
+
+For deployment on Vercel, add this environment variable in your frontend project settings:
+
+- Name: `NEXT_PUBLIC_API_BASE_URL`
+- Value: your deployed backend URL (example: `https://your-backend-domain.vercel.app`)
+
+Only variables starting with `NEXT_PUBLIC_` are available in browser/client code.
+
 ## Getting Started
 
 First, run the development server:
