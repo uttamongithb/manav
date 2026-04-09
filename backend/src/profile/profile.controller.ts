@@ -17,6 +17,11 @@ import { existsSync, mkdirSync } from 'node:fs';
 import type { Request } from 'express';
 import type { FileFilterCallback } from 'multer';
 
+function resolveUploadsPath() {
+  const basePath = process.env.VERCEL ? '/tmp' : process.cwd();
+  return join(basePath, 'uploads');
+}
+
 @Controller('profile')
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
@@ -40,7 +45,7 @@ export class ProfileController {
           _file: Express.Multer.File,
           cb: (error: Error | null, destination: string) => void,
         ) => {
-          const uploadDir = join(process.cwd(), 'uploads');
+          const uploadDir = resolveUploadsPath();
           if (!existsSync(uploadDir)) {
             mkdirSync(uploadDir, { recursive: true });
           }
