@@ -114,7 +114,7 @@ export default function SectionPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
 
-  const backendUrl = "http://localhost:3001";
+  const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
 
   useEffect(() => {
     if (!section) {

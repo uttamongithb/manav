@@ -21,7 +21,7 @@ export default function PublicFeedPage() {
   const [query, setQuery] = useState("");
   const [activeSection, setActiveSection] = useState("All");
 
-  const backendUrl = "http://localhost:3001";
+  const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
 
   const sections = ["All", ...Array.from(new Set(posts.map((post) => post.section)))];
   const filteredPosts = posts.filter((post) => {

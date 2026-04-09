@@ -53,7 +53,7 @@ export default function PublicFeed() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState("All");
 
-  const backendUrl = "http://localhost:3001";
+  const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
 
   const loadPosts = async () => {
     try {
