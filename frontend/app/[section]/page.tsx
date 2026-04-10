@@ -25,6 +25,13 @@ type SectionConfig = {
 const createSectionImage = (seed: string) =>
   `https://picsum.photos/seed/${encodeURIComponent(seed)}/900/520`;
 
+const createHeroFallback = (title: string) => {
+  const safeTitle = title.replace(/[&<>"']/g, "");
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="850" viewBox="0 0 1200 850"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1b2431"/><stop offset="100%" stop-color="#0f766e"/></linearGradient></defs><rect width="1200" height="850" fill="url(#g)"/><circle cx="980" cy="170" r="160" fill="rgba(255,255,255,0.08)"/><circle cx="220" cy="720" r="210" fill="rgba(255,255,255,0.06)"/><text x="70" y="730" fill="rgba(255,255,255,0.92)" font-family="Georgia, serif" font-size="64">${safeTitle}</text></svg>`
+  )}`;
+};
+
 const SECTION_QUICK_TAGS: Record<string, string[]> = {
   sher: ["Classic", "Love", "Life", "Wisdom", "Modern"],
   dictionary: ["Meaning", "Usage", "Word Roots", "Synonyms", "Examples"],
@@ -238,67 +245,77 @@ export default function SectionPage() {
           </div>
         </section>
 
-        <section className={`rounded-[28px] border p-5 md:p-7 ${isDark ? "border-white/20 bg-[#17181d]" : "border-black/10 bg-white"}`}>
-          <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
-            <div>
-              <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${isDark ? "text-white/55" : "text-[#637a63]"}`}>
+        <header className={`overflow-hidden rounded-4xl border ${isDark ? "border-white/20 bg-[#17181d]" : "border-black/10 bg-white"}`}>
+          <div className="grid gap-0 lg:grid-cols-[1.3fr_1fr]">
+            <div className="p-6 md:p-8">
+              <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-white/45" : "text-[#5e775f]"}`}>
                 {section.title} Archive
               </p>
-              <h1 className="mt-2 text-[36px] font-bold leading-tight tracking-[-0.02em]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
+              <h1 className="mt-2 text-[34px] font-semibold leading-tight tracking-[-0.03em] md:text-[50px]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
                 Explore {section.title},
                 <br />
                 Voices, and Verse.
               </h1>
-              <p className={`mt-2 max-w-180 text-[15px] leading-relaxed ${isDark ? "text-white/72" : "text-[#496048]"}`}>
+              <p className={`mt-3 text-[15px] leading-relaxed ${isDark ? "text-white/68" : "text-[#496048]"}`}>
                 {section.subtitle}
               </p>
-              <p className={`mt-1 text-[13px] ${isDark ? "text-white/52" : "text-[#657a66]"}`}>{section.tone}</p>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                {quickTags.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold tracking-[0.08em] transition ${
-                      isDark
-                        ? "border-white/18 bg-[#1f2229] text-white/80 hover:bg-[#2a2f39]"
-                        : "border-black/10 bg-[#f4f8f0] text-[#3a523a] hover:bg-[#e9f2e6]"
-                    }`}
-                  >
-                    {tag}
-                  </button>
-                ))}
+              <div className="mt-5 flex flex-wrap gap-2">
+                {quickTags.map((tag, index) => {
+                  const active = index === 0;
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold tracking-[0.08em] transition ${
+                        active
+                          ? isDark
+                            ? "border-[#8cf8c1]/45 bg-[#2ce88f] text-[#09120d]"
+                            : "border-[#0a8a5b]/35 bg-[#0a8a5b] text-white"
+                          : isDark
+                            ? "border-white/12 bg-transparent text-white/75 hover:bg-white/8"
+                            : "border-black/10 bg-transparent text-[#4f684f] hover:bg-[#ebf3e9]"
+                      }`}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            <aside className={`rounded-2xl border p-4 ${isDark ? "border-white/20 bg-[#1a1c22]" : "border-black/10 bg-[#f9fbf7]"}`}>
-              <div className="overflow-hidden rounded-xl border border-white/10">
-                <img
-                  src={createSectionImage(`${sectionSlug}-featured`) }
-                  alt={`${section.title} featured poster`}
-                  className="h-44 w-full object-cover"
-                />
+            <div className="relative min-h-72">
+              <img
+                src={createSectionImage(`${sectionSlug}-featured`) }
+                alt={`${section.title} featured`}
+                className="h-full w-full object-cover"
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src = createHeroFallback(section.title);
+                }}
+              />
+              <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/25 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-6 text-white">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/75">Featured {section.title}</p>
+                {featuredPost ? (
+                  <>
+                    <h2 className="mt-1 text-[24px] font-semibold leading-tight">{featuredPost.author}</h2>
+                    <p className="mt-1 text-[12px] text-white/85">
+                      {featuredPost.content.length > 78
+                        ? `${featuredPost.content.slice(0, 78).trim()}...`
+                        : featuredPost.content}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="mt-1 text-[24px] font-semibold leading-tight">No featured entry yet</h2>
+                    <p className="mt-1 text-[12px] text-white/85">Add content to spotlight this section.</p>
+                  </>
+                )}
               </div>
-              <p className={`mt-3 text-[11px] font-semibold uppercase tracking-[0.15em] ${isDark ? "text-white/55" : "text-[#637a63]"}`}>
-                Featured {section.title}
-              </p>
-              {featuredPost ? (
-                <>
-                  <p className={`mt-2 text-[15px] leading-7 ${isDark ? "text-white/88" : "text-[#2b3f2b]"}`}>
-                    {featuredPost.content.length > 140
-                      ? `${featuredPost.content.slice(0, 140).trim()}...`
-                      : featuredPost.content}
-                  </p>
-                  <p className={`mt-3 text-[13px] font-semibold ${isDark ? "text-white/84" : "text-[#223822]"}`}>{featuredPost.author}</p>
-                </>
-              ) : (
-                <p className={`mt-2 text-[14px] ${isDark ? "text-white/60" : "text-[#607560]"}`}>
-                  Add content to show a featured highlight.
-                </p>
-              )}
-            </aside>
+            </div>
           </div>
-        </section>
+        </header>
 
         <div className="mt-5 space-y-3">
           {apiError ? (
