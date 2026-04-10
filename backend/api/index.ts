@@ -13,7 +13,17 @@ function resolveUploadsPath() {
   return join(basePath, 'uploads');
 }
 
+function resolveCorsOrigins(): string[] {
+  const rawOrigins = process.env.CORS_ORIGINS ?? process.env.FRONTEND_URL ?? '';
+  return rawOrigins
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
 function attachServerMiddleware(app: any) {
+  const allowedOrigins = resolveCorsOrigins();
+
   app.use((req: any, _res: any, next: any) => {
     if (req.url === '/api') {
       req.url = '/';
@@ -25,7 +35,17 @@ function attachServerMiddleware(app: any) {
   });
 
   app.enableCors({
-    origin: true,
+    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(new Error(`Origin not allowed by CORS: ${origin}`));
+    },
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
