@@ -34,9 +34,20 @@ export class ProfileController {
     return typeof headerValue === 'string' ? headerValue : undefined;
   }
 
+  private resolveDisplayName(req: Request): string | undefined {
+    const headerValue = req.headers['x-user-display-name'];
+    if (Array.isArray(headerValue)) {
+      return headerValue[0];
+    }
+    return typeof headerValue === 'string' ? headerValue : undefined;
+  }
+
   @Get()
   async getProfile(@Req() req: Request): Promise<ProfileRecord> {
-    return this.profileService.getProfile(this.resolveUserId(req));
+    return this.profileService.getProfile(
+      this.resolveUserId(req),
+      this.resolveDisplayName(req),
+    );
   }
 
   @Put()
@@ -44,7 +55,11 @@ export class ProfileController {
     @Req() req: Request,
     @Body() body: Partial<ProfileRecord>,
   ): Promise<ProfileRecord> {
-    return this.profileService.updateProfile(body, this.resolveUserId(req));
+    return this.profileService.updateProfile(
+      body,
+      this.resolveUserId(req),
+      this.resolveDisplayName(req),
+    );
   }
 
   @Post('avatar')
@@ -91,6 +106,10 @@ export class ProfileController {
     }
 
     const avatarUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
-    return this.profileService.updateProfile({ avatarUrl }, this.resolveUserId(req));
+    return this.profileService.updateProfile(
+      { avatarUrl },
+      this.resolveUserId(req),
+      this.resolveDisplayName(req),
+    );
   }
 }

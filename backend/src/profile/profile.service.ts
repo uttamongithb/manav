@@ -13,8 +13,8 @@ export type ProfileRecord = {
 };
 
 const DEFAULT_PROFILE: ProfileRecord = {
-  name: 'Drake',
-  role: 'Writer',
+  name: 'User',
+  role: 'Member',
   city: 'Los Angeles',
   state: 'California',
   country: 'United States',
@@ -29,7 +29,7 @@ export class ProfileService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  private async resolveUserContext(userId?: string) {
+  private async resolveUserContext(userId?: string, displayNameHint?: string) {
     const resolvedUserId = userId?.trim() || this.fallbackUserId;
 
     const user = await this.prisma.user.findUnique({
@@ -44,14 +44,14 @@ export class ProfileService {
 
     return {
       userId: resolvedUserId,
-      displayName: user?.displayName?.trim() || DEFAULT_PROFILE.name,
+      displayName: user?.displayName?.trim() || displayNameHint?.trim() || DEFAULT_PROFILE.name,
       role: user?.role ? String(user.role) : DEFAULT_PROFILE.role,
       avatarUrl: user?.avatarUrl?.trim() || DEFAULT_PROFILE.avatarUrl,
     };
   }
 
-  async getProfile(userId?: string): Promise<ProfileRecord> {
-    const context = await this.resolveUserContext(userId);
+  async getProfile(userId?: string, displayNameHint?: string): Promise<ProfileRecord> {
+    const context = await this.resolveUserContext(userId, displayNameHint);
 
     const record = await this.prisma.userProfile.findUnique({
       where: { userId: context.userId },
@@ -96,8 +96,12 @@ export class ProfileService {
     };
   }
 
-  async updateProfile(input: Partial<ProfileRecord>, userId?: string): Promise<ProfileRecord> {
-    const context = await this.resolveUserContext(userId);
+  async updateProfile(
+    input: Partial<ProfileRecord>,
+    userId?: string,
+    displayNameHint?: string,
+  ): Promise<ProfileRecord> {
+    const context = await this.resolveUserContext(userId, displayNameHint);
     const current = await this.getProfile(context.userId);
 
     const updated = await this.prisma.userProfile.upsert({

@@ -28,24 +28,24 @@ type UserProfile = {
   avatarUrl: string;
 };
 
-const DEFAULT_PROFILE: UserProfile = {
-  name: "Drake",
-  role: "Writer",
+function buildDefaultProfile(displayName?: string): UserProfile {
+  return {
+  name: displayName?.trim() || "User",
+  role: "Member",
   city: "Los Angeles",
   state: "California",
   country: "United States",
   timezone: "PST (UTC-08:00)",
   bio: "Urdu poetry enthusiast sharing verses and literary reflections.",
   avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=500&q=80",
-};
-
-const CACHE_KEY = "manav-profile-cache";
+  };
+}
 
 // Read profile from localStorage cache (client-side only)
-const readCachedProfile = (): UserProfile | null => {
+const readCachedProfile = (cacheKey: string): UserProfile | null => {
   if (typeof window === "undefined") return null;
   try {
-    const cached = localStorage.getItem(CACHE_KEY);
+    const cached = localStorage.getItem(cacheKey);
     return cached ? (JSON.parse(cached) as UserProfile) : null;
   } catch {
     return null;
@@ -53,10 +53,10 @@ const readCachedProfile = (): UserProfile | null => {
 };
 
 // Save profile to localStorage cache
-const saveCachedProfile = (profile: UserProfile): void => {
+const saveCachedProfile = (cacheKey: string, profile: UserProfile): void => {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(profile));
+    localStorage.setItem(cacheKey, JSON.stringify(profile));
   } catch {
     // Silently fail if localStorage is unavailable
   }
@@ -82,9 +82,11 @@ export function MyProfileContent() {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
   const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null);
+  const cacheKey = `manav-profile-cache:${user?.id ?? "guest"}`;
+  const defaultProfile = buildDefaultProfile(user?.displayName || user?.username);
   // Use DEFAULT_PROFILE for initial render (server-side compatible)
-  const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
-  const [draftProfile, setDraftProfile] = useState<UserProfile>(DEFAULT_PROFILE);
+  const [profile, setProfile] = useState<UserProfile>(defaultProfile);
+  const [draftProfile, setDraftProfile] = useState<UserProfile>(defaultProfile);
 
   const backendUrl = getApiBaseUrl();
   const activeDraft = draftByTab[activeTab] ?? "";
@@ -92,7 +94,12 @@ export function MyProfileContent() {
   const loadProfile = async () => {
     try {
       const res = await fetch(`${backendUrl}/profile`, {
-        headers: user?.id ? { "x-user-id": user.id } : undefined,
+        headers: user?.id
+          ? {
+              "x-user-id": user.id,
+              "x-user-display-name": user.displayName || user.username,
+            }
+          : undefined,
       });
       if (!res.ok) {
         throw new Error("failed_response");
@@ -101,7 +108,7 @@ export function MyProfileContent() {
       const data = (await res.json()) as UserProfile;
       setProfile(data);
       setDraftProfile(data);
-      saveCachedProfile(data); // Save fetched profile to cache
+      saveCachedProfile(cacheKey, data); // Save fetched profile to cache
     } catch {
       setApiError("Unable to load profile from backend.");
     }
@@ -138,14 +145,17 @@ export function MyProfileContent() {
 
   // Hydrate profile from cache and sync with backend
   useEffect(() => {
-    const cachedProfile = readCachedProfile();
+    const cachedProfile = readCachedProfile(cacheKey);
     if (cachedProfile) {
       setProfile(cachedProfile);
       setDraftProfile(cachedProfile);
+    } else {
+      setProfile(defaultProfile);
+      setDraftProfile(defaultProfile);
     }
     // Background fetch to keep cache in sync with server
     void loadProfile();
-  }, [user?.id]);
+  }, [user?.id, cacheKey]);
 
   useEffect(() => {
     return () => {
@@ -209,7 +219,12 @@ export function MyProfileContent() {
 
       const res = await fetch(`${backendUrl}/profile/avatar`, {
         method: "POST",
-        headers: user?.id ? { "x-user-id": user.id } : undefined,
+        headers: user?.id
+          ? {
+              "x-user-id": user.id,
+              "x-user-display-name": user.displayName || user.username,
+            }
+          : undefined,
         body: formData,
       });
 
@@ -221,7 +236,7 @@ export function MyProfileContent() {
       const updated = (await res.json()) as UserProfile;
       setProfile(updated);
       setDraftProfile(updated);
-      saveCachedProfile(updated); // Save updated profile to cache
+      saveCachedProfile(cacheKey, updated); // Save updated profile to cache
       return updated;
     } finally {
       setIsUploadingAvatar(false);
@@ -257,7 +272,12 @@ export function MyProfileContent() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            ...(user?.id ? { "x-user-id": user.id } : {}),
+            ...(user?.id
+              ? {
+                  "x-user-id": user.id,
+                  "x-user-display-name": user.displayName || user.username,
+                }
+              : {}),
           },
           body: JSON.stringify(payload),
         });
@@ -269,7 +289,7 @@ export function MyProfileContent() {
         const updated = (await res.json()) as UserProfile;
         setProfile(updated);
         setDraftProfile(updated);
-        saveCachedProfile(updated); // Save updated profile to cache
+        saveCachedProfile(cacheKey, updated); // Save updated profile to cache
         setPendingAvatarFile(null);
         setPendingAvatarPreview(null);
         setIsEditingProfile(false);
