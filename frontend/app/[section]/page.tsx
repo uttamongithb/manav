@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useTheme } from "@/app/context/theme";
 import { SiteNavbar } from "@/app/components/site-navbar";
+import { getApiBaseUrl } from "@/app/lib/api-base";
 
 type UserPost = {
   id: string;
@@ -114,7 +115,7 @@ export default function SectionPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState<string | null>(null);
 
-  const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+  const backendUrl = getApiBaseUrl();
 
   useEffect(() => {
     if (!section) {

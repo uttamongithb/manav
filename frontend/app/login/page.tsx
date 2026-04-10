@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/context/auth";
+import { getApiBaseUrl } from "@/app/lib/api-base";
 import { useTheme } from "@/app/context/theme";
 
 type LoginResponse = {
@@ -46,7 +47,7 @@ export default function LoginPage() {
     displayName: "",
   });
 
-  const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+  const backendUrl = getApiBaseUrl();
 
   const handleLoginSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

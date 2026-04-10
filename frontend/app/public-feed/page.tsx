@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/app/context/theme";
+import { getApiBaseUrl } from "@/app/lib/api-base";
 
 type UserPost = {
   id: string;
@@ -21,7 +22,7 @@ export default function PublicFeedPage() {
   const [query, setQuery] = useState("");
   const [activeSection, setActiveSection] = useState("All");
 
-  const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+  const backendUrl = getApiBaseUrl();
 
   const sections = ["All", ...Array.from(new Set(posts.map((post) => post.section)))];
   const filteredPosts = posts.filter((post) => {

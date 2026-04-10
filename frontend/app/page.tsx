@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/app/context/auth";
 import { useTheme } from "@/app/context/theme";
 import { SiteNavbar } from "@/app/components/site-navbar";
+import { getApiBaseUrl } from "@/app/lib/api-base";
 
 type UserPost = {
   id: string;
@@ -53,7 +54,7 @@ export default function PublicFeed() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState("All");
 
-  const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+  const backendUrl = getApiBaseUrl();
 
   const loadPosts = async () => {
     try {

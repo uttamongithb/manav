@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/app/context/auth";
 import { useTheme } from "@/app/context/theme";
 import { ProtectedRoute } from "@/app/components/protected-route";
+import { getApiBaseUrl } from "@/app/lib/api-base";
 
 type UserPost = {
   id: string;
@@ -85,7 +86,7 @@ export function MyProfileContent() {
   const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
   const [draftProfile, setDraftProfile] = useState<UserProfile>(DEFAULT_PROFILE);
 
-  const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001";
+  const backendUrl = getApiBaseUrl();
   const activeDraft = draftByTab[activeTab] ?? "";
 
   const loadProfile = async () => {
