@@ -151,8 +151,15 @@ export default function LoginPage() {
 
   return (
     <main
-      className={`relative isolate min-h-screen overflow-hidden px-2 py-5 transition-colors duration-300 sm:px-4 md:p-10 ${isDark ? "text-white" : "text-[#10131a]"}`}
+      className={`relative isolate min-h-screen overflow-hidden px-2 py-5 transition-colors duration-300 sm:px-4 md:p-10 ${isDark ? "bg-[#0e1117] text-white" : "bg-[#f3f5f8] text-[#10131a]"}`}
     >
+      <div
+        className={`pointer-events-none absolute inset-0 transition-opacity duration-300 ${isDark ? "opacity-100" : "opacity-0"}`}
+        aria-hidden="true"
+      >
+        <div className="absolute -left-24 top-12 h-64 w-64 rounded-full bg-[#2ce88f]/10 blur-3xl" />
+        <div className="absolute -right-28 bottom-8 h-72 w-72 rounded-full bg-[#3c8cff]/10 blur-3xl" />
+      </div>
       <div className="relative z-10">
       {/* Theme Toggle */}
       <button
