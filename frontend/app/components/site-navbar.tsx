@@ -9,6 +9,19 @@ type SiteNavbarProps = {
   activeHref?: string;
 };
 
+function buildAvatarFallbackDataUrl(name?: string) {
+  const safeName = (name?.trim() || "User").slice(0, 40);
+  const initials = safeName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "U";
+
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'><rect width='96' height='96' rx='48' fill='#2ce88f'/><text x='50%' y='53%' text-anchor='middle' dominant-baseline='middle' font-family='Arial, sans-serif' font-size='34' font-weight='700' fill='#0b1112'>${initials}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
 const NAV_ITEMS = [
   { label: "POETS", href: "/poets" },
   { label: "SHER", href: "/sher" },
@@ -24,6 +37,8 @@ const NAV_ITEMS = [
 
 export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProps) {
   const { user } = useAuth();
+  const avatarSrc =
+    user?.avatarUrl?.trim() || buildAvatarFallbackDataUrl(user?.displayName || user?.username || "User");
 
   return (
     <nav
@@ -74,12 +89,31 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
             </span>
           </button>
 
-          <Link
-            href={user ? "/my-profile" : "/login"}
-            className="rounded-full bg-[#2ce88f] px-4 py-2 text-[12px] font-bold tracking-[0.08em] text-[#0b1112] transition hover:bg-[#45f39f]"
-          >
-            {user ? "PROFILE" : "SIGN IN"}
-          </Link>
+          {user ? (
+            <Link
+              href="/my-profile"
+              aria-label="Open profile"
+              className={`group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border transition ${
+                isDark
+                  ? "border-[#2ce88f]/45 bg-[#11161d] hover:border-[#2ce88f]/75"
+                  : "border-[#0a8a5b]/30 bg-white hover:border-[#0a8a5b]/55"
+              }`}
+              title="Profile"
+            >
+              <img
+                src={avatarSrc}
+                alt="Profile"
+                className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.04]"
+              />
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="rounded-full bg-[#2ce88f] px-4 py-2 text-[12px] font-bold tracking-[0.08em] text-[#0b1112] transition hover:bg-[#45f39f]"
+            >
+              SIGN IN
+            </Link>
+          )}
         </div>
       </div>
     </nav>
