@@ -28,16 +28,77 @@ type UserProfile = {
   avatarUrl: string;
 };
 
+function buildAvatarFallbackDataUrl(name: string): string {
+  const safeName = (name.trim() || "User").slice(0, 40);
+  const initials = safeName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "U";
+
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='192' height='192' viewBox='0 0 192 192'><rect width='192' height='192' rx='96' fill='#2ce88f'/><text x='50%' y='52%' text-anchor='middle' dominant-baseline='middle' font-family='Arial, sans-serif' font-size='72' font-weight='700' fill='#0b1112'>${initials}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+async function compressAvatarImage(file: File): Promise<File> {
+  if (!file.type.startsWith("image/") || file.type === "image/gif") {
+    return file;
+  }
+
+  const objectUrl = URL.createObjectURL(file);
+
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("image_load_failed"));
+      img.src = objectUrl;
+    });
+
+    const maxSize = 512;
+    const scale = Math.min(maxSize / image.width, maxSize / image.height, 1);
+    const width = Math.max(1, Math.round(image.width * scale));
+    const height = Math.max(1, Math.round(image.height * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      return file;
+    }
+
+    ctx.drawImage(image, 0, 0, width, height);
+
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, "image/webp", 0.82);
+    });
+
+    if (!blob || blob.size >= file.size) {
+      return file;
+    }
+
+    const nextName = file.name.replace(/\.[a-zA-Z0-9]+$/, "") + ".webp";
+    return new File([blob], nextName, { type: "image/webp" });
+  } catch {
+    return file;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 function buildDefaultProfile(displayName?: string): UserProfile {
   return {
-  name: displayName?.trim() || "User",
-  role: "Member",
-  city: "",
-  state: "",
-  country: "",
-  timezone: "",
-  bio: "",
-  avatarUrl: "",
+    name: displayName?.trim() || "User",
+    role: "Member",
+    city: "",
+    state: "",
+    country: "",
+    timezone: "",
+    bio: "",
+    avatarUrl: "",
   };
 }
 
@@ -106,9 +167,7 @@ export function MyProfileContent() {
     profile.avatarUrl,
   ];
   const completionPercent = Math.round((profileFields.filter((field) => field.trim().length > 0).length / profileFields.length) * 100);
-  const avatarSrc =
-    profile.avatarUrl.trim() ||
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name || "User")}&background=2ce88f&color=0b1112`;
+  const avatarSrc = profile.avatarUrl.trim() || buildAvatarFallbackDataUrl(profile.name || "User");
 
   const loadProfile = async () => {
     try {
@@ -589,7 +648,7 @@ export function MyProfileContent() {
                     }`}
                   >
                     <img
-                      src={profile.avatarUrl}
+                      src={avatarSrc}
                       alt="Profile avatar"
                       className="h-full w-full object-cover"
                     />
@@ -811,7 +870,7 @@ export function MyProfileContent() {
               <div className="md:col-span-2 flex items-center gap-4 rounded-xl border border-dashed p-3">
                 <div className="h-16 w-16 overflow-hidden rounded-full border">
                   <img
-                    src={pendingAvatarPreview ?? draftProfile.avatarUrl}
+                    src={pendingAvatarPreview ?? (draftProfile.avatarUrl || buildAvatarFallbackDataUrl(draftProfile.name || "User"))}
                     alt="Avatar preview"
                     className="h-full w-full object-cover"
                   />
@@ -837,23 +896,27 @@ export function MyProfileContent() {
                       const file = e.target.files?.[0];
                       if (!file) return;
 
-                      if (!file.type.startsWith("image/")) {
-                        setApiError("Please upload an image file.");
-                        return;
-                      }
+                      void (async () => {
+                        if (!file.type.startsWith("image/")) {
+                          setApiError("Please upload an image file.");
+                          return;
+                        }
 
-                      if (file.size > 5 * 1024 * 1024) {
-                        setApiError("Image is too large. Maximum allowed size is 5MB.");
-                        return;
-                      }
+                        if (file.size > 5 * 1024 * 1024) {
+                          setApiError("Image is too large. Maximum allowed size is 5MB.");
+                          return;
+                        }
 
-                      if (pendingAvatarPreview) {
-                        URL.revokeObjectURL(pendingAvatarPreview);
-                      }
+                        const optimizedFile = await compressAvatarImage(file);
 
-                      setApiError(null);
-                      setPendingAvatarFile(file);
-                      setPendingAvatarPreview(URL.createObjectURL(file));
+                        if (pendingAvatarPreview) {
+                          URL.revokeObjectURL(pendingAvatarPreview);
+                        }
+
+                        setApiError(null);
+                        setPendingAvatarFile(optimizedFile);
+                        setPendingAvatarPreview(URL.createObjectURL(optimizedFile));
+                      })();
                     }}
                   />
                 </label>

@@ -69,7 +69,10 @@ async function bootstrapServer() {
     if (!existsSync(uploadsPath)) {
       mkdirSync(uploadsPath, { recursive: true });
     }
-    app.use('/uploads', express.static(uploadsPath));
+    app.use('/uploads', express.static(uploadsPath, {
+      maxAge: '7d',
+      immutable: true,
+    }));
   } catch (error) {
     console.warn('Uploads storage unavailable:', String(error));
   }

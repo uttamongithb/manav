@@ -64,7 +64,10 @@ async function bootstrap() {
     if (!existsSync(uploadsPath)) {
       mkdirSync(uploadsPath, { recursive: true });
     }
-    app.use('/uploads', express.static(uploadsPath));
+    app.use('/uploads', express.static(uploadsPath, {
+      maxAge: '7d',
+      immutable: true,
+    }));
   } catch (error) {
     // Keep service booting even if upload storage cannot be mounted.
     console.warn('Uploads storage unavailable:', String(error));
