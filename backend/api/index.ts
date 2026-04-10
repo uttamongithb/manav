@@ -17,7 +17,7 @@ function resolveCorsOrigins(): string[] {
   const rawOrigins = process.env.CORS_ORIGINS ?? process.env.FRONTEND_URL ?? '';
   return rawOrigins
     .split(',')
-    .map((origin) => origin.trim())
+    .map((origin) => origin.trim().replace(/\/+$/, '').toLowerCase())
     .filter(Boolean);
 }
 
@@ -40,7 +40,9 @@ function attachServerMiddleware(app: any) {
         return callback(null, true);
       }
 
-      if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      const normalizedOrigin = origin.trim().replace(/\/+$/, '').toLowerCase();
+
+      if (allowedOrigins.length === 0 || allowedOrigins.includes(normalizedOrigin)) {
         return callback(null, true);
       }
 
