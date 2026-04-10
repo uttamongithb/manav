@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/app/context/auth";
+import { getStoredAuthToken, useAuth } from "@/app/context/auth";
 import { useTheme } from "@/app/context/theme";
 import { ProtectedRoute } from "@/app/components/protected-route";
 import { getApiBaseUrl } from "@/app/lib/api-base";
@@ -20,12 +20,15 @@ type UserPost = {
 type UserProfile = {
   name: string;
   role: string;
+  visibility: "public" | "private";
   city: string;
   state: string;
   country: string;
   timezone: string;
   bio: string;
   avatarUrl: string;
+  followersCount: number;
+  followingCount: number;
 };
 
 function buildAvatarFallbackDataUrl(name: string): string {
@@ -93,12 +96,15 @@ function buildDefaultProfile(displayName?: string): UserProfile {
   return {
     name: displayName?.trim() || "User",
     role: "Member",
+    visibility: "public",
     city: "",
     state: "",
     country: "",
     timezone: "",
     bio: "",
     avatarUrl: "",
+    followersCount: 0,
+    followingCount: 0,
   };
 }
 
@@ -128,7 +134,6 @@ export function MyProfileContent() {
   const router = useRouter();
   const { logout, user } = useAuth();
   const { isDark, setIsDark } = useTheme();
-  const [isPublic, setIsPublic] = useState(true);
   const [activeTab, setActiveTab] = useState("POETRY");
 
   const favoriteTabs = ["POETRY", "AAMOZISH", "WORD", "BOOKS", "POET", "SUFINAMA", "HINDWI"];
@@ -151,7 +156,10 @@ export function MyProfileContent() {
   const [draftProfile, setDraftProfile] = useState<UserProfile>(defaultProfile);
 
   const backendUrl = getApiBaseUrl();
+  const authToken = getStoredAuthToken();
+  const authHeaders = authToken ? { Authorization: `Bearer ${authToken}` } : undefined;
   const activeDraft = draftByTab[activeTab] ?? "";
+  const isPublic = profile.visibility !== "private";
   const locationParts = [profile.city, profile.state, profile.country].map((v) => v.trim()).filter(Boolean);
   const localTimeText = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   const authoredPostsCount = allPublicPosts.filter(
@@ -173,12 +181,7 @@ export function MyProfileContent() {
   const loadProfile = async () => {
     try {
       const res = await fetch(`${backendUrl}/profile`, {
-        headers: user?.id
-          ? {
-              "x-user-id": user.id,
-              "x-user-display-name": user.displayName || user.username,
-            }
-          : undefined,
+        headers: authHeaders,
       });
       if (!res.ok) {
         throw new Error("failed_response");
@@ -191,6 +194,35 @@ export function MyProfileContent() {
     } catch {
       setApiError("Unable to load profile from backend.");
     }
+  };
+
+  const toggleProfileVisibility = () => {
+    void (async () => {
+      try {
+        setApiError(null);
+        const res = await fetch(`${backendUrl}/profile`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...(authHeaders ?? {}),
+          },
+          body: JSON.stringify({
+            visibility: isPublic ? "private" : "public",
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error("failed_response");
+        }
+
+        const updated = (await res.json()) as UserProfile;
+        setProfile(updated);
+        setDraftProfile(updated);
+        saveCachedProfile(cacheKey, updated);
+      } catch {
+        setApiError("Unable to update profile visibility.");
+      }
+    })();
   };
 
   const loadPosts = async (section: string) => {
@@ -298,12 +330,7 @@ export function MyProfileContent() {
 
       const res = await fetch(`${backendUrl}/profile/avatar`, {
         method: "POST",
-        headers: user?.id
-          ? {
-              "x-user-id": user.id,
-              "x-user-display-name": user.displayName || user.username,
-            }
-          : undefined,
+        headers: authHeaders,
         body: formData,
       });
 
@@ -339,6 +366,7 @@ export function MyProfileContent() {
           ...avatarProfile,
           name: draftProfile.name.trim() || "User",
           role: draftProfile.role.trim() || "Member",
+          visibility: draftProfile.visibility,
           city: draftProfile.city.trim(),
           state: draftProfile.state.trim(),
           country: draftProfile.country.trim(),
@@ -351,12 +379,7 @@ export function MyProfileContent() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            ...(user?.id
-              ? {
-                  "x-user-id": user.id,
-                  "x-user-display-name": user.displayName || user.username,
-                }
-              : {}),
+            ...(authHeaders ?? {}),
           },
           body: JSON.stringify(payload),
         });
@@ -468,8 +491,8 @@ export function MyProfileContent() {
             >
               {[
                 { label: "Posts", value: String(authoredPostsCount) },
-                { label: "Followers", value: "0" },
-                { label: "Following", value: "0" },
+                { label: "Followers", value: String(profile.followersCount) },
+                { label: "Following", value: String(profile.followingCount) },
                 { label: "Works", value: String(authoredPostsCount) },
               ].map((item) => (
                 <div key={item.label}>
@@ -494,7 +517,7 @@ export function MyProfileContent() {
               </div>
               <button
                 type="button"
-                onClick={() => setIsPublic((prev) => !prev)}
+                onClick={toggleProfileVisibility}
                 className={`relative h-6 w-11 rounded-full transition ${isPublic ? "bg-[#2ce88f]" : "bg-white/25"}`}
                 aria-label="Toggle profile visibility"
               >

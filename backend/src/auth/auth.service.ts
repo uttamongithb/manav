@@ -5,6 +5,7 @@ import {
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
@@ -12,7 +13,26 @@ import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  private signAccessToken(user: {
+    id: string;
+    email: string;
+    username: string;
+    displayName: string | null;
+    role: string;
+  }): string {
+    return this.jwtService.sign({
+      sub: user.id,
+      email: user.email,
+      username: user.username,
+      displayName: user.displayName,
+      role: user.role,
+    });
+  }
 
   private handlePrismaError(error: unknown): never {
     const err = error as { code?: string; message?: string };
@@ -56,7 +76,7 @@ export class AuthService {
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      return await this.prisma.user.create({
+      const user = await this.prisma.user.create({
         data: {
           email,
           username,
@@ -76,6 +96,17 @@ export class AuthService {
           avatarUrl: true,
         },
       });
+
+      return {
+        ...user,
+        token: this.signAccessToken({
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          displayName: user.displayName,
+          role: String(user.role),
+        }),
+      };
     } catch (error) {
       this.handlePrismaError(error);
     }
@@ -133,6 +164,13 @@ export class AuthService {
       role: user.role,
       avatarUrl: user.avatarUrl,
       bio: user.bio,
+      token: this.signAccessToken({
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        displayName: user.displayName,
+        role: String(user.role),
+      }),
     };
   }
 

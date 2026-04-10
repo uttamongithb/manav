@@ -8,9 +8,12 @@ import {
   Req,
   UploadedFile,
   UseInterceptors,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProfileRecord, ProfileService } from './profile.service';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { diskStorage } from 'multer';
 import { extname, join } from 'node:path';
 import { existsSync, mkdirSync } from 'node:fs';
@@ -23,49 +26,29 @@ function resolveUploadsPath() {
 }
 
 @Controller('profile')
+@UseGuards(JwtAuthGuard)
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
-  private resolveUserId(req: Request): string {
-    const headerValue = req.headers['x-user-id'];
-    const resolved = Array.isArray(headerValue)
-      ? headerValue[0]
-      : typeof headerValue === 'string'
-        ? headerValue
-        : undefined;
-
-    if (!resolved?.trim()) {
-      throw new BadRequestException('x-user-id header is required');
-    }
-
-    return resolved.trim();
-  }
-
-  private resolveDisplayName(req: Request): string | undefined {
-    const headerValue = req.headers['x-user-display-name'];
-    if (Array.isArray(headerValue)) {
-      return headerValue[0];
-    }
-    return typeof headerValue === 'string' ? headerValue : undefined;
-  }
-
   @Get()
-  async getProfile(@Req() req: Request): Promise<ProfileRecord> {
+  async getProfile(
+    @CurrentUser() user: { sub: string; displayName?: string | null },
+  ): Promise<ProfileRecord> {
     return this.profileService.getProfile(
-      this.resolveUserId(req),
-      this.resolveDisplayName(req),
+      user.sub,
+      user.displayName ?? undefined,
     );
   }
 
   @Put()
   async updateProfile(
-    @Req() req: Request,
+    @CurrentUser() user: { sub: string; displayName?: string | null },
     @Body() body: Partial<ProfileRecord>,
   ): Promise<ProfileRecord> {
     return this.profileService.updateProfile(
       body,
-      this.resolveUserId(req),
-      this.resolveDisplayName(req),
+      user.sub,
+      user.displayName ?? undefined,
     );
   }
 
@@ -105,6 +88,7 @@ export class ProfileController {
     }),
   )
   async uploadAvatar(
+    @CurrentUser() user: { sub: string; displayName?: string | null },
     @UploadedFile() file: Express.Multer.File,
     @Req() req: Request,
   ): Promise<ProfileRecord> {
@@ -115,8 +99,8 @@ export class ProfileController {
     const avatarUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
     return this.profileService.updateProfile(
       { avatarUrl },
-      this.resolveUserId(req),
-      this.resolveDisplayName(req),
+      user.sub,
+      user.displayName ?? undefined,
     );
   }
 }

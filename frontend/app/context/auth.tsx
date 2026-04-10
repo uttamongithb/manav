@@ -31,6 +31,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const USER_CACHE_KEY = "manav-user-cache";
 const AUTH_TOKEN_KEY = "manav-auth-token";
 
+export function getStoredAuthToken(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
@@ -39,7 +46,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(nextUser);
     if (typeof window !== "undefined") {
       localStorage.setItem(USER_CACHE_KEY, JSON.stringify(nextUser));
-      localStorage.setItem(AUTH_TOKEN_KEY, token || nextUser.id);
+      if (token) {
+        localStorage.setItem(AUTH_TOKEN_KEY, token);
+      }
     }
   }, []);
 
@@ -63,9 +72,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const cachedUser = localStorage.getItem(USER_CACHE_KEY);
         const token = localStorage.getItem(AUTH_TOKEN_KEY);
 
-        if (cachedUser && token) {
+        const hasJwtShape = typeof token === "string" && token.split(".").length === 3;
+
+        if (cachedUser && hasJwtShape) {
           const userData = JSON.parse(cachedUser) as AuthUser;
           setUser(userData);
+        } else if (cachedUser || token) {
+          localStorage.removeItem(USER_CACHE_KEY);
+          localStorage.removeItem(AUTH_TOKEN_KEY);
         }
       } catch (error) {
         console.error("Failed to initialize auth:", error);

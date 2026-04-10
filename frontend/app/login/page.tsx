@@ -14,6 +14,7 @@ type LoginResponse = {
   displayName: string;
   role: string;
   avatarUrl?: string;
+  token: string;
 };
 
 export default function LoginPage() {
@@ -77,7 +78,7 @@ export default function LoginPage() {
       const user = (await res.json()) as LoginResponse;
 
       // Update shared auth state immediately so protected routes recognize the session
-      login(user, user.id);
+      login(user, user.token);
 
       // Reset form
       setLoginForm({ email: "", password: "" });
@@ -128,7 +129,7 @@ export default function LoginPage() {
       const user = (await res.json()) as LoginResponse;
 
       // Update shared auth state immediately so protected routes recognize the session
-      login(user, user.id);
+      login(user, user.token);
 
       // Reset form
       setRegisterForm({
