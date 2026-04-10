@@ -13,10 +13,29 @@ function resolveUploadsPath() {
   return join(basePath, 'uploads');
 }
 
+function attachServerMiddleware(app: any) {
+  app.use((req: any, _res: any, next: any) => {
+    if (req.url === '/api') {
+      req.url = '/';
+    } else if (req.url?.startsWith('/api/')) {
+      req.url = req.url.slice(4);
+    }
+
+    next();
+  });
+
+  app.enableCors({
+    origin: true,
+    credentials: true,
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+}
+
 async function bootstrapServer() {
   const server = express();
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
-  app.enableCors();
+  attachServerMiddleware(app);
 
   const uploadsPath = resolveUploadsPath();
   try {

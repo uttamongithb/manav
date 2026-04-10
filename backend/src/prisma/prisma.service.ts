@@ -11,7 +11,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       throw new Error('DATABASE_URL is missing. Add it to backend/.env before starting the server.');
     }
 
-    const adapterUrl = rawUrl.replace(/^mysql:\/\//, 'mariadb://');
+    const databaseUrl = rawUrl.includes('?')
+      ? `${rawUrl}&connection_limit=1&pool_timeout=30`
+      : `${rawUrl}?connection_limit=1&pool_timeout=30`;
+    const adapterUrl = databaseUrl.replace(/^mysql:\/\//, 'mariadb://');
     const adapter = new PrismaMariaDb(adapterUrl);
     super({
       adapter,
