@@ -15,12 +15,12 @@ export type ProfileRecord = {
 const DEFAULT_PROFILE: ProfileRecord = {
   name: 'User',
   role: 'Member',
-  city: 'Los Angeles',
-  state: 'California',
-  country: 'United States',
-  timezone: 'PST (UTC-08:00)',
-  bio: 'Urdu poetry enthusiast sharing verses and literary reflections.',
-  avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=500&q=80',
+  city: '',
+  state: '',
+  country: '',
+  timezone: '',
+  bio: '',
+  avatarUrl: '',
 };
 
 @Injectable()

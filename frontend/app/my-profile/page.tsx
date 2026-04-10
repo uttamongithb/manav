@@ -32,12 +32,12 @@ function buildDefaultProfile(displayName?: string): UserProfile {
   return {
   name: displayName?.trim() || "User",
   role: "Member",
-  city: "Los Angeles",
-  state: "California",
-  country: "United States",
-  timezone: "PST (UTC-08:00)",
-  bio: "Urdu poetry enthusiast sharing verses and literary reflections.",
-  avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=500&q=80",
+  city: "",
+  state: "",
+  country: "",
+  timezone: "",
+  bio: "",
+  avatarUrl: "",
   };
 }
 
@@ -90,6 +90,25 @@ export function MyProfileContent() {
 
   const backendUrl = getApiBaseUrl();
   const activeDraft = draftByTab[activeTab] ?? "";
+  const locationParts = [profile.city, profile.state, profile.country].map((v) => v.trim()).filter(Boolean);
+  const localTimeText = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const authoredPostsCount = allPublicPosts.filter(
+    (post) => post.author.trim().toLowerCase() === profile.name.trim().toLowerCase(),
+  ).length;
+  const profileFields = [
+    profile.name,
+    profile.role,
+    profile.city,
+    profile.state,
+    profile.country,
+    profile.timezone,
+    profile.bio,
+    profile.avatarUrl,
+  ];
+  const completionPercent = Math.round((profileFields.filter((field) => field.trim().length > 0).length / profileFields.length) * 100);
+  const avatarSrc =
+    profile.avatarUrl.trim() ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name || "User")}&background=2ce88f&color=0b1112`;
 
   const loadProfile = async () => {
     try {
@@ -320,7 +339,7 @@ export function MyProfileContent() {
                 }`}
               >
                 <img
-                  src={profile.avatarUrl}
+                  src={avatarSrc}
                   alt="User profile photo"
                   className="h-full w-full object-cover"
                   loading="eager"
@@ -330,12 +349,16 @@ export function MyProfileContent() {
 
               <h1 className="text-[34px] font-semibold leading-tight tracking-[-0.02em]">{profile.name}</h1>
 
-              <p className={`mt-1 text-[16px] font-medium ${isDark ? "text-white/70" : "text-[#3f4656]"}`}>
-                {profile.city}, {profile.state}, {profile.country}
-              </p>
-              <p className={`mt-1 text-[14px] ${isDark ? "text-white/50" : "text-[#636e84]"}`}>
-                {profile.timezone} • Local time 09:45 AM
-              </p>
+              {locationParts.length > 0 ? (
+                <p className={`mt-1 text-[16px] font-medium ${isDark ? "text-white/70" : "text-[#3f4656]"}`}>
+                  {locationParts.join(", ")}
+                </p>
+              ) : null}
+              {profile.timezone.trim() ? (
+                <p className={`mt-1 text-[14px] ${isDark ? "text-white/50" : "text-[#636e84]"}`}>
+                  {profile.timezone} • Local time {localTimeText}
+                </p>
+              ) : null}
 
               <div className="mt-3 flex items-center gap-2">
                 <span className="rounded-full border border-emerald-400/40 bg-emerald-400/12 px-2.5 py-1 text-[13px] font-semibold text-emerald-300">
@@ -354,10 +377,10 @@ export function MyProfileContent() {
             >
               <div className={`mb-1.5 flex items-center justify-between text-[13px] ${isDark ? "text-white/75" : "text-[#505a6f]"}`}>
                 <span>Profile completion</span>
-                <span className="font-semibold">78%</span>
+                <span className="font-semibold">{completionPercent}%</span>
               </div>
               <div className={`h-1.5 overflow-hidden rounded-full ${isDark ? "bg-white/10" : "bg-black/10"}`}>
-                <div className="h-full w-[78%] rounded-full bg-[#2ce88f]" />
+                <div className="h-full rounded-full bg-[#2ce88f]" style={{ width: `${completionPercent}%` }} />
               </div>
               <button
                 type="button"
@@ -374,11 +397,8 @@ export function MyProfileContent() {
             >
               <p className={`text-[13px] uppercase tracking-[0.14em] ${isDark ? "text-white/45" : "text-[#657086]"}`}>Bio</p>
               <p className={`mt-1.5 text-[14px] leading-relaxed ${isDark ? "text-white/80" : "text-[#2f3644]"}`}>
-                {profile.bio}
+                {profile.bio.trim() || "No bio added yet."}
               </p>
-              <button type="button" className="mt-1.5 text-[13px] font-semibold text-[#8cf8c1]">
-                Read more
-              </button>
             </div>
 
             <div
@@ -387,10 +407,10 @@ export function MyProfileContent() {
               }`}
             >
               {[
-                { label: "Posts", value: "124" },
-                { label: "Followers", value: "3.8K" },
-                { label: "Following", value: "612" },
-                { label: "Works", value: "41" },
+                { label: "Posts", value: String(authoredPostsCount) },
+                { label: "Followers", value: "0" },
+                { label: "Following", value: "0" },
+                { label: "Works", value: String(authoredPostsCount) },
               ].map((item) => (
                 <div key={item.label}>
                   <p className="text-[17px] font-semibold">{item.value}</p>
