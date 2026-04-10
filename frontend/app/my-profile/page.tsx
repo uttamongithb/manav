@@ -118,6 +118,7 @@ const saveCachedProfile = (cacheKey: string, profile: UserProfile): void => {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(cacheKey, JSON.stringify(profile));
+    window.dispatchEvent(new Event("manav-profile-updated"));
   } catch {
     // Silently fail if localStorage is unavailable
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/app/context/auth";
 
 type SiteNavbarProps = {
@@ -37,8 +38,44 @@ const NAV_ITEMS = [
 
 export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProps) {
   const { user } = useAuth();
+  const [cachedAvatarUrl, setCachedAvatarUrl] = useState<string>("");
+
+  useEffect(() => {
+    if (!user?.id || typeof window === "undefined") {
+      setCachedAvatarUrl("");
+      return;
+    }
+
+    const cacheKey = `manav-profile-cache:${user.id}`;
+    const loadAvatar = () => {
+      try {
+        const raw = localStorage.getItem(cacheKey);
+        if (!raw) {
+          setCachedAvatarUrl("");
+          return;
+        }
+
+        const parsed = JSON.parse(raw) as { avatarUrl?: string };
+        setCachedAvatarUrl(parsed.avatarUrl?.trim() || "");
+      } catch {
+        setCachedAvatarUrl("");
+      }
+    };
+
+    loadAvatar();
+    window.addEventListener("storage", loadAvatar);
+    window.addEventListener("manav-profile-updated", loadAvatar);
+
+    return () => {
+      window.removeEventListener("storage", loadAvatar);
+      window.removeEventListener("manav-profile-updated", loadAvatar);
+    };
+  }, [user?.id]);
+
   const avatarSrc =
-    user?.avatarUrl?.trim() || buildAvatarFallbackDataUrl(user?.displayName || user?.username || "User");
+    cachedAvatarUrl ||
+    user?.avatarUrl?.trim() ||
+    buildAvatarFallbackDataUrl(user?.displayName || user?.username || "User");
 
   return (
     <nav
