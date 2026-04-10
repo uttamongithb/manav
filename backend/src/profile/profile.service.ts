@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 export type ProfileRecord = {
@@ -25,12 +25,10 @@ const DEFAULT_PROFILE: ProfileRecord = {
 
 @Injectable()
 export class ProfileService {
-  private readonly fallbackUserId = 'demo-user';
-
   constructor(private readonly prisma: PrismaService) {}
 
-  private async resolveUserContext(userId?: string, displayNameHint?: string) {
-    const resolvedUserId = userId?.trim() || this.fallbackUserId;
+  private async resolveUserContext(userId: string, displayNameHint?: string) {
+    const resolvedUserId = userId.trim();
 
     const user = await this.prisma.user.findUnique({
       where: { id: resolvedUserId },
@@ -42,6 +40,10 @@ export class ProfileService {
       },
     });
 
+    if (!user) {
+      throw new NotFoundException('User not found for profile operations');
+    }
+
     return {
       userId: resolvedUserId,
       displayName: user?.displayName?.trim() || displayNameHint?.trim() || DEFAULT_PROFILE.name,
@@ -50,7 +52,7 @@ export class ProfileService {
     };
   }
 
-  async getProfile(userId?: string, displayNameHint?: string): Promise<ProfileRecord> {
+  async getProfile(userId: string, displayNameHint?: string): Promise<ProfileRecord> {
     const context = await this.resolveUserContext(userId, displayNameHint);
 
     const record = await this.prisma.userProfile.findUnique({
@@ -98,7 +100,7 @@ export class ProfileService {
 
   async updateProfile(
     input: Partial<ProfileRecord>,
-    userId?: string,
+    userId: string,
     displayNameHint?: string,
   ): Promise<ProfileRecord> {
     const context = await this.resolveUserContext(userId, displayNameHint);

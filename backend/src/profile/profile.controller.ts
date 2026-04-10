@@ -26,12 +26,19 @@ function resolveUploadsPath() {
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
-  private resolveUserId(req: Request): string | undefined {
+  private resolveUserId(req: Request): string {
     const headerValue = req.headers['x-user-id'];
-    if (Array.isArray(headerValue)) {
-      return headerValue[0];
+    const resolved = Array.isArray(headerValue)
+      ? headerValue[0]
+      : typeof headerValue === 'string'
+        ? headerValue
+        : undefined;
+
+    if (!resolved?.trim()) {
+      throw new BadRequestException('x-user-id header is required');
     }
-    return typeof headerValue === 'string' ? headerValue : undefined;
+
+    return resolved.trim();
   }
 
   private resolveDisplayName(req: Request): string | undefined {
