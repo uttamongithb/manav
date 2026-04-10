@@ -40,7 +40,7 @@ function attachServerMiddleware(app: any) {
         return callback(null, true);
       }
 
-      return callback(new Error(`Origin not allowed by CORS: ${origin}`));
+      return callback(null, false);
     },
     credentials: true,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
