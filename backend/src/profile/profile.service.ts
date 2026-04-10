@@ -25,27 +25,50 @@ const DEFAULT_PROFILE: ProfileRecord = {
 
 @Injectable()
 export class ProfileService {
-  private readonly defaultUserId = 'demo-user';
+  private readonly fallbackUserId = 'demo-user';
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async getProfile(): Promise<ProfileRecord> {
+  private async resolveUserContext(userId?: string) {
+    const resolvedUserId = userId?.trim() || this.fallbackUserId;
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: resolvedUserId },
+      select: {
+        id: true,
+        displayName: true,
+        role: true,
+        avatarUrl: true,
+      },
+    });
+
+    return {
+      userId: resolvedUserId,
+      displayName: user?.displayName?.trim() || DEFAULT_PROFILE.name,
+      role: user?.role ? String(user.role) : DEFAULT_PROFILE.role,
+      avatarUrl: user?.avatarUrl?.trim() || DEFAULT_PROFILE.avatarUrl,
+    };
+  }
+
+  async getProfile(userId?: string): Promise<ProfileRecord> {
+    const context = await this.resolveUserContext(userId);
+
     const record = await this.prisma.userProfile.findUnique({
-      where: { userId: this.defaultUserId },
+      where: { userId: context.userId },
     });
 
     if (!record) {
       const created = await this.prisma.userProfile.create({
         data: {
-          userId: this.defaultUserId,
-          name: DEFAULT_PROFILE.name,
-          role: DEFAULT_PROFILE.role,
+          userId: context.userId,
+          name: context.displayName,
+          role: context.role,
           city: DEFAULT_PROFILE.city,
           state: DEFAULT_PROFILE.state,
           country: DEFAULT_PROFILE.country,
           timezone: DEFAULT_PROFILE.timezone,
           bio: DEFAULT_PROFILE.bio,
-          avatarUrl: DEFAULT_PROFILE.avatarUrl,
+          avatarUrl: context.avatarUrl,
         },
       });
 
@@ -57,7 +80,7 @@ export class ProfileService {
         country: created.country,
         timezone: created.timezone,
         bio: created.bio,
-        avatarUrl: created.avatarUrl ?? DEFAULT_PROFILE.avatarUrl,
+        avatarUrl: created.avatarUrl ?? context.avatarUrl,
       };
     }
 
@@ -69,15 +92,16 @@ export class ProfileService {
       country: record.country,
       timezone: record.timezone,
       bio: record.bio,
-      avatarUrl: record.avatarUrl ?? DEFAULT_PROFILE.avatarUrl,
+      avatarUrl: record.avatarUrl ?? context.avatarUrl,
     };
   }
 
-  async updateProfile(input: Partial<ProfileRecord>): Promise<ProfileRecord> {
-    const current = await this.getProfile();
+  async updateProfile(input: Partial<ProfileRecord>, userId?: string): Promise<ProfileRecord> {
+    const context = await this.resolveUserContext(userId);
+    const current = await this.getProfile(context.userId);
 
     const updated = await this.prisma.userProfile.upsert({
-      where: { userId: this.defaultUserId },
+      where: { userId: context.userId },
       update: {
         name: (input.name ?? current.name).trim() || current.name,
         role: (input.role ?? current.role).trim() || current.role,
@@ -89,15 +113,15 @@ export class ProfileService {
         avatarUrl: (input.avatarUrl ?? current.avatarUrl).trim() || current.avatarUrl,
       },
       create: {
-        userId: this.defaultUserId,
-        name: (input.name ?? DEFAULT_PROFILE.name).trim() || DEFAULT_PROFILE.name,
-        role: (input.role ?? DEFAULT_PROFILE.role).trim() || DEFAULT_PROFILE.role,
+        userId: context.userId,
+        name: (input.name ?? context.displayName).trim() || context.displayName,
+        role: (input.role ?? context.role).trim() || context.role,
         city: (input.city ?? DEFAULT_PROFILE.city).trim() || DEFAULT_PROFILE.city,
         state: (input.state ?? DEFAULT_PROFILE.state).trim() || DEFAULT_PROFILE.state,
         country: (input.country ?? DEFAULT_PROFILE.country).trim() || DEFAULT_PROFILE.country,
         timezone: (input.timezone ?? DEFAULT_PROFILE.timezone).trim() || DEFAULT_PROFILE.timezone,
         bio: (input.bio ?? DEFAULT_PROFILE.bio).trim() || DEFAULT_PROFILE.bio,
-        avatarUrl: (input.avatarUrl ?? DEFAULT_PROFILE.avatarUrl).trim() || DEFAULT_PROFILE.avatarUrl,
+        avatarUrl: (input.avatarUrl ?? context.avatarUrl).trim() || context.avatarUrl,
       },
     });
 
@@ -109,7 +133,7 @@ export class ProfileService {
       country: updated.country,
       timezone: updated.timezone,
       bio: updated.bio,
-      avatarUrl: updated.avatarUrl ?? DEFAULT_PROFILE.avatarUrl,
+      avatarUrl: updated.avatarUrl ?? context.avatarUrl,
     };
   }
 }

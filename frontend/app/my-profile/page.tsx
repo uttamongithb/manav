@@ -64,7 +64,7 @@ const saveCachedProfile = (profile: UserProfile): void => {
 
 export function MyProfileContent() {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const { isDark, setIsDark } = useTheme();
   const [isPublic, setIsPublic] = useState(true);
   const [activeTab, setActiveTab] = useState("POETRY");
@@ -91,7 +91,9 @@ export function MyProfileContent() {
 
   const loadProfile = async () => {
     try {
-      const res = await fetch(`${backendUrl}/profile`);
+      const res = await fetch(`${backendUrl}/profile`, {
+        headers: user?.id ? { "x-user-id": user.id } : undefined,
+      });
       if (!res.ok) {
         throw new Error("failed_response");
       }
@@ -143,7 +145,7 @@ export function MyProfileContent() {
     }
     // Background fetch to keep cache in sync with server
     void loadProfile();
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     return () => {
@@ -207,6 +209,7 @@ export function MyProfileContent() {
 
       const res = await fetch(`${backendUrl}/profile/avatar`, {
         method: "POST",
+        headers: user?.id ? { "x-user-id": user.id } : undefined,
         body: formData,
       });
 
@@ -252,7 +255,10 @@ export function MyProfileContent() {
 
         const res = await fetch(`${backendUrl}/profile`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(user?.id ? { "x-user-id": user.id } : {}),
+          },
           body: JSON.stringify(payload),
         });
 

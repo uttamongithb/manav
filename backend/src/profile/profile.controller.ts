@@ -26,14 +26,25 @@ function resolveUploadsPath() {
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) {}
 
+  private resolveUserId(req: Request): string | undefined {
+    const headerValue = req.headers['x-user-id'];
+    if (Array.isArray(headerValue)) {
+      return headerValue[0];
+    }
+    return typeof headerValue === 'string' ? headerValue : undefined;
+  }
+
   @Get()
-  async getProfile(): Promise<ProfileRecord> {
-    return this.profileService.getProfile();
+  async getProfile(@Req() req: Request): Promise<ProfileRecord> {
+    return this.profileService.getProfile(this.resolveUserId(req));
   }
 
   @Put()
-  async updateProfile(@Body() body: Partial<ProfileRecord>): Promise<ProfileRecord> {
-    return this.profileService.updateProfile(body);
+  async updateProfile(
+    @Req() req: Request,
+    @Body() body: Partial<ProfileRecord>,
+  ): Promise<ProfileRecord> {
+    return this.profileService.updateProfile(body, this.resolveUserId(req));
   }
 
   @Post('avatar')
@@ -80,6 +91,6 @@ export class ProfileController {
     }
 
     const avatarUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
-    return this.profileService.updateProfile({ avatarUrl });
+    return this.profileService.updateProfile({ avatarUrl }, this.resolveUserId(req));
   }
 }
