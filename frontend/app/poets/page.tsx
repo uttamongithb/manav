@@ -4,25 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useTheme } from "@/app/context/theme";
 import { SiteNavbar } from "@/app/components/site-navbar";
-
-type PoetGroup = "Classical" | "Modern" | "Women" | "Contemporary";
-
-type Poet = {
-  id: string;
-  name: string;
-  years: string;
-  location: string;
-  avatarUrl: string;
-  heroImage: string;
-  group: PoetGroup[];
-  shortBio: string;
-  signatureLine: string;
-  stats: {
-    sher: number;
-    ghazal: number;
-    nazm: number;
-  };
-};
+import { POETS, PoetGroup } from "@/app/lib/poets-data";
 
 type GroupFilter = "All" | PoetGroup;
 
@@ -34,117 +16,12 @@ const GROUP_FILTERS: Array<{ label: string; value: GroupFilter }> = [
   { label: "Contemporary", value: "Contemporary" },
 ];
 
-const createAvatarUrl = (name: string) =>
-  `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=0f766e&color=ffffff&bold=true&size=128`;
-
-const createHeroImage = (name: string) =>
-  `https://picsum.photos/seed/${encodeURIComponent(name)}/1200/850`;
-
 const createHeroFallback = (name: string) => {
   const safeName = name.replace(/[&<>"']/g, "");
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="850" viewBox="0 0 1200 850"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1b2431"/><stop offset="100%" stop-color="#0f766e"/></linearGradient></defs><rect width="1200" height="850" fill="url(#g)"/><circle cx="980" cy="170" r="160" fill="rgba(255,255,255,0.08)"/><circle cx="220" cy="720" r="210" fill="rgba(255,255,255,0.06)"/><text x="70" y="730" fill="rgba(255,255,255,0.92)" font-family="Georgia, serif" font-size="64">${safeName}</text></svg>`
   )}`;
 };
-
-const POETS: Poet[] = [
-  {
-    id: "mir",
-    name: "Mir Taqi Mir",
-    years: "1723 - 1810",
-    location: "Delhi",
-    avatarUrl: createAvatarUrl("Mir Taqi Mir"),
-    heroImage: createHeroImage("Mir Taqi Mir"),
-    group: ["Classical"],
-    shortBio: "The foundational voice of Urdu ghazal, known for emotional clarity and lyrical grace.",
-    signatureLine: "Patta patta boota boota haal hamara jaane hai",
-    stats: { sher: 112, ghazal: 81, nazm: 12 },
-  },
-  {
-    id: "ghalib",
-    name: "Mirza Ghalib",
-    years: "1797 - 1869",
-    location: "Delhi",
-    avatarUrl: createAvatarUrl("Mirza Ghalib"),
-    heroImage: createHeroImage("Mirza Ghalib"),
-    group: ["Classical", "Modern"],
-    shortBio: "A timeless master whose verse combines intellect, irony, and philosophical tenderness.",
-    signatureLine: "Hazaron khwahishen aisi ke har khwahish pe dam nikle",
-    stats: { sher: 136, ghazal: 94, nazm: 9 },
-  },
-  {
-    id: "faiz",
-    name: "Faiz Ahmed Faiz",
-    years: "1911 - 1984",
-    location: "Lahore",
-    avatarUrl: createAvatarUrl("Faiz Ahmed Faiz"),
-    heroImage: createHeroImage("Faiz Ahmed Faiz"),
-    group: ["Modern"],
-    shortBio: "A progressive poet whose language of love and resistance still resonates deeply.",
-    signatureLine: "Bol ke lab azaad hain tere",
-    stats: { sher: 86, ghazal: 57, nazm: 31 },
-  },
-  {
-    id: "parveen",
-    name: "Parveen Shakir",
-    years: "1952 - 1994",
-    location: "Karachi",
-    avatarUrl: createAvatarUrl("Parveen Shakir"),
-    heroImage: createHeroImage("Parveen Shakir"),
-    group: ["Women", "Modern"],
-    shortBio: "A defining feminine voice in Urdu poetry with intimacy, elegance, and contemporary tone.",
-    signatureLine: "Khushbu jaise log mile afsane mein",
-    stats: { sher: 63, ghazal: 42, nazm: 21 },
-  },
-  {
-    id: "jaun",
-    name: "Jaun Eliya",
-    years: "1931 - 2002",
-    location: "Karachi",
-    avatarUrl: createAvatarUrl("Jaun Eliya"),
-    heroImage: createHeroImage("Jaun Eliya"),
-    group: ["Modern", "Contemporary"],
-    shortBio: "Beloved for his existential intensity, conversational rhythm, and sharp reflective style.",
-    signatureLine: "Shayad mujhe kisi se mohabbat nahin hui",
-    stats: { sher: 99, ghazal: 64, nazm: 26 },
-  },
-  {
-    id: "ada",
-    name: "Ada Jafri",
-    years: "1924 - 2015",
-    location: "Karachi",
-    avatarUrl: createAvatarUrl("Ada Jafri"),
-    heroImage: createHeroImage("Ada Jafri"),
-    group: ["Women", "Modern"],
-    shortBio: "A pioneering woman poet who introduced a gentle yet assertive lyrical identity.",
-    signatureLine: "Jinhen main dhoondti thi woh nazar ke saamne the",
-    stats: { sher: 41, ghazal: 33, nazm: 17 },
-  },
-  {
-    id: "nida",
-    name: "Nida Fazli",
-    years: "1938 - 2016",
-    location: "Mumbai",
-    avatarUrl: createAvatarUrl("Nida Fazli"),
-    heroImage: createHeroImage("Nida Fazli"),
-    group: ["Modern"],
-    shortBio: "Known for simplicity and depth, with poems that blend urban realism and inward thought.",
-    signatureLine: "Ghar se masjid hai bahut door chalo yun kar lein",
-    stats: { sher: 54, ghazal: 39, nazm: 24 },
-  },
-  {
-    id: "wasi",
-    name: "Wasi Shah",
-    years: "1976 -",
-    location: "Lahore",
-    avatarUrl: createAvatarUrl("Wasi Shah"),
-    heroImage: createHeroImage("Wasi Shah"),
-    group: ["Contemporary"],
-    shortBio: "A widely-read contemporary poet with accessible language and emotional clarity.",
-    signatureLine: "Tum mere paas raho",
-    stats: { sher: 29, ghazal: 17, nazm: 14 },
-  },
-];
 
 export default function PoetsPage() {
   const { isDark, setIsDark } = useTheme();
@@ -224,7 +101,7 @@ export default function PoetsPage() {
             </div>
           </section>
 
-          <header className={`overflow-hidden rounded-[32px] border ${isDark ? "border-white/20 bg-[#17181d]" : "border-black/10 bg-white"}`}>
+          <header className={`overflow-hidden rounded-4xl border ${isDark ? "border-white/20 bg-[#17181d]" : "border-black/10 bg-white"}`}>
             <div className="grid gap-0 lg:grid-cols-[1.3fr_1fr]">
               <div className="p-6 md:p-8">
                 <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-white/45" : "text-[#5e775f]"}`}>
@@ -277,7 +154,11 @@ export default function PoetsPage() {
                 <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/25 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-6 text-white">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/75">Featured Poet</p>
-                  <h2 className="mt-1 text-[24px] font-semibold leading-tight">{featuredPoet.name}</h2>
+                  <h2 className="mt-1 text-[24px] font-semibold leading-tight">
+                    <Link href={`/poets/${featuredPoet.id}`} className="hover:underline">
+                      {featuredPoet.name}
+                    </Link>
+                  </h2>
                   <p className="mt-1 text-[12px] text-white/85">{featuredPoet.years} • {featuredPoet.location}</p>
                 </div>
               </div>
@@ -286,14 +167,18 @@ export default function PoetsPage() {
 
           <div className="mt-5 space-y-4">
             {filteredPoets.map((poet) => (
-              <article key={poet.id} className={`rounded-[24px] border p-5 ${isDark ? "border-white/20 bg-[#1a1c22]" : "border-black/10 bg-white/94"}`}>
+              <article key={poet.id} className={`rounded-3xl border p-5 ${isDark ? "border-white/20 bg-[#1a1c22]" : "border-black/10 bg-white/94"}`}>
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start gap-3">
-                      <img src={poet.avatarUrl} alt={poet.name} className="h-14 w-14 shrink-0 rounded-full border object-cover" />
+                      <Link href={`/poets/${poet.id}`}>
+                        <img src={poet.avatarUrl} alt={poet.name} className="h-14 w-14 shrink-0 rounded-full border object-cover" />
+                      </Link>
                       <div className="min-w-0">
                         <h3 className="text-[20px] font-semibold tracking-[-0.02em]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
-                          {poet.name}
+                          <Link href={`/poets/${poet.id}`} className="hover:underline">
+                            {poet.name}
+                          </Link>
                         </h3>
                         <p className={`text-[12px] ${isDark ? "text-white/55" : "text-[#6d836c]"}`}>{poet.years} • {poet.location}</p>
                       </div>
