@@ -239,19 +239,25 @@ export default function AdminLayout({
             </button>
 
             <div className="admin-topnav-section">
-              <span className="admin-topnav-section-label">Section</span>
               <span className="admin-topnav-section-value">{currentSectionLabel}</span>
             </div>
           </div>
 
           <div className="admin-topnav-right">
+            <Link href="/" className="admin-topnav-home-link">
+              Home
+            </Link>
+
             <button
               type="button"
-              className="admin-topnav-theme-toggle"
+              className={`admin-topnav-theme-toggle ${isDarkMode ? "is-dark" : ""}`}
               onClick={() => setIsDarkMode((prev) => !prev)}
               title={`Switch to ${isDarkMode ? "light" : "dark"} mode`}
             >
-              {isDarkMode ? "Light" : "Dark"}
+              <span>{isDarkMode ? "DARK" : "LIGHT"}</span>
+              <span className="admin-topnav-theme-track">
+                <span className="admin-topnav-theme-knob" />
+              </span>
             </button>
 
             <button type="button" className="admin-topnav-icon-btn">

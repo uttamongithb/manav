@@ -264,17 +264,9 @@
 
 .admin-topnav-section {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 8px;
   min-width: 0;
-}
-
-.admin-topnav-section-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--admin-text-muted);
-  font-weight: 700;
 }
 
 .admin-topnav-section-value {
@@ -311,6 +303,28 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.admin-topnav-home-link {
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--admin-card-border);
+  background: var(--admin-card-bg);
+  color: var(--admin-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 0 12px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.admin-topnav-home-link:hover {
+  border-color: var(--admin-accent);
+  color: var(--admin-text-primary);
 }
 
 .admin-topnav-icon-btn {
@@ -369,15 +383,18 @@
 }
 
 .admin-topnav-theme-toggle {
-  height: 36px;
-  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  border-radius: 999px;
   border: 1px solid var(--admin-card-border);
   background: var(--admin-card-bg);
   color: var(--admin-text-secondary);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  padding: 0 12px;
+  letter-spacing: 0.08em;
+  padding: 0 10px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -385,6 +402,35 @@
 .admin-topnav-theme-toggle:hover {
   border-color: var(--admin-accent);
   color: var(--admin-text-primary);
+}
+
+.admin-topnav-theme-track {
+  position: relative;
+  width: 32px;
+  height: 16px;
+  border-radius: 999px;
+  background: #d9dde5;
+  transition: background 0.15s ease;
+}
+
+.admin-topnav-theme-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #10131a;
+  transition: left 0.15s ease, background 0.15s ease;
+}
+
+.admin-topnav-theme-toggle.is-dark .admin-topnav-theme-track {
+  background: var(--admin-accent);
+}
+
+.admin-topnav-theme-toggle.is-dark .admin-topnav-theme-knob {
+  left: 18px;
+  background: #0b1112;
 }
 
 /* ── Page Content ──────────────────────────────────────────── */
