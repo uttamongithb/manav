@@ -18,6 +18,24 @@ import { AdminService } from './admin.service';
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  @Get('dashboard')
+  getDashboard() {
+    return this.adminService.getDashboardSummary();
+  }
+
+  @Get('banners')
+  getBanners() {
+    return this.adminService.getBannerSlides();
+  }
+
+  @Put('banners')
+  updateBanners(
+    @Body() body: { slides?: unknown },
+    @CurrentUser() user: { sub: string },
+  ) {
+    return this.adminService.updateBannerSlides(body.slides, user.sub);
+  }
+
   @Get('privacy-policy')
   getPrivacyPolicy() {
     return this.adminService.getPrivacyPolicy();

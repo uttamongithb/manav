@@ -16,6 +16,19 @@ type UserPost = {
   createdAt: string;
 };
 
+type HeroSlide = {
+  title: string;
+  subtitle: string;
+  image: string;
+  tag: string;
+};
+
+type HomeConfigResponse = {
+  slides: HeroSlide[];
+  updatedAt: string | null;
+  updatedBy: string | null;
+};
+
 const DEFAULT_POSTS: UserPost[] = [];
 
 const QUICK_ACCESS_ITEMS = [
@@ -28,7 +41,7 @@ const QUICK_ACCESS_ITEMS = [
   { label: "ARCHIVES", href: "/archives" },
 ];
 
-const HERO_SLIDES = [
+const DEFAULT_HERO_SLIDES: HeroSlide[] = [
   {
     title: "A Living Library of Words",
     subtitle:
@@ -114,6 +127,7 @@ export default function PublicFeed() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState("All");
   const [activeHeroSlide, setActiveHeroSlide] = useState(0);
+  const [heroSlides, setHeroSlides] = useState<HeroSlide[]>(DEFAULT_HERO_SLIDES);
   const recentCarouselRef = useRef<HTMLDivElement | null>(null);
 
   const backendUrl = getApiBaseUrl();
@@ -148,14 +162,35 @@ export default function PublicFeed() {
   }, []);
 
   useEffect(() => {
+    const loadHomeConfig = async () => {
+      try {
+        const res = await fetch(`${backendUrl}/public/home-config`);
+        if (!res.ok) return;
+
+        const config = (await res.json()) as HomeConfigResponse;
+        if (config.slides?.length > 0) {
+          setHeroSlides(config.slides);
+          setActiveHeroSlide(0);
+        }
+      } catch {
+        // Keep the local fallback slides if the config endpoint is unavailable.
+      }
+    };
+
+    void loadHomeConfig();
+  }, [backendUrl]);
+
+  useEffect(() => {
+    if (heroSlides.length <= 1) return undefined;
+
     const timer = window.setInterval(() => {
-      setActiveHeroSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+      setActiveHeroSlide((prev) => (prev + 1) % heroSlides.length);
     }, 4500);
 
     return () => {
       window.clearInterval(timer);
     };
-  }, []);
+  }, [heroSlides.length]);
 
   const jumpToSlide = (index: number) => {
     setActiveHeroSlide(index);
@@ -163,12 +198,12 @@ export default function PublicFeed() {
 
   const showPrevSlide = () => {
     setActiveHeroSlide((prev) =>
-      prev === 0 ? HERO_SLIDES.length - 1 : prev - 1,
+      prev === 0 ? heroSlides.length - 1 : prev - 1,
     );
   };
 
   const showNextSlide = () => {
-    setActiveHeroSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+    setActiveHeroSlide((prev) => (prev + 1) % heroSlides.length);
   };
 
   const scrollRecentCards = (direction: "prev" | "next") => {
@@ -209,7 +244,7 @@ export default function PublicFeed() {
 
       <section className="w-full px-0 pt-0">
         <div className="relative h-[48vh] min-h-80 w-full overflow-hidden md:h-[56vh] md:min-h-115">
-          {HERO_SLIDES.map((slide, index) => {
+          {heroSlides.map((slide, index) => {
             const active = activeHeroSlide === index;
             return (
               <article
@@ -266,7 +301,7 @@ export default function PublicFeed() {
           </button>
 
           <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 md:bottom-6">
-            {HERO_SLIDES.map((slide, index) => {
+            {heroSlides.map((slide, index) => {
               const active = activeHeroSlide === index;
               return (
                 <button
