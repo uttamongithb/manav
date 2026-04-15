@@ -38,6 +38,8 @@ export default function AdminPage() {
 
   const backendUrl = getApiBaseUrl();
   const authToken = getStoredAuthToken();
+  const role = user?.role?.toLowerCase?.() ?? "";
+  const isAdmin = !!user && ["admin", "superadmin"].includes(role);
   const authHeaders = useMemo(
     () =>
       authToken
@@ -51,9 +53,8 @@ export default function AdminPage() {
   useEffect(() => {
     if (isLoadingAuth) return;
 
-    const role = user?.role?.toLowerCase?.() ?? "";
-    if (!user || !["admin", "superadmin"].includes(role)) {
-      router.replace("/");
+    if (!user) {
+      router.replace("/login");
     }
   }, [isLoadingAuth, user, router]);
 
@@ -86,9 +87,9 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (!authHeaders || isLoadingAuth) return;
+    if (!authHeaders || isLoadingAuth || !isAdmin) return;
     void loadAdminData();
-  }, [authHeaders, isLoadingAuth]);
+  }, [authHeaders, isLoadingAuth, isAdmin]);
 
   const savePolicy = async () => {
     if (!authHeaders) return;
@@ -146,6 +147,23 @@ export default function AdminPage() {
     <main className={`min-h-screen transition-colors duration-300 ${isDark ? "bg-[#0e1117] text-white" : "bg-[#f3f5f8] text-[#10131a]"}`}>
       <SiteNavbar isDark={isDark} onToggleTheme={() => setIsDark((prev) => !prev)} activeHref="/admin" />
 
+      {!isLoadingAuth && user && !isAdmin ? (
+        <section className="mx-auto w-[80vw] max-w-none px-1 py-10">
+          <div className={`rounded-3xl border p-7 md:p-10 ${isDark ? "border-white/20 bg-[#17181d]" : "border-black/10 bg-white"}`}>
+            <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-white/45" : "text-[#5e775f]"}`}>
+              Admin Access Required
+            </p>
+            <h1 className="mt-2 text-[34px] font-semibold leading-tight tracking-[-0.03em] md:text-[44px]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
+              You are signed in, but this account does not have admin permission.
+            </h1>
+            <p className={`mt-3 max-w-2xl text-[15px] leading-relaxed ${isDark ? "text-white/68" : "text-[#496048]"}`}>
+              Ask a superadmin to update your role to admin or superadmin to access moderation and policy controls.
+            </p>
+          </div>
+        </section>
+      ) : null}
+
+      {!isLoadingAuth && user && isAdmin ? (
       <section className="mx-auto grid w-[80vw] max-w-none gap-6 px-1 py-7 md:grid-cols-12 md:py-10">
         <div className="md:col-span-12">
           <header className={`overflow-hidden rounded-4xl border ${isDark ? "border-white/20 bg-[#17181d]" : "border-black/10 bg-white"}`}>
@@ -257,6 +275,7 @@ export default function AdminPage() {
           </div>
         </div>
       </section>
+      ) : null}
     </main>
   );
 }
