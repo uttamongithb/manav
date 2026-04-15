@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { SiteNavbar } from "@/app/components/site-navbar";
 import { useAuth } from "@/app/context/auth";
 import { useTheme } from "@/app/context/theme";
-import { SiteNavbar } from "@/app/components/site-navbar";
 import { getApiBaseUrl } from "@/app/lib/api-base";
 
 type UserPost = {
@@ -19,16 +19,37 @@ type UserPost = {
 const DEFAULT_POSTS: UserPost[] = [];
 
 const QUICK_ACCESS_ITEMS = [
-  { label: "POETS", href: "/poets" },
-  { label: "SHER", href: "/sher" },
-  { label: "DICTIONARY", href: "/dictionary" },
-  { label: "VIDEOS", href: "/videos" },
-  { label: "E-BOOKS", href: "/e-books" },
-  { label: "PROSE", href: "/prose" },
-  { label: "BLOG", href: "/blog" },
-  { label: "SHAYARI", href: "/shayari" },
-  { label: "QUIZ", href: "/quiz" },
-  { label: "MORE", href: "/more" },
+  { label: "HOME", href: "/" },
+  { label: "ABOUT US", href: "/about-us" },
+  { label: "CONTACT US", href: "/contact-us" },
+  { label: "PRIVACY POLICY", href: "/privacy-policy" },
+  { label: "LINKS", href: "/links" },
+  { label: "EBOOK DOWNLOAD", href: "/ebook-download" },
+  { label: "ARCHIVES", href: "/archives" },
+];
+
+const HERO_SLIDES = [
+  {
+    title: "A Living Library of Words",
+    subtitle:
+      "Move through poetry, essays, and reflections in one continuous reading experience.",
+    image: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=2200&q=80",
+    tag: "Editorial Collection",
+  },
+  {
+    title: "Stories That Travel Across Eras",
+    subtitle:
+      "From classic voices to new writers, discover writing that stays with you long after reading.",
+    image: "https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=2200&q=80",
+    tag: "Curated Timeline",
+  },
+  {
+    title: "Designed for Reading Flow",
+    subtitle:
+      "Clean typography, focused rhythm, and thoughtful pacing built for desktop and mobile alike.",
+    image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=2200&q=80",
+    tag: "Reader First",
+  },
 ];
 
 function formatPostDate(value: string) {
@@ -53,6 +74,7 @@ export default function PublicFeed() {
   const [sortOrder, setSortOrder] = useState<"latest" | "oldest">("latest");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState("All");
+  const [activeHeroSlide, setActiveHeroSlide] = useState(0);
 
   const backendUrl = getApiBaseUrl();
 
@@ -76,6 +98,30 @@ export default function PublicFeed() {
   useEffect(() => {
     void loadPosts();
   }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setActiveHeroSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+    }, 4500);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  const jumpToSlide = (index: number) => {
+    setActiveHeroSlide(index);
+  };
+
+  const showPrevSlide = () => {
+    setActiveHeroSlide((prev) =>
+      prev === 0 ? HERO_SLIDES.length - 1 : prev - 1,
+    );
+  };
+
+  const showNextSlide = () => {
+    setActiveHeroSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+  };
 
   const sections = ["All", ...Array.from(new Set(allPublicPosts.map((post) => post.section)))];
 
@@ -102,70 +148,180 @@ export default function PublicFeed() {
     <main className={`relative min-h-screen transition-colors duration-300 ${isDark ? "bg-[#0e1117] text-white" : "bg-[#f3f5f8] text-[#10131a]"}`}>
       <SiteNavbar isDark={isDark} onToggleTheme={() => setIsDark((prev) => !prev)} />
 
+      <section className="w-full px-0 pt-0">
+        <div className="relative h-[48vh] min-h-80 w-full overflow-hidden md:h-[56vh] md:min-h-115">
+          {HERO_SLIDES.map((slide, index) => {
+            const active = activeHeroSlide === index;
+            return (
+              <article
+                key={slide.title}
+                className={`absolute inset-0 transition-opacity duration-700 ${active ? "opacity-100" : "pointer-events-none opacity-0"}`}
+                aria-hidden={!active}
+              >
+                <img
+                  src={slide.image}
+                  alt={slide.title}
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(100deg,rgba(0,0,0,0.7)_0%,rgba(0,0,0,0.42)_45%,rgba(0,0,0,0.15)_100%)]" />
+                <div className="absolute inset-x-0 bottom-0 top-0 mx-auto flex w-[92vw] max-w-350 items-end pb-8 md:items-center md:pb-0">
+                  <div className="max-w-xl rounded-[30px] border border-white/25 bg-black/30 p-5 text-white backdrop-blur-md md:p-7">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/75">
+                      {slide.tag}
+                    </p>
+                    <h2
+                      className="mt-2 text-[34px] font-semibold leading-[0.95] tracking-[-0.03em] md:text-[58px]"
+                      style={{ fontFamily: "Georgia, Times New Roman, serif" }}
+                    >
+                      {slide.title}
+                    </h2>
+                    <p className="mt-3 max-w-lg text-[14px] leading-relaxed text-white/88 md:text-[16px]">
+                      {slide.subtitle}
+                    </p>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+
+          <button
+            type="button"
+            aria-label="Previous slide"
+            onClick={showPrevSlide}
+            className="absolute left-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-white/35 bg-black/35 p-2.5 text-white transition hover:bg-black/55 md:left-6"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            aria-label="Next slide"
+            onClick={showNextSlide}
+            className="absolute right-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-white/35 bg-black/35 p-2.5 text-white transition hover:bg-black/55 md:right-6"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </button>
+
+          <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 md:bottom-6">
+            {HERO_SLIDES.map((slide, index) => {
+              const active = activeHeroSlide === index;
+              return (
+                <button
+                  key={slide.title}
+                  type="button"
+                  aria-label={`Go to slide ${index + 1}`}
+                  onClick={() => jumpToSlide(index)}
+                  className={`h-2.5 rounded-full transition ${active ? "w-8 bg-white" : "w-2.5 bg-white/60 hover:bg-white/85"}`}
+                />
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
       <section className="mx-auto grid w-[80vw] max-w-none gap-7 px-1 py-7 md:grid-cols-12 md:py-10">
         <div className="md:col-span-8">
-          <header className={`rounded-[32px] border p-6 md:p-8 ${isDark ? "border-white/20 bg-[#17181d]" : "border-black/10 bg-white/92"}`}>
-            <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-white/45" : "text-[#5d755f]"}`}>
-              Community Timeline
-            </p>
-            <h1 className="mt-2 text-[36px] font-semibold leading-tight tracking-[-0.03em] md:text-[48px]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
-              Public Feed
-            </h1>
-            <p className={`mt-2 text-[15px] leading-relaxed ${isDark ? "text-white/68" : "text-[#4a5f4c]"}`}>
-              Discover fresh writing, reflections, and verses from every section in one curated stream.
-            </p>
+          <header className={`overflow-hidden rounded-[34px] border ${isDark ? "border-white/18 bg-[#17181d]" : "border-black/10 bg-white/92"}`}>
+            <div className="grid gap-0 lg:grid-cols-[1.2fr_0.95fr]">
+              <div className="relative p-6 md:p-8 lg:p-10">
+                <div className={`absolute inset-0 ${isDark ? "bg-[radial-gradient(circle_at_top_left,rgba(44,232,143,0.16),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.05),transparent_42%)]" : "bg-[radial-gradient(circle_at_top_left,rgba(10,138,91,0.13),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(10,138,91,0.06),transparent_42%)]"}`} />
+                <div className="relative z-10">
+                  <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-white/45" : "text-[#5d755f]"}`}>
+                    Community Timeline
+                  </p>
+                  <h1 className="mt-2 max-w-xl text-[36px] font-semibold leading-[0.98] tracking-[-0.04em] md:text-[56px]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
+                    Public Feed
+                  </h1>
+                  <p className={`mt-3 max-w-lg text-[15px] leading-relaxed ${isDark ? "text-white/68" : "text-[#4a5f4c]"}`}>
+                    Discover fresh writing, reflections, and verses from every section in one curated stream.
+                  </p>
 
-            <div className={`mt-6 rounded-2xl border p-3.5 md:p-4 ${isDark ? "border-white/20 bg-[#1c2027]" : "border-black/10 bg-[#f4f8f0]"}`}>
-              <div className="flex flex-wrap items-center gap-2">
-                <div className={`flex min-w-64 flex-1 items-center gap-2 rounded-full border px-4 py-2.5 ${isDark ? "border-white/20 bg-[#101318]" : "border-black/10 bg-[#fbfdf9]"}`}>
-                  <svg viewBox="0 0 24 24" className={`h-4 w-4 ${isDark ? "text-white/45" : "text-[#7a8497]"}`} fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="7" />
-                    <path d="M20 20l-3.2-3.2" />
-                  </svg>
-                  <input
-                    type="text"
-                    placeholder="Search by author, section or phrase"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className={`w-full bg-transparent text-[14px] outline-none ${isDark ? "placeholder:text-white/35" : "placeholder:text-[#81907d]"}`}
-                  />
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    <div className={`rounded-full border px-4 py-2 text-[12px] font-semibold tracking-[0.08em] ${isDark ? "border-[#8cf8c1]/35 bg-[#2ce88f]/10 text-[#8cf8c1]" : "border-[#0a8a5b]/25 bg-[#0a8a5b]/10 text-[#0a8a5b]"}`}>
+                      {displayPosts.length} POSTS
+                    </div>
+                    <div className={`rounded-full border px-4 py-2 text-[12px] font-semibold tracking-[0.08em] ${isDark ? "border-white/15 bg-white/5 text-white/75" : "border-black/10 bg-white/80 text-[#2f4533]"}`}>
+                      {totalAuthors} WRITERS
+                    </div>
+                    <div className={`rounded-full border px-4 py-2 text-[12px] font-semibold tracking-[0.08em] ${isDark ? "border-white/15 bg-white/5 text-white/75" : "border-black/10 bg-white/80 text-[#2f4533]"}`}>
+                      {sortOrder === "latest" ? "LATEST" : "OLDEST"}
+                    </div>
+                  </div>
+
+                  <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_auto]">
+                    <div className={`flex min-w-0 items-center gap-2 rounded-full border px-4 py-2.5 ${isDark ? "border-white/20 bg-[#101318]" : "border-black/10 bg-[#fbfdf9]"}`}>
+                      <svg viewBox="0 0 24 24" className={`h-4 w-4 shrink-0 ${isDark ? "text-white/45" : "text-[#7a8497]"}`} fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="11" cy="11" r="7" />
+                        <path d="M20 20l-3.2-3.2" />
+                      </svg>
+                      <input
+                        type="text"
+                        placeholder="Search by author, section or phrase"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className={`w-full bg-transparent text-[14px] outline-none ${isDark ? "placeholder:text-white/35" : "placeholder:text-[#81907d]"}`}
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setSortOrder((prev) => (prev === "latest" ? "oldest" : "latest"))}
+                      className={`rounded-full border px-5 py-2 text-[12px] font-semibold tracking-[0.08em] transition ${isDark ? "border-white/20 bg-[#1f2229] text-white/85 hover:bg-[#2a2f39]" : "border-black/10 bg-[#fbfdf9] text-[#2f4533] hover:bg-[#edf4ea]"}`}
+                    >
+                      {sortOrder === "latest" ? "LATEST" : "OLDEST"}
+                    </button>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {sections.map((section) => {
+                      const active = activeSection === section;
+                      return (
+                        <button
+                          key={section}
+                          type="button"
+                          onClick={() => setActiveSection(section)}
+                          className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold tracking-[0.08em] transition ${
+                            active
+                              ? isDark
+                                ? "border-[#2ce88f]/45 bg-[#2ce88f] text-[#09130d]"
+                                : "border-[#0a8a5b]/30 bg-[#0a8a5b] text-white"
+                              : isDark
+                                ? "border-white/12 bg-transparent text-white/72 hover:bg-white/8"
+                                : "border-black/10 bg-transparent text-[#4f684f] hover:bg-[#edf4ea]"
+                          }`}
+                        >
+                          {section}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => setSortOrder((prev) => (prev === "latest" ? "oldest" : "latest"))}
-                  className={`rounded-full border px-4 py-2 text-[12px] font-semibold tracking-[0.08em] transition ${isDark ? "border-white/20 bg-[#1f2229] text-white/85 hover:bg-[#2a2f39]" : "border-black/10 bg-[#fbfdf9] text-[#2f4533] hover:bg-[#edf4ea]"}`}
-                >
-                  {sortOrder === "latest" ? "LATEST" : "OLDEST"}
-                </button>
-
-                <span className={`rounded-full border px-4 py-2 text-[12px] font-semibold tracking-[0.08em] ${isDark ? "border-[#8cf8c1]/45 bg-[#2ce88f]/10 text-[#8cf8c1]" : "border-[#0a8a5b]/30 bg-[#0a8a5b]/10 text-[#0a8a5b]"}`}>
-                  {displayPosts.length} POSTS
-                </span>
               </div>
 
-              <div className="mt-3 flex flex-wrap gap-2">
-                {sections.map((section) => {
-                  const active = activeSection === section;
-                  return (
-                    <button
-                      key={section}
-                      type="button"
-                      onClick={() => setActiveSection(section)}
-                      className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold tracking-[0.08em] transition ${
-                        active
-                          ? isDark
-                            ? "border-[#2ce88f]/45 bg-[#2ce88f] text-[#09130d]"
-                            : "border-[#0a8a5b]/30 bg-[#0a8a5b] text-white"
-                          : isDark
-                            ? "border-white/12 bg-transparent text-white/72 hover:bg-white/8"
-                          : "border-black/10 bg-transparent text-[#4f684f] hover:bg-[#edf4ea]"
-                      }`}
-                    >
-                      {section}
-                    </button>
-                  );
-                })}
+              <div className="relative min-h-80 lg:min-h-105">
+                <img
+                  src="https://picsum.photos/seed/public-feed-banner/1200/1200"
+                  alt="Public feed banner"
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/28 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-6 md:p-7">
+                  <div className={`rounded-[26px] border p-4 backdrop-blur-md ${isDark ? "border-white/15 bg-black/25" : "border-white/20 bg-black/20"}`}>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/75">
+                      Featured Stream
+                    </p>
+                    <h2 className="mt-2 text-[24px] font-semibold leading-tight text-white md:text-[30px]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
+                      Curated words from every corner of the platform.
+                    </h2>
+                    <p className="mt-2 text-[13px] leading-relaxed text-white/82">
+                      Search, filter, and switch between sections without losing the visual focus of the banner.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </header>
@@ -187,7 +343,7 @@ export default function PublicFeed() {
                     {postPreview(featuredPost.content, 90)}
                   </h2>
                 </div>
-                <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] ${isDark ? "border-[#8cf8c1]/45 bg-[#2ce88f]/12 text-[#8cf8c1]" : "border-[#0a8a5b]/30 bg-[#0a8a5b]/10 text-[#0a8a5b]"}`}>
+                <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-widest ${isDark ? "border-[#8cf8c1]/45 bg-[#2ce88f]/12 text-[#8cf8c1]" : "border-[#0a8a5b]/30 bg-[#0a8a5b]/10 text-[#0a8a5b]"}`}>
                   {featuredPost.section}
                 </span>
               </div>
@@ -235,7 +391,7 @@ export default function PublicFeed() {
                       </div>
                     </div>
 
-                    <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.1em] ${isDark ? "border-white/15 text-white/70" : "border-black/10 text-[#5a715a]"}`}>
+                    <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest ${isDark ? "border-white/15 text-white/70" : "border-black/10 text-[#5a715a]"}`}>
                       {post.section}
                     </span>
                   </div>

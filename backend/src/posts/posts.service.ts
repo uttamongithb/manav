@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ContentType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
-type Visibility = 'public';
+type Visibility = 'public' | 'pending';
 
 export interface PostRecord {
   id: string;
@@ -11,6 +11,7 @@ export interface PostRecord {
   content: string;
   visibility: Visibility;
   createdAt: string;
+  moderationStatus?: 'review' | 'published';
 }
 
 @Injectable()
@@ -179,11 +180,10 @@ export class PostsService {
         authorId: author.id,
         tenantId: this.defaultTenantId,
         collectionId: collection.id,
-        status: 'published',
-        publishedAt: new Date(),
+        status: 'review',
         metadata: {
           section: normalizedSection,
-          visibility: 'public',
+          visibility: 'pending',
         },
       },
       include: {
@@ -201,8 +201,9 @@ export class PostsService {
       section: normalizedSection,
       author: created.author.displayName ?? created.author.username,
       content: created.body ?? created.excerpt ?? created.title,
-      visibility: 'public',
+      visibility: 'pending',
       createdAt: (created.createdAt ?? new Date()).toISOString(),
+      moderationStatus: 'review',
     };
   }
 }

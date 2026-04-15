@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { SiteNavbar } from "@/app/components/site-navbar";
 import { useTheme } from "@/app/context/theme";
 import { getPoetById } from "@/app/lib/poets-data";
 
@@ -97,9 +96,7 @@ export default function PoetProfilePage() {
   return (
     <main className={`relative isolate min-h-screen px-2 py-5 transition-colors duration-300 sm:px-4 md:h-screen md:overflow-hidden md:p-10 ${isDark ? "bg-[#0e1117] text-white" : "bg-[#f3f5f8] text-[#10131a]"}`}>
       <div className="relative z-10 h-full">
-        <SiteNavbar isDark={isDark} onToggleTheme={() => setIsDark((prev) => !prev)} activeHref="/poets" />
-
-        <div className="mt-4 flex min-h-[calc(100vh-6rem)] w-full items-center justify-center md:h-[calc(100%-4rem)] md:min-h-0 md:items-start md:justify-start md:gap-14">
+        <div className="flex min-h-[calc(100vh-2.5rem)] w-full items-center justify-center md:h-full md:min-h-0 md:items-start md:justify-start md:gap-14">
           <aside
             className={`flex w-full max-w-sm flex-col rounded-[38px] border px-6 py-5 shadow-[0_30px_80px_rgba(0,0,0,0.25)] transition-colors duration-300 md:h-full md:overflow-hidden md:px-7 md:py-6 ${
               isDark ? "border-white/20 bg-[#17181d]" : "border-black/10 bg-white"

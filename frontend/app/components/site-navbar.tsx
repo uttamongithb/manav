@@ -24,21 +24,37 @@ function buildAvatarFallbackDataUrl(name?: string) {
 }
 
 const NAV_ITEMS = [
-  { label: "POETS", href: "/poets" },
-  { label: "SHER", href: "/sher" },
-  { label: "DICTIONARY", href: "/dictionary" },
-  { label: "VIDEOS", href: "/videos" },
-  { label: "E-BOOKS", href: "/e-books" },
-  { label: "PROSE", href: "/prose" },
-  { label: "BLOG", href: "/blog" },
-  { label: "SHAYARI", href: "/shayari" },
-  { label: "QUIZ", href: "/quiz" },
-  { label: "MORE", href: "/more" },
+  { label: "Home", href: "/" },
+  { label: "About us", href: "/about-us" },
+  { label: "Contact us", href: "/contact-us" },
+  { label: "Privacy Policy", href: "/privacy-policy" },
+  {
+    label: "Links",
+    href: "/links",
+    dropdownItems: [
+      "Home Page",
+      "News",
+      "Literature",
+      "Activities",
+      "Special report",
+      "Health",
+      "Interesting",
+      "Sport",
+      "Entertainment",
+      "Donate",
+    ],
+  },
+  { label: "EBook Download", href: "/ebook-download" },
+  { label: "Archives", href: "/archives" },
 ];
 
 export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProps) {
   const { user } = useAuth();
   const [cachedAvatarUrl, setCachedAvatarUrl] = useState<string>("");
+  const isAdmin = ["admin", "superadmin"].includes(user?.role?.toLowerCase?.() ?? "");
+  const visibleNavItems = isAdmin
+    ? [...NAV_ITEMS, { label: "Admin", href: "/admin" }]
+    : NAV_ITEMS;
 
   useEffect(() => {
     if (!user?.id || typeof window === "undefined") {
@@ -89,8 +105,51 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">
-          {NAV_ITEMS.map((item) => {
-            const isActive = activeHref === item.href;
+          {visibleNavItems.map((item) => {
+            const isActive = activeHref === item.href || (item.href === "/links" && activeHref?.startsWith("/links"));
+
+            if (item.dropdownItems?.length) {
+              return (
+                <div key={item.label} className="group relative">
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-1 text-[13px] font-semibold tracking-[0.08em] transition hover:opacity-70 ${
+                      isActive
+                        ? isDark
+                          ? "text-[#8cf8c1]"
+                          : "text-[#0a8a5b]"
+                        : isDark
+                          ? "text-white/80"
+                          : "text-[#203022]"
+                    }`}
+                  >
+                    {item.label}
+                    <span className="text-[10px]">▼</span>
+                  </Link>
+
+                  <div
+                    className={`invisible absolute left-0 top-full z-50 mt-2 w-52 translate-y-1 rounded-2xl border p-2 opacity-0 shadow-xl transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100 ${
+                      isDark ? "border-white/20 bg-[#17181d]" : "border-black/10 bg-white"
+                    }`}
+                  >
+                    {item.dropdownItems.map((entry) => (
+                      <Link
+                        key={entry}
+                        href={`/links?topic=${encodeURIComponent(entry)}`}
+                        className={`block rounded-xl px-3 py-2 text-[12px] font-semibold transition ${
+                          isDark
+                            ? "text-white/80 hover:bg-white/8"
+                            : "text-[#203022] hover:bg-[#edf4ea]"
+                        }`}
+                      >
+                        {entry}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <Link
                 key={item.label}
