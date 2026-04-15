@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SiteNavbar } from "@/app/components/site-navbar";
 import { useAuth } from "@/app/context/auth";
 import { useTheme } from "@/app/context/theme";
@@ -52,6 +52,45 @@ const HERO_SLIDES = [
   },
 ];
 
+const MANAV_RECENT_CARDS = [
+  {
+    title: "Why Urdu Sounds Like Love | Guftugu with Javed Jaferi",
+    image:
+      "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1000&q=80",
+    href: "https://www.youtube.com/",
+  },
+  {
+    title: "Kal Chaudhvin Ki Raat Thi | Papon Live",
+    image:
+      "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=1000&q=80",
+    href: "https://www.youtube.com/",
+  },
+  {
+    title: "Wasim Barelvi & Shakeel Azmi Mushaira | Best Moments",
+    image:
+      "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1000&q=80",
+    href: "https://www.youtube.com/",
+  },
+  {
+    title: "Raj Babbar and Zeeshan Ayyub on Urdu Ishq and Cinema",
+    image:
+      "https://images.unsplash.com/photo-1460723237483-7a6dc9d0b212?auto=format&fit=crop&w=1000&q=80",
+    href: "https://www.youtube.com/",
+  },
+  {
+    title: "Why Mirza Ghalib is Timeless | Javed Akhtar Special",
+    image:
+      "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1000&q=80",
+    href: "https://www.youtube.com/",
+  },
+  {
+    title: "Rang-e-Ghazal: Voices That Shaped Modern Urdu",
+    image:
+      "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?auto=format&fit=crop&w=1000&q=80",
+    href: "https://www.youtube.com/",
+  },
+];
+
 function formatPostDate(value: string) {
   return new Date(value).toLocaleString(undefined, {
     month: "short",
@@ -75,6 +114,7 @@ export default function PublicFeed() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState("All");
   const [activeHeroSlide, setActiveHeroSlide] = useState(0);
+  const recentCarouselRef = useRef<HTMLDivElement | null>(null);
 
   const backendUrl = getApiBaseUrl();
 
@@ -129,6 +169,17 @@ export default function PublicFeed() {
 
   const showNextSlide = () => {
     setActiveHeroSlide((prev) => (prev + 1) % HERO_SLIDES.length);
+  };
+
+  const scrollRecentCards = (direction: "prev" | "next") => {
+    const container = recentCarouselRef.current;
+    if (!container) return;
+
+    const step = Math.round(container.clientWidth * 0.78);
+    container.scrollBy({
+      left: direction === "next" ? step : -step,
+      behavior: "smooth",
+    });
   };
 
   const sections = ["All", ...Array.from(new Set(allPublicPosts.map((post) => post.section)))];
@@ -468,6 +519,73 @@ export default function PublicFeed() {
             </section>
           </div>
         </aside>
+      </section>
+
+      <section className={`mx-auto w-[92vw] max-w-350 px-1 pb-14 pt-4 ${isDark ? "text-white" : "text-[#0e2138]"}`}>
+        <header className="text-center">
+          <p className={`text-[22px] font-semibold tracking-[0.28em] md:text-[26px] ${isDark ? "text-white/88" : "text-[#24384f]"}`} style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
+            MANAV RECENT
+          </p>
+          <p className={`mt-2 text-[14px] md:text-[16px] ${isDark ? "text-white/72" : "text-[#31465e]"}`}>
+            Watch. Share. Subscribe.
+          </p>
+        </header>
+
+        <div className="relative mt-8 md:mt-10">
+          <button
+            type="button"
+            onClick={() => scrollRecentCards("prev")}
+            aria-label="Scroll previous cards"
+            className={`absolute left-0 top-1/2 z-20 hidden h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border md:flex ${isDark ? "border-white/25 bg-[#0f131a]/85 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/90 text-[#4b5d74] hover:bg-white"}`}
+          >
+            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+
+          <div
+            ref={recentCarouselRef}
+            className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-1 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
+            {MANAV_RECENT_CARDS.map((card) => (
+              <article key={card.title} className="group w-[calc(50%-10px)] min-w-45 shrink-0 snap-start sm:w-60 sm:min-w-60">
+                <a href={card.href} target="_blank" rel="noreferrer" className="block">
+                  <div className="relative aspect-4/6 overflow-hidden rounded-3xl">
+                    <img
+                      src={card.image}
+                      alt={card.title}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                    />
+                    <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/15 to-transparent" />
+
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-black/58 text-white backdrop-blur-sm transition group-hover:scale-105">
+                        <svg viewBox="0 0 24 24" className="h-7 w-7" fill="currentColor">
+                          <path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l10.5-6.86a1 1 0 0 0 0-1.72L9.5 4.28A1 1 0 0 0 8 5.14z" />
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
+
+                  <h3 className={`mt-3 line-clamp-2 text-[14px] font-semibold leading-snug md:text-[16px] ${isDark ? "text-white/92" : "text-[#0e2742]"}`} style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
+                    {card.title}
+                  </h3>
+                </a>
+              </article>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => scrollRecentCards("next")}
+            aria-label="Scroll next cards"
+            className={`absolute right-0 top-1/2 z-20 hidden h-14 w-14 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border md:flex ${isDark ? "border-white/25 bg-[#0f131a]/85 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/90 text-[#4b5d74] hover:bg-white"}`}
+          >
+            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </button>
+        </div>
       </section>
     </main>
   );
