@@ -79,9 +79,14 @@ export default function PublicFeed() {
   const backendUrl = getApiBaseUrl();
 
   const loadPosts = async () => {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 8000);
+
     try {
       setApiError(null);
-      const res = await fetch(`${backendUrl}/posts/public`);
+      const res = await fetch(`${backendUrl}/posts/public`, {
+        signal: controller.signal,
+      });
 
       if (!res.ok) {
         throw new Error("failed_response");
@@ -91,7 +96,10 @@ export default function PublicFeed() {
       setAllPublicPosts(data);
     } catch {
       setAllPublicPosts([]);
-      setApiError("Unable to reach post service. Start backend on port 3001.");
+      setApiError(null);
+      console.warn("Public posts unavailable; rendering empty feed state.");
+    } finally {
+      window.clearTimeout(timeout);
     }
   };
 

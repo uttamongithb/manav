@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ContentType } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -16,6 +16,7 @@ export interface PostRecord {
 
 @Injectable()
 export class PostsService {
+  private readonly logger = new Logger(PostsService.name);
   private readonly defaultTenantId = 'public-tenant';
   private readonly defaultAuthorId = 'system-author';
 
@@ -120,41 +121,46 @@ export class PostsService {
     const normalizedSection = section ? this.normalizeSection(section) : undefined;
     const collectionSlug = normalizedSection ? this.sectionToSlug(normalizedSection) : undefined;
 
-    const posts = await this.prisma.content.findMany({
-      where: {
-        status: 'published',
-        ...(collectionSlug
-          ? {
-              collection: {
-                slug: collectionSlug,
-              },
-            }
-          : {}),
-      },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        author: {
-          select: {
-            displayName: true,
-            username: true,
+    try {
+      const posts = await this.prisma.content.findMany({
+        where: {
+          status: 'published',
+          ...(collectionSlug
+            ? {
+                collection: {
+                  slug: collectionSlug,
+                },
+              }
+            : {}),
+        },
+        orderBy: { createdAt: 'desc' },
+        include: {
+          author: {
+            select: {
+              displayName: true,
+              username: true,
+            },
+          },
+          collection: {
+            select: {
+              title: true,
+            },
           },
         },
-        collection: {
-          select: {
-            title: true,
-          },
-        },
-      },
-    });
+      });
 
-    return posts.map((post) => ({
-      id: post.id,
-      section: post.collection?.title ?? normalizedSection ?? 'GENERAL',
-      author: post.author.displayName ?? post.author.username,
-      content: post.body ?? post.excerpt ?? post.title,
-      visibility: 'public',
-      createdAt: (post.createdAt ?? new Date()).toISOString(),
-    }));
+      return posts.map((post) => ({
+        id: post.id,
+        section: post.collection?.title ?? normalizedSection ?? 'GENERAL',
+        author: post.author.displayName ?? post.author.username,
+        content: post.body ?? post.excerpt ?? post.title,
+        visibility: 'public',
+        createdAt: (post.createdAt ?? new Date()).toISOString(),
+      }));
+    } catch (error) {
+      this.logger.warn(`Failed to list posts: ${String(error)}`);
+      return [];
+    }
   }
 
   async create(input: { section: string; content: string; author?: string }): Promise<PostRecord> {
