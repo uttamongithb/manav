@@ -11,6 +11,9 @@ type DashboardSummary = {
   pendingPosts: number;
   publishedPosts: number;
   bannerSlides: number;
+  unreadMessages: number;
+  totalPoets: number;
+  totalPages: number;
 };
 
 type PendingPost = {
@@ -202,6 +205,37 @@ export default function AdminOverview() {
       icon: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <path d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+    },
+    {
+      label: "Unread Messages",
+      value: dashboard?.unreadMessages ?? "—",
+      color: "orange" as const,
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M4.5 6.75A2.25 2.25 0 016.75 4.5h10.5a2.25 2.25 0 012.25 2.25v7.5a2.25 2.25 0 01-2.25 2.25H11.5l-5 3.75v-3.75H6.75A2.25 2.25 0 014.5 13.5v-6.75z" />
+        </svg>
+      ),
+    },
+    {
+      label: "Poets",
+      value: dashboard?.totalPoets ?? "—",
+      color: "green" as const,
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M12 6.75l4.5 2.625v5.25L12 17.25l-4.5-2.625v-5.25L12 6.75z" />
+          <path d="M3.75 8.25L12 3.75l8.25 4.5M3.75 15.75L12 20.25l8.25-4.5" />
+        </svg>
+      ),
+    },
+    {
+      label: "Editable Pages",
+      value: dashboard?.totalPages ?? "—",
+      color: "blue" as const,
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
         </svg>
       ),
     },

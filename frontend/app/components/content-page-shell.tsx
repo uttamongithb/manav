@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { SiteNavbar } from "@/app/components/site-navbar";
+import { SiteFooter } from "@/app/components/site-footer";
 import { useTheme } from "@/app/context/theme";
+import type { ReactNode } from "react";
 
 type PageSection = {
   heading: string;
@@ -17,6 +19,7 @@ type ContentPageShellProps = {
   sections: PageSection[];
   ctaLabel?: string;
   ctaHref?: string;
+  children?: ReactNode;
 };
 
 const createHeroImage = (seed: string) =>
@@ -37,6 +40,7 @@ export function ContentPageShell({
   sections,
   ctaLabel = "Back to Home",
   ctaHref = "/",
+  children,
 }: ContentPageShellProps) {
   const { isDark, setIsDark } = useTheme();
   const chips = sections.slice(0, 5).map((section) => section.heading);
@@ -121,8 +125,12 @@ export function ContentPageShell({
               </article>
             ))}
           </div>
+
+          {children ? <div className="mt-5">{children}</div> : null}
         </div>
       </section>
+
+      <SiteFooter isDark={isDark} />
     </main>
   );
 }

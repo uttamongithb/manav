@@ -19,16 +19,10 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const THEME_CACHE_KEY = "INSAAN-theme-dark";
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const cached = localStorage.getItem(THEME_CACHE_KEY);
-    if (cached === "true") {
-      setIsDark(true);
-    }
-  }, []);
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem(THEME_CACHE_KEY) === "true";
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;

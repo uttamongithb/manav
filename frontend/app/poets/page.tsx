@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTheme } from "@/app/context/theme";
+import { getApiBaseUrl } from "@/app/lib/api-base";
 import { SiteNavbar } from "@/app/components/site-navbar";
 import { POETS, PoetGroup } from "@/app/lib/poets-data";
 
@@ -27,11 +28,40 @@ export default function PoetsPage() {
   const { isDark, setIsDark } = useTheme();
   const [query, setQuery] = useState("");
   const [groupFilter, setGroupFilter] = useState<GroupFilter>("All");
+  const [poets, setPoets] = useState(POETS);
+
+  const backendUrl = getApiBaseUrl();
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadPoets = async () => {
+      try {
+        const res = await fetch(`${backendUrl}/public/poets`);
+        if (!res.ok) {
+          return;
+        }
+
+        const data = (await res.json()) as typeof POETS;
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          setPoets(data);
+        }
+      } catch {
+        // Keep local fallback poets.
+      }
+    };
+
+    void loadPoets();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [backendUrl]);
 
   const filteredPoets = useMemo(() => {
     const normalized = query.trim().toLowerCase();
 
-    return POETS.filter((poet) => {
+    return poets.filter((poet) => {
       const matchFilter = groupFilter === "All" || poet.group.includes(groupFilter);
       const matchQuery =
         normalized.length === 0 ||
@@ -42,9 +72,9 @@ export default function PoetsPage() {
 
       return matchFilter && matchQuery;
     });
-  }, [groupFilter, query]);
+  }, [groupFilter, poets, query]);
 
-  const featuredPoet = filteredPoets[0] ?? POETS[0];
+  const featuredPoet = filteredPoets[0] ?? poets[0] ?? POETS[0];
 
   return (
     <main className={`relative min-h-screen transition-colors duration-300 ${isDark ? "bg-[#0e1117] text-white" : "bg-[#f3f5f8] text-[#10131a]"}`}>

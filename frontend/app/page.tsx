@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { SiteNavbar } from "@/app/components/site-navbar";
+import { SiteFooter } from "@/app/components/site-footer";
 import { useAuth } from "@/app/context/auth";
 import { useTheme } from "@/app/context/theme";
 import { getApiBaseUrl } from "@/app/lib/api-base";
@@ -622,6 +623,8 @@ export default function PublicFeed() {
           </button>
         </div>
       </section>
+
+      <SiteFooter isDark={isDark} />
     </main>
   );
 }

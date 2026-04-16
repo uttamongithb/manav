@@ -27,21 +27,22 @@ const NAV_ITEMS = [
   { label: "Home", href: "/" },
   { label: "About us", href: "/about-us" },
   { label: "Contact us", href: "/contact-us" },
+  { label: "Donate", href: "/donate" },
   { label: "Privacy Policy", href: "/privacy-policy" },
   {
     label: "Links",
     href: "/links",
     dropdownItems: [
-      "Home Page",
-      "News",
-      "Literature",
-      "Activities",
-      "Special report",
-      "Health",
-      "Interesting",
-      "Sport",
-      "Entertainment",
-      "Donate",
+      { label: "Home Page", href: "/links?topic=Home%20Page" },
+      { label: "News", href: "/links?topic=News" },
+      { label: "Literature", href: "/links?topic=Literature" },
+      { label: "Activities", href: "/links?topic=Activities" },
+      { label: "Special report", href: "/links?topic=Special%20report" },
+      { label: "Health", href: "/links?topic=Health" },
+      { label: "Interesting", href: "/links?topic=Interesting" },
+      { label: "Sport", href: "/links?topic=Sport" },
+      { label: "Entertainment", href: "/links?topic=Entertainment" },
+      { label: "Donate", href: "/donate" },
     ],
   },
   { label: "EBook Download", href: "/ebook-download" },
@@ -58,7 +59,6 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
 
   useEffect(() => {
     if (!user?.id || typeof window === "undefined") {
-      setCachedAvatarUrl("");
       return;
     }
 
@@ -113,7 +113,7 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
                 <div key={item.label} className="group relative">
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-1 text-[13px] font-semibold tracking-[0.08em] transition hover:opacity-70 ${
+                    className={`flex items-center gap-1 text-[14px] font-semibold tracking-[0.08em] transition hover:opacity-70 ${
                       isActive
                         ? isDark
                           ? "text-[#8cf8c1]"
@@ -124,7 +124,11 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
                     }`}
                   >
                     {item.label}
-                    <span className="text-[10px]">â–¼</span>
+                    <span className="inline-flex items-center" aria-hidden="true">
+                      <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="currentColor">
+                        <path d="M5.6 7.5L10 11.9l4.4-4.4 1 1L10 14 4.6 8.5l1-1z" />
+                      </svg>
+                    </span>
                   </Link>
 
                   <div
@@ -134,15 +138,15 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
                   >
                     {item.dropdownItems.map((entry) => (
                       <Link
-                        key={entry}
-                        href={`/links?topic=${encodeURIComponent(entry)}`}
+                        key={entry.label}
+                        href={entry.href}
                         className={`block rounded-xl px-3 py-2 text-[12px] font-semibold transition ${
                           isDark
                             ? "text-white/80 hover:bg-white/8"
                             : "text-[#203022] hover:bg-[#edf4ea]"
                         }`}
                       >
-                        {entry}
+                        {entry.label}
                       </Link>
                     ))}
                   </div>
@@ -154,7 +158,7 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
               <Link
                 key={item.label}
                 href={item.href}
-                className={`text-[13px] font-semibold tracking-[0.08em] transition hover:opacity-70 ${
+                className={`text-[14px] font-semibold tracking-[0.08em] transition hover:opacity-70 ${
                   isActive
                     ? isDark
                       ? "text-[#8cf8c1]"

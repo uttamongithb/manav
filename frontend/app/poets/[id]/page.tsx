@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useTheme } from "@/app/context/theme";
 import { getPoetById } from "@/app/lib/poets-data";
+import { getApiBaseUrl } from "@/app/lib/api-base";
 
 type PoetWork = {
   id: string;
@@ -70,9 +71,41 @@ function buildAvatarFallbackDataUrl(name: string): string {
 export default function PoetProfilePage() {
   const params = useParams<{ id: string }>();
   const poetId = String(params?.id ?? "").toLowerCase();
-  const poet = getPoetById(poetId);
   const { isDark, setIsDark } = useTheme();
   const [activeTab, setActiveTab] = useState<"ALL" | "SHER" | "GHAZAL" | "NAZM">("ALL");
+  const [poet, setPoet] = useState(() => getPoetById(poetId) ?? null);
+  const backendUrl = getApiBaseUrl();
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadPoet = async () => {
+      try {
+        const res = await fetch(`${backendUrl}/public/poets/${encodeURIComponent(poetId)}`);
+        if (!res.ok) {
+          if (isMounted) {
+            setPoet(getPoetById(poetId) ?? null);
+          }
+          return;
+        }
+
+        const data = (await res.json()) as NonNullable<ReturnType<typeof getPoetById>>;
+        if (isMounted) {
+          setPoet(data ?? getPoetById(poetId) ?? null);
+        }
+      } catch {
+        if (isMounted) {
+          setPoet(getPoetById(poetId) ?? null);
+        }
+      }
+    };
+
+    void loadPoet();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [backendUrl, poetId]);
 
   if (!poet) {
     return (

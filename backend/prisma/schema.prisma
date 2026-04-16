@@ -27,6 +27,12 @@ enum ProfileVisibility {
   private
 }
 
+enum ContactMessageStatus {
+  unread
+  read
+  archived
+}
+
 model User {
   id              String      @id @default(uuid())
   email           String      @unique @db.VarChar(255)
@@ -246,6 +252,20 @@ model UserProfile {
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
   @@map("user_profiles")
+}
+
+model ContactMessage {
+  id        String                @id @default(uuid())
+  name      String                @db.VarChar(120)
+  email     String                @db.VarChar(255)
+  category  String                @db.VarChar(100)
+  message   String                @db.Text
+  status    ContactMessageStatus  @default(unread)
+  readAt    DateTime?             @map("read_at")
+  createdAt DateTime              @default(now()) @map("created_at")
+  updatedAt DateTime              @updatedAt @map("updated_at")
+
+  @@map("contact_messages")
 }
 
 model RolePermission {

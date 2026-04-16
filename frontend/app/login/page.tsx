@@ -525,7 +525,7 @@ export default function LoginPage() {
           </div>
 
           {/* Social Login */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3">
             <button
               type="button"
               className={`rounded-xl border px-4 py-3 text-[13px] font-semibold transition ${
@@ -535,16 +535,6 @@ export default function LoginPage() {
               }`}
             >
               Google
-            </button>
-            <button
-              type="button"
-              className={`rounded-xl border px-4 py-3 text-[13px] font-semibold transition ${
-                isDark
-                  ? "border-white/15 hover:border-white/25 hover:bg-white/5"
-                  : "border-black/10 hover:border-black/20 hover:bg-black/5"
-              }`}
-            >
-              GitHub
             </button>
           </div>
 
