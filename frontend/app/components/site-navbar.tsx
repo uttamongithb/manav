@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/app/context/auth";
@@ -200,9 +201,12 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
               }`}
               title="Profile"
             >
-              <img
+              <Image
                 src={avatarSrc}
                 alt="Profile"
+                fill
+                sizes="40px"
+                unoptimized
                 className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.04]"
               />
             </Link>

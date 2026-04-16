@@ -150,9 +150,6 @@ export default function ModerationPage() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th style={{ width: 44 }}>
-                  <input type="checkbox" style={{ width: 16, height: 16, cursor: "pointer" }} />
-                </th>
                 <th>Author</th>
                 <th>Section</th>
                 <th>Preview</th>
@@ -165,7 +162,7 @@ export default function ModerationPage() {
               {filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={6}
                     style={{
                       textAlign: "center",
                       padding: "48px 16px",
@@ -180,9 +177,6 @@ export default function ModerationPage() {
               ) : (
                 filtered.map((post) => (
                   <tr key={post.id}>
-                    <td>
-                      <input type="checkbox" style={{ width: 16, height: 16, cursor: "pointer" }} />
-                    </td>
                     <td>
                       <div className="admin-table-user">
                         <div

@@ -1,7 +1,8 @@
 ﻿"use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SiteNavbar } from "@/app/components/site-navbar";
 import { SiteFooter } from "@/app/components/site-footer";
 import { useAuth } from "@/app/context/auth";
@@ -133,7 +134,7 @@ export default function PublicFeed() {
 
   const backendUrl = getApiBaseUrl();
 
-  const loadPosts = async () => {
+  const loadPosts = useCallback(async () => {
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 8000);
 
@@ -156,11 +157,11 @@ export default function PublicFeed() {
     } finally {
       window.clearTimeout(timeout);
     }
-  };
+  }, [backendUrl]);
 
   useEffect(() => {
     void loadPosts();
-  }, []);
+  }, [loadPosts]);
 
   useEffect(() => {
     const loadHomeConfig = async () => {
@@ -253,9 +254,12 @@ export default function PublicFeed() {
                 className={`absolute inset-0 transition-opacity duration-700 ${active ? "opacity-100" : "pointer-events-none opacity-0"}`}
                 aria-hidden={!active}
               >
-                <img
+                <Image
                   src={slide.image}
                   alt={slide.title}
+                  fill
+                  sizes="100vw"
+                  unoptimized
                   className="h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(100deg,rgba(0,0,0,0.7)_0%,rgba(0,0,0,0.42)_45%,rgba(0,0,0,0.15)_100%)]" />
@@ -398,9 +402,12 @@ export default function PublicFeed() {
               </div>
 
               <div className="relative min-h-80 lg:min-h-105">
-                <img
+                <Image
                   src="https://picsum.photos/seed/public-feed-banner/1200/1200"
                   alt="Public feed banner"
+                  fill
+                  sizes="(min-width: 1024px) 40vw, 100vw"
+                  unoptimized
                   className="h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/28 to-transparent" />
@@ -587,9 +594,12 @@ export default function PublicFeed() {
               <article key={card.title} className="group w-[calc(50%-10px)] min-w-45 shrink-0 snap-start sm:w-60 sm:min-w-60">
                 <a href={card.href} target="_blank" rel="noreferrer" className="block">
                   <div className="relative aspect-4/6 overflow-hidden rounded-3xl">
-                    <img
+                    <Image
                       src={card.image}
                       alt={card.title}
+                      fill
+                      sizes="(min-width: 640px) 240px, 50vw"
+                      unoptimized
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/15 to-transparent" />

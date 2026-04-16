@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import NextImage from "next/image";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getStoredAuthToken, useAuth } from "@/app/context/auth";
@@ -140,7 +141,6 @@ export function MyProfileContent() {
   const [draftByTab, setDraftByTab] = useState<Record<string, string>>(() =>
     Object.fromEntries(favoriteTabs.map((tab) => [tab, ""])) as Record<string, string>,
   );
-  const [activePosts, setActivePosts] = useState<UserPost[]>([]);
   const [allPublicPosts, setAllPublicPosts] = useState<UserPost[]>([]);
   const [isPosting, setIsPosting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -150,14 +150,20 @@ export function MyProfileContent() {
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
   const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null);
   const cacheKey = `INSAAN-profile-cache:${user?.id ?? "guest"}`;
-  const defaultProfile = buildDefaultProfile(user?.displayName || user?.username);
+  const defaultProfile = useMemo(
+    () => buildDefaultProfile(user?.displayName || user?.username),
+    [user?.displayName, user?.username],
+  );
   // Use DEFAULT_PROFILE for initial render (server-side compatible)
   const [profile, setProfile] = useState<UserProfile>(defaultProfile);
   const [draftProfile, setDraftProfile] = useState<UserProfile>(defaultProfile);
 
   const backendUrl = getApiBaseUrl();
   const authToken = getStoredAuthToken();
-  const authHeaders = authToken ? { Authorization: `Bearer ${authToken}` } : undefined;
+  const authHeaders = useMemo(
+    () => (authToken ? { Authorization: `Bearer ${authToken}` } : undefined),
+    [authToken],
+  );
   const activeDraft = draftByTab[activeTab] ?? "";
   const isPublic = profile.visibility !== "private";
   const locationParts = [profile.city, profile.state, profile.country].map((v) => v.trim()).filter(Boolean);
@@ -178,7 +184,7 @@ export function MyProfileContent() {
   const completionPercent = Math.round((profileFields.filter((field) => field.trim().length > 0).length / profileFields.length) * 100);
   const avatarSrc = profile.avatarUrl.trim() || buildAvatarFallbackDataUrl(profile.name || "User");
 
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     try {
       const res = await fetch(`${backendUrl}/profile`, {
         headers: authHeaders,
@@ -194,7 +200,7 @@ export function MyProfileContent() {
     } catch {
       setApiError("Unable to load profile from backend.");
     }
-  };
+  }, [authHeaders, backendUrl, cacheKey]);
 
   const toggleProfileVisibility = () => {
     void (async () => {
@@ -225,7 +231,7 @@ export function MyProfileContent() {
     })();
   };
 
-  const loadPosts = async (section: string) => {
+  const loadPosts = useCallback(async (section: string) => {
     try {
       setApiError(null);
 
@@ -238,21 +244,18 @@ export function MyProfileContent() {
         throw new Error("failed_response");
       }
 
-      const sectionData = (await sectionRes.json()) as UserPost[];
       const publicData = (await publicRes.json()) as UserPost[];
 
-      setActivePosts(sectionData);
       setAllPublicPosts(publicData);
     } catch {
-      setActivePosts([]);
       setAllPublicPosts([]);
       setApiError("Unable to reach post service. Start backend on port 3001.");
     }
-  };
+  }, [backendUrl]);
 
   useEffect(() => {
     void loadPosts(activeTab);
-  }, [activeTab]);
+  }, [activeTab, loadPosts]);
 
   // Hydrate profile from cache and sync with backend
   useEffect(() => {
@@ -266,7 +269,7 @@ export function MyProfileContent() {
     }
     // Background fetch to keep cache in sync with server
     void loadProfile();
-  }, [user?.id, cacheKey]);
+  }, [cacheKey, defaultProfile, loadProfile, user?.id]);
 
   useEffect(() => {
     return () => {
@@ -421,12 +424,15 @@ export function MyProfileContent() {
                   isDark ? "border-white/20 ring-white/5" : "border-black/10 ring-black/5"
                 }`}
               >
-                <img
+                <NextImage
                   src={avatarSrc}
                   alt="User profile photo"
+                  width={96}
+                  height={96}
+                  unoptimized
                   className="h-full w-full object-cover"
                   loading="eager"
-                  fetchPriority="high"
+                  priority
                 />
               </div>
 
@@ -671,9 +677,12 @@ export function MyProfileContent() {
                       isDark ? "border-white/15" : "border-black/10"
                     }`}
                   >
-                    <img
+                    <NextImage
                       src={avatarSrc}
                       alt="Profile avatar"
+                      width={44}
+                      height={44}
+                      unoptimized
                       className="h-full w-full object-cover"
                     />
                   </div>
@@ -893,9 +902,12 @@ export function MyProfileContent() {
             <div className="grid gap-3 md:grid-cols-2">
               <div className="md:col-span-2 flex items-center gap-4 rounded-xl border border-dashed p-3">
                 <div className="h-16 w-16 overflow-hidden rounded-full border">
-                  <img
+                    <NextImage
                     src={pendingAvatarPreview ?? (draftProfile.avatarUrl || buildAvatarFallbackDataUrl(draftProfile.name || "User"))}
                     alt="Avatar preview"
+                      width={64}
+                      height={64}
+                      unoptimized
                     className="h-full w-full object-cover"
                   />
                 </div>

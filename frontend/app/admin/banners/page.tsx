@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { getStoredAuthToken } from "@/app/context/auth";
 import { getApiBaseUrl } from "@/app/lib/api-base";
@@ -190,6 +191,7 @@ export default function BannersPage() {
               {slide.image && (
                 <div
                   style={{
+                    position: "relative",
                     width: "100%",
                     height: 140,
                     borderRadius: 10,
@@ -198,16 +200,15 @@ export default function BannersPage() {
                     background: "#f3f4f6",
                   }}
                 >
-                  <img
+                  <Image
                     src={slide.image}
                     alt={slide.title || "Banner preview"}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
+                    fill
+                    sizes="(min-width: 768px) 40vw, 100vw"
+                    unoptimized
+                    style={{ objectFit: "cover" }}
                     onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = "none";
+                      e.currentTarget.style.display = "none";
                     }}
                   />
                 </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { getStoredAuthToken } from "@/app/context/auth";
 import { getApiBaseUrl } from "@/app/lib/api-base";
@@ -145,11 +146,14 @@ export default function AdminMediaPage() {
           assets.map((asset) => (
             <div key={asset.filename} className="admin-card" style={{ overflow: "hidden" }}>
               {isImage(asset.mimeType) ? (
-                <div style={{ height: 160, background: "#f3f4f6" }}>
-                  <img
+                <div style={{ position: "relative", height: 160, background: "#f3f4f6" }}>
+                  <Image
                     src={`${backendUrl}${asset.path}`}
                     alt={asset.filename}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    fill
+                    sizes="(min-width: 1200px) 25vw, (min-width: 768px) 33vw, 100vw"
+                    unoptimized
+                    style={{ objectFit: "cover" }}
                   />
                 </div>
               ) : (

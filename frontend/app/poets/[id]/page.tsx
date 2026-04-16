@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useTheme } from "@/app/context/theme";
 import { getPoetById } from "@/app/lib/poets-data";
@@ -71,7 +72,7 @@ function buildAvatarFallbackDataUrl(name: string): string {
 export default function PoetProfilePage() {
   const params = useParams<{ id: string }>();
   const poetId = String(params?.id ?? "").toLowerCase();
-  const { isDark, setIsDark } = useTheme();
+  const { isDark } = useTheme();
   const [activeTab, setActiveTab] = useState<"ALL" | "SHER" | "GHAZAL" | "NAZM">("ALL");
   const [poet, setPoet] = useState(() => getPoetById(poetId) ?? null);
   const backendUrl = getApiBaseUrl();
@@ -142,7 +143,7 @@ export default function PoetProfilePage() {
                     isDark ? "border-white/20 ring-white/5" : "border-black/10 ring-black/5"
                   }`}
                 >
-                  <img src={avatarSrc} alt={`${poet.name} profile photo`} className="h-full w-full object-cover" loading="eager" fetchPriority="high" />
+                  <Image src={avatarSrc} alt={`${poet.name} profile photo`} width={96} height={96} unoptimized className="h-full w-full object-cover" loading="eager" priority />
                 </div>
 
                 <h1 className="text-[34px] font-semibold leading-tight tracking-[-0.02em]">{poet.name}</h1>

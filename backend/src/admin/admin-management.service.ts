@@ -621,7 +621,8 @@ export class AdminManagementService {
 
   async getPoetById(poetId: string) {
     const poets = await this.getPoets();
-    return poets.find((poet) => poet.id === poetId.trim().toLowerCase()) ?? null;
+    const normalizedPoetId = poetId.trim().toLowerCase();
+    return poets.find((poet) => poet.id.trim().toLowerCase() === normalizedPoetId) ?? null;
   }
 
   async updatePoets(input: unknown, adminUserId: string) {

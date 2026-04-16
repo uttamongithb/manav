@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useTheme } from "@/app/context/theme";
@@ -172,9 +173,12 @@ export default function PoetsPage() {
               </div>
 
               <div className="relative min-h-72">
-                <img
+                <Image
                   src={featuredPoet.heroImage}
                   alt={featuredPoet.name}
+                  fill
+                  sizes="(min-width: 1024px) 40vw, 100vw"
+                  unoptimized
                   className="h-full w-full object-cover"
                   onError={(event) => {
                     event.currentTarget.onerror = null;
@@ -202,7 +206,7 @@ export default function PoetsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start gap-3">
                       <Link href={`/poets/${poet.id}`}>
-                        <img src={poet.avatarUrl} alt={poet.name} className="h-14 w-14 shrink-0 rounded-full border object-cover" />
+                        <Image src={poet.avatarUrl} alt={poet.name} width={56} height={56} unoptimized className="h-14 w-14 shrink-0 rounded-full border object-cover" />
                       </Link>
                       <div className="min-w-0">
                         <h3 className="text-[20px] font-semibold tracking-[-0.02em]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>

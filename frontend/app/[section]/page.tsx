@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -154,7 +155,7 @@ export default function SectionPage() {
         setIsLoading(false);
       }
     })();
-  }, [section, sectionSlug]);
+  }, [backendUrl, section, sectionSlug]);
 
   const filteredPosts = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -285,9 +286,12 @@ export default function SectionPage() {
             </div>
 
             <div className="relative min-h-72">
-              <img
+              <Image
                 src={createSectionImage(`${sectionSlug}-featured`) }
                 alt={`${section.title} featured`}
+                fill
+                sizes="(min-width: 1024px) 40vw, 100vw"
+                unoptimized
                 className="h-full w-full object-cover"
                 onError={(event) => {
                   event.currentTarget.onerror = null;
@@ -356,10 +360,13 @@ export default function SectionPage() {
                   </div>
 
                   <div className="w-full md:w-56">
-                    <div className="overflow-hidden rounded-xl border border-white/10">
-                      <img
+                    <div className="relative overflow-hidden rounded-xl border border-white/10">
+                      <Image
                         src={createSectionImage(`${sectionSlug}-${post.id}`)}
                         alt={`${section.title} poster`}
+                        width={224}
+                        height={128}
+                        unoptimized
                         className="h-32 w-full object-cover"
                       />
                     </div>

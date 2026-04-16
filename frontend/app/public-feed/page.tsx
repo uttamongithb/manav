@@ -35,11 +35,6 @@ export default function PublicFeedPage() {
     return matchesQuery && matchesSection;
   });
 
-  const totalAuthors = new Set(posts.map((post) => post.author)).size;
-  const latestPost = posts[0];
-
-  const featuredPost = filteredPosts[0] ?? latestPost;
-
   useEffect(() => {
     void (async () => {
       try {
@@ -59,7 +54,7 @@ export default function PublicFeedPage() {
         setIsLoading(false);
       }
     })();
-  }, []);
+  }, [backendUrl]);
 
   return (
     <main className={`relative isolate min-h-screen overflow-hidden px-4 py-4 transition-colors duration-300 md:px-6 lg:px-8 ${isDark ? "text-white" : "text-[#10131a]"}`}>

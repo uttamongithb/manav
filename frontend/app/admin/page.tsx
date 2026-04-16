@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useAuth, getStoredAuthToken } from "@/app/context/auth";
+import { getStoredAuthToken } from "@/app/context/auth";
 import { getApiBaseUrl } from "@/app/lib/api-base";
 import Link from "next/link";
 
@@ -54,7 +54,6 @@ function postPreview(content: string, max = 60) {
 }
 
 export default function AdminOverview() {
-  const { user } = useAuth();
   const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
   const [pendingPosts, setPendingPosts] = useState<PendingPost[]>([]);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -146,20 +145,28 @@ export default function AdminOverview() {
       ? `conic-gradient(${conicStops.join(", ")})`
       : "conic-gradient(#e5e7eb 0% 100%)";
 
-  // Bar chart mock data (month-based counts)
+  // Build monthly activity using real pending submissions by month.
   const monthlyData = useMemo(() => {
-    const thisYear = MONTHS.map(() => Math.floor(Math.random() * 20) + 5);
-    const lastYear = MONTHS.map(() => Math.floor(Math.random() * 15) + 3);
+    const currentYear = new Date().getFullYear();
+    const thisYear = Array.from({ length: MONTHS.length }, () => 0);
+    const lastYear = Array.from({ length: MONTHS.length }, () => 0);
 
-    // If we have real pending data, use it to populate current month
-    if (dashboard) {
-      const currentMonth = new Date().getMonth();
-      thisYear[currentMonth] = dashboard.totalPosts || thisYear[currentMonth]!;
-    }
+    pendingPosts.forEach((post) => {
+      const date = new Date(post.createdAt);
+      if (Number.isNaN(date.getTime())) {
+        return;
+      }
+      const month = date.getMonth();
+      const year = date.getFullYear();
+      if (year === currentYear) {
+        thisYear[month] += 1;
+      } else if (year === currentYear - 1) {
+        lastYear[month] += 1;
+      }
+    });
 
     return { thisYear, lastYear };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dashboard?.totalPosts]);
+  }, [pendingPosts]);
 
   const maxBarVal = Math.max(
     ...monthlyData.thisYear,
@@ -241,8 +248,7 @@ export default function AdminOverview() {
     },
   ];
 
-  // Recent (latest approved) - for demo, reverse & slice pending
-  const recentPublished = [...pendingPosts].reverse().slice(0, 5);
+  const recentPendingPosts = [...pendingPosts].reverse().slice(0, 5);
 
   return (
     <>
@@ -286,10 +292,10 @@ export default function AdminOverview() {
 
       {/* ── Row 2: Charts ────────────────────────────────────── */}
       <div className="admin-grid admin-grid-8-4" style={{ marginBottom: 24 }}>
-        {/* Bar Chart — Posts Activity */}
+        {/* Bar Chart — Pending Activity */}
         <div className="admin-card">
           <div className="admin-card-header">
-            <h2 className="admin-card-title">Posts Activity</h2>
+            <h2 className="admin-card-title">Pending Activity</h2>
             <button
               type="button"
               className="admin-card-action"
@@ -387,20 +393,20 @@ export default function AdminOverview() {
 
       {/* ── Row 3: Recent + Moderation ───────────────────────── */}
       <div className="admin-grid admin-grid-4-8">
-        {/* Recent Posts */}
+        {/* Recent Pending Posts */}
         <div className="admin-card">
           <div className="admin-card-header">
-            <h2 className="admin-card-title">Recent Posts</h2>
+            <h2 className="admin-card-title">Recent Pending Posts</h2>
           </div>
           <div className="admin-card-body">
-            {recentPublished.length === 0 ? (
+            {recentPendingPosts.length === 0 ? (
               <div className="admin-empty">
                 <div className="admin-empty-icon">📄</div>
                 <div className="admin-empty-text">No recent posts</div>
               </div>
             ) : (
               <ul className="admin-recent-list">
-                {recentPublished.map((post) => (
+                {recentPendingPosts.map((post) => (
                   <li key={post.id} className="admin-recent-item">
                     <div className="admin-recent-thumb">📝</div>
                     <div className="admin-recent-info">

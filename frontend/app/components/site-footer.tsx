@@ -119,19 +119,19 @@ export function SiteFooter({ isDark = false }: SiteFooterProps) {
     <footer
       className={`mt-8 border-t ${
         isDark
-          ? "border-white/10 bg-[#4f4f52] text-white"
-          : "border-black/10 bg-[#555557] text-white"
+          ? "border-white/10 bg-[#111a16] text-[#e7f4ee]"
+          : "border-black/10 bg-[#eaf3ea] text-[#1c3527]"
       }`}
     >
       <div className="mx-auto w-[92vw] max-w-350 px-3 py-8 md:px-2 md:py-9">
         <div className="grid gap-8 lg:grid-cols-[1fr_1fr_1fr_1.2fr] lg:gap-x-7">
           <div className="space-y-10">
             <section>
-              <h3 className="text-[27px] font-semibold tracking-[0.05em] text-[#f8d88f]">QUICK LINKS</h3>
+              <h3 className={`text-[27px] font-semibold tracking-[0.05em] ${isDark ? "text-[#8cf8c1]" : "text-[#0a8a5b]"}`}>QUICK LINKS</h3>
               <ul className="mt-4 space-y-2.5">
                 {QUICK_LINKS.map((item) => (
                   <li key={item.label}>
-                    <Link href={item.href} className="text-[16px] leading-snug text-white transition hover:text-[#10c4ff]">
+                    <Link href={item.href} className={`text-[16px] leading-snug transition ${isDark ? "text-white/86 hover:text-[#8cf8c1]" : "text-[#2b4634] hover:text-[#0a8a5b]"}`}>
                       {item.label}
                     </Link>
                   </li>
@@ -140,7 +140,7 @@ export function SiteFooter({ isDark = false }: SiteFooterProps) {
             </section>
 
             <section>
-              <h3 className="text-[27px] font-semibold tracking-[0.05em] text-[#f8d88f]">FOLLOW US</h3>
+              <h3 className={`text-[27px] font-semibold tracking-[0.05em] ${isDark ? "text-[#8cf8c1]" : "text-[#0a8a5b]"}`}>FOLLOW US</h3>
               <div className="mt-3 flex flex-wrap items-center gap-3">
                 {SOCIAL_LINKS.map((social) => (
                   <a
@@ -149,7 +149,7 @@ export function SiteFooter({ isDark = false }: SiteFooterProps) {
                     target="_blank"
                     rel="noreferrer"
                     aria-label={social.label}
-                    className="inline-flex h-7 min-w-7 items-center justify-center text-[23px] font-semibold text-white transition hover:text-[#10c4ff]"
+                    className={`inline-flex h-7 min-w-7 items-center justify-center text-[23px] font-semibold transition ${isDark ? "text-white/86 hover:text-[#8cf8c1]" : "text-[#2b4634] hover:text-[#0a8a5b]"}`}
                   >
                     {social.icon}
                   </a>
@@ -159,11 +159,11 @@ export function SiteFooter({ isDark = false }: SiteFooterProps) {
           </div>
 
           <section>
-            <h3 className="text-[27px] font-semibold tracking-[0.05em] text-[#f8d88f]">SITE INFO</h3>
+            <h3 className={`text-[27px] font-semibold tracking-[0.05em] ${isDark ? "text-[#8cf8c1]" : "text-[#0a8a5b]"}`}>SITE INFO</h3>
             <ul className="mt-4 space-y-2.5">
               {SITE_INFO_LINKS.map((item) => (
                 <li key={item.label}>
-                  <Link href={item.href} className="text-[16px] leading-snug text-white transition hover:text-[#10c4ff]">
+                  <Link href={item.href} className={`text-[16px] leading-snug transition ${isDark ? "text-white/86 hover:text-[#8cf8c1]" : "text-[#2b4634] hover:text-[#0a8a5b]"}`}>
                     {item.label}
                   </Link>
                 </li>
@@ -173,11 +173,11 @@ export function SiteFooter({ isDark = false }: SiteFooterProps) {
 
           <div className="space-y-10">
             <section>
-              <h3 className="text-[27px] font-semibold tracking-[0.05em] text-[#f8d88f]">OUR PLATFORM</h3>
+              <h3 className={`text-[27px] font-semibold tracking-[0.05em] ${isDark ? "text-[#8cf8c1]" : "text-[#0a8a5b]"}`}>OUR PLATFORM</h3>
               <ul className="mt-4 space-y-2.5">
                 {PLATFORM_LINKS.map((item) => (
                   <li key={item.label}>
-                    <Link href={item.href} className="text-[16px] leading-snug text-white transition hover:text-[#10c4ff]">
+                    <Link href={item.href} className={`text-[16px] leading-snug transition ${isDark ? "text-white/86 hover:text-[#8cf8c1]" : "text-[#2b4634] hover:text-[#0a8a5b]"}`}>
                       {item.label}
                     </Link>
                   </li>
@@ -186,35 +186,35 @@ export function SiteFooter({ isDark = false }: SiteFooterProps) {
             </section>
 
             <section>
-              <h3 className="whitespace-nowrap text-[25px] font-semibold tracking-[0.04em] text-[#f8d88f]">
+              <h3 className={`whitespace-nowrap text-[25px] font-semibold tracking-[0.04em] ${isDark ? "text-[#8cf8c1]" : "text-[#0a8a5b]"}`}>
                 DOWNLOAD INSAAN APP
               </h3>
               <div className="mt-3 flex flex-nowrap gap-2.5">
-                <a
-                  href="#"
-                  className="inline-flex h-10 shrink-0 items-center justify-center border border-white/20 bg-black/45 px-3.5 text-[13px] font-semibold text-white whitespace-nowrap"
+                <Link
+                  href="/contact-us"
+                  className={`inline-flex h-10 shrink-0 items-center justify-center border px-3.5 text-[13px] font-semibold whitespace-nowrap transition ${isDark ? "border-[#2ce88f]/35 bg-[#15231b] text-[#dff7ea] hover:bg-[#1a2b21]" : "border-[#0a8a5b]/25 bg-white text-[#1f3a2a] hover:bg-[#e4f3ea]"}`}
                 >
                   Get it on Google Play
-                </a>
-                <a
-                  href="#"
-                  className="inline-flex h-10 shrink-0 items-center justify-center border border-white/20 bg-black/45 px-3.5 text-[13px] font-semibold text-white whitespace-nowrap"
+                </Link>
+                <Link
+                  href="/contact-us"
+                  className={`inline-flex h-10 shrink-0 items-center justify-center border px-3.5 text-[13px] font-semibold whitespace-nowrap transition ${isDark ? "border-[#2ce88f]/35 bg-[#15231b] text-[#dff7ea] hover:bg-[#1a2b21]" : "border-[#0a8a5b]/25 bg-white text-[#1f3a2a] hover:bg-[#e4f3ea]"}`}
                 >
                   Download on App Store
-                </a>
+                </Link>
               </div>
             </section>
           </div>
 
           <section>
-            <h3 className="text-[27px] font-semibold tracking-[0.05em] text-[#f8d88f]">WRITE TO US</h3>
+            <h3 className={`text-[27px] font-semibold tracking-[0.05em] ${isDark ? "text-[#8cf8c1]" : "text-[#0a8a5b]"}`}>WRITE TO US</h3>
             <form className="mt-4 space-y-2.5" onSubmit={handleSubmit}>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="NAME"
-                className="h-9 w-full rounded-none border border-transparent bg-white/88 px-3 text-[14px] text-[#10131a] outline-none placeholder:text-[#87909a] focus:border-[#10c4ff]"
+                className={`h-9 w-full rounded-none border px-3 text-[14px] outline-none transition placeholder:text-[#87909a] ${isDark ? "border-white/12 bg-white/92 text-[#10131a] focus:border-[#2ce88f]" : "border-[#0a8a5b]/15 bg-white text-[#10131a] focus:border-[#0a8a5b]"}`}
                 required
               />
               <input
@@ -222,13 +222,13 @@ export function SiteFooter({ isDark = false }: SiteFooterProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="E-MAIL"
-                className="h-9 w-full rounded-none border border-transparent bg-white/88 px-3 text-[14px] text-[#10131a] outline-none placeholder:text-[#87909a] focus:border-[#10c4ff]"
+                className={`h-9 w-full rounded-none border px-3 text-[14px] outline-none transition placeholder:text-[#87909a] ${isDark ? "border-white/12 bg-white/92 text-[#10131a] focus:border-[#2ce88f]" : "border-[#0a8a5b]/15 bg-white text-[#10131a] focus:border-[#0a8a5b]"}`}
                 required
               />
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="h-9 w-full rounded-none border border-transparent bg-white/88 px-3 text-[14px] text-[#10131a] outline-none focus:border-[#10c4ff]"
+                className={`h-9 w-full rounded-none border px-3 text-[14px] outline-none transition ${isDark ? "border-white/12 bg-white/92 text-[#10131a] focus:border-[#2ce88f]" : "border-[#0a8a5b]/15 bg-white text-[#10131a] focus:border-[#0a8a5b]"}`}
                 required
               >
                 <option value="" disabled>
@@ -243,20 +243,20 @@ export function SiteFooter({ isDark = false }: SiteFooterProps) {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="MESSAGE"
-                className="w-full resize-none rounded-none border border-transparent bg-white/88 px-3 py-2 text-[14px] text-[#10131a] outline-none placeholder:text-[#87909a] focus:border-[#10c4ff]"
+                className={`w-full resize-none rounded-none border px-3 py-2 text-[14px] outline-none transition placeholder:text-[#87909a] ${isDark ? "border-white/12 bg-white/92 text-[#10131a] focus:border-[#2ce88f]" : "border-[#0a8a5b]/15 bg-white text-[#10131a] focus:border-[#0a8a5b]"}`}
                 required
               />
 
-              <label className="flex items-start gap-2 text-[14px] leading-snug text-white/92">
+              <label className={`flex items-start gap-2 text-[14px] leading-snug ${isDark ? "text-white/92" : "text-[#2b4634]"}`}>
                 <input
                   type="checkbox"
                   checked={agreed}
                   onChange={(e) => setAgreed(e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-white/60 bg-transparent"
+                  className={`mt-1 h-4 w-4 rounded ${isDark ? "border-white/60 bg-transparent" : "border-[#0a8a5b]/40 bg-white"}`}
                   required
                 />
                 <span>
-                  I have read and I agree to INSAAN <Link href="/privacy-policy" className="text-[#10c4ff]">Privacy Policy</Link>
+                  I have read and I agree to INSAAN <Link href="/privacy-policy" className={`${isDark ? "text-[#8cf8c1]" : "text-[#0a8a5b]"}`}>Privacy Policy</Link>
                 </span>
               </label>
 
@@ -266,7 +266,7 @@ export function SiteFooter({ isDark = false }: SiteFooterProps) {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex h-10 items-center justify-center gap-2 bg-[#10c4ff] px-6 text-[14px] font-semibold tracking-[0.06em] text-white transition hover:bg-[#35d1ff]"
+                className={`inline-flex h-10 items-center justify-center gap-2 px-6 text-[14px] font-semibold tracking-[0.06em] transition ${isDark ? "bg-[#2ce88f] text-[#0b1112] hover:bg-[#45f39f]" : "bg-[#0a8a5b] text-white hover:bg-[#0d9d67]"}`}
               >
                 <span>{isSubmitting ? "SENDING..." : "SEND MESSAGE"}</span>
               </button>
@@ -275,20 +275,20 @@ export function SiteFooter({ isDark = false }: SiteFooterProps) {
         </div>
       </div>
 
-      <div className="border-t border-black/20 bg-[#2f3033]">
+      <div className={`border-t ${isDark ? "border-white/10 bg-[#0d1411]" : "border-[#0a8a5b]/15 bg-[#dcebdc]"}`}>
         <div className="mx-auto flex w-[92vw] max-w-350 flex-col items-center justify-between gap-2 px-3 py-3 md:flex-row md:px-2">
-          <div className="flex items-center gap-4 text-[14px] font-semibold uppercase tracking-[0.03em] text-white">
-            <Link href="/privacy-policy" className="transition hover:text-[#10c4ff]">
+          <div className={`flex items-center gap-4 text-[14px] font-semibold uppercase tracking-[0.03em] ${isDark ? "text-white" : "text-[#23452f]"}`}>
+            <Link href="/privacy-policy" className={`transition ${isDark ? "hover:text-[#8cf8c1]" : "hover:text-[#0a8a5b]"}`}>
               Privacy Policy
             </Link>
-            <Link href="/links" className="transition hover:text-[#10c4ff]">
+            <Link href="/links" className={`transition ${isDark ? "hover:text-[#8cf8c1]" : "hover:text-[#0a8a5b]"}`}>
               Terms of Use
             </Link>
-            <Link href="/about-us" className="transition hover:text-[#10c4ff]">
+            <Link href="/about-us" className={`transition ${isDark ? "hover:text-[#8cf8c1]" : "hover:text-[#0a8a5b]"}`}>
               Copyright
             </Link>
           </div>
-          <p className="text-[14px] text-white">© {year} INSAAN Foundation. All rights reserved.</p>
+          <p className={`text-[14px] ${isDark ? "text-white" : "text-[#23452f]"}`}>© {year} INSAAN Foundation. All rights reserved.</p>
         </div>
       </div>
     </footer>

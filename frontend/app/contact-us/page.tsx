@@ -65,8 +65,8 @@ export default function ContactUsPage() {
       sections={content.sections}
       ctaLabel={content.ctaLabel || "Back to Home"}
       ctaHref={content.ctaHref || "/"}
-      children={
-          <section className="grid gap-4 lg:grid-cols-[1fr_1.1fr]">
+    >
+      <section className="grid gap-4 lg:grid-cols-[1fr_1.1fr]">
             <div className="rounded-[30px] border border-black/10 bg-white/95 p-6 md:p-7">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#5e775f]">Direct Inbox</p>
               <h2 className="mt-2 text-[28px] font-semibold tracking-[-0.03em]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
@@ -165,8 +165,7 @@ export default function ContactUsPage() {
                 {isSubmitting ? "Sending..." : "Send Message"}
               </button>
             </form>
-          </section>
-        }
-    />
+      </section>
+    </ContentPageShell>
   );
 }

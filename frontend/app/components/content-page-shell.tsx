@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { SiteNavbar } from "@/app/components/site-navbar";
 import { SiteFooter } from "@/app/components/site-footer";
@@ -89,9 +90,12 @@ export function ContentPageShell({
               </div>
 
               <div className="relative min-h-72">
-                <img
+                <Image
                   src={heroImage}
                   alt={`${title} featured image`}
+                  fill
+                  sizes="(min-width: 1024px) 40vw, 100vw"
+                  unoptimized
                   className="h-full w-full object-cover"
                   onError={(event) => {
                     event.currentTarget.onerror = null;
