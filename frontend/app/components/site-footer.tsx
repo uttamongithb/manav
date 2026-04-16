@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { FormEvent, useState } from "react";
+import { getApiBaseUrl } from "@/app/lib/api-base";
 
 type SiteFooterProps = {
   isDark?: boolean;
@@ -61,6 +63,57 @@ const SOCIAL_LINKS = [
 
 export function SiteFooter({ isDark = false }: SiteFooterProps) {
   const year = new Date().getFullYear();
+  const backendUrl = getApiBaseUrl();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [category, setCategory] = useState("");
+  const [message, setMessage] = useState("");
+  const [agreed, setAgreed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!agreed) {
+      setSuccessMsg(null);
+      setErrorMsg("Please accept the privacy policy before submitting.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSuccessMsg(null);
+    setErrorMsg(null);
+
+    try {
+      const res = await fetch(`${backendUrl}/contact-messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          category,
+          message,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("submit_failed");
+      }
+
+      setName("");
+      setEmail("");
+      setCategory("");
+      setMessage("");
+      setAgreed(false);
+      setSuccessMsg("Message sent successfully. Our team will review it shortly.");
+    } catch {
+      setErrorMsg("Unable to send message right now. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <footer
@@ -155,46 +208,67 @@ export function SiteFooter({ isDark = false }: SiteFooterProps) {
 
           <section>
             <h3 className="text-[27px] font-semibold tracking-[0.05em] text-[#f8d88f]">WRITE TO US</h3>
-            <form className="mt-4 space-y-2.5" onSubmit={(e) => e.preventDefault()}>
+            <form className="mt-4 space-y-2.5" onSubmit={handleSubmit}>
               <input
                 type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="NAME"
                 className="h-9 w-full rounded-none border border-transparent bg-white/88 px-3 text-[14px] text-[#10131a] outline-none placeholder:text-[#87909a] focus:border-[#10c4ff]"
+                required
               />
               <input
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="E-MAIL"
                 className="h-9 w-full rounded-none border border-transparent bg-white/88 px-3 text-[14px] text-[#10131a] outline-none placeholder:text-[#87909a] focus:border-[#10c4ff]"
+                required
               />
               <select
-                defaultValue=""
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
                 className="h-9 w-full rounded-none border border-transparent bg-white/88 px-3 text-[14px] text-[#10131a] outline-none focus:border-[#10c4ff]"
+                required
               >
                 <option value="" disabled>
                   SELECT CATEGORY
                 </option>
-                <option>General</option>
-                <option>Support</option>
-                <option>Feedback</option>
+                <option value="General">General</option>
+                <option value="Support">Support</option>
+                <option value="Feedback">Feedback</option>
               </select>
               <textarea
                 rows={5}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
                 placeholder="MESSAGE"
                 className="w-full resize-none rounded-none border border-transparent bg-white/88 px-3 py-2 text-[14px] text-[#10131a] outline-none placeholder:text-[#87909a] focus:border-[#10c4ff]"
+                required
               />
 
               <label className="flex items-start gap-2 text-[14px] leading-snug text-white/92">
-                <input type="checkbox" className="mt-1 h-4 w-4 rounded border-white/60 bg-transparent" />
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-white/60 bg-transparent"
+                  required
+                />
                 <span>
                   I have read and I agree to INSAAN <Link href="/privacy-policy" className="text-[#10c4ff]">Privacy Policy</Link>
                 </span>
               </label>
 
+              {successMsg ? <p className="text-[13px] font-medium text-[#8cf8c1]">{successMsg}</p> : null}
+              {errorMsg ? <p className="text-[13px] font-medium text-[#ffd1d1]">{errorMsg}</p> : null}
+
               <button
                 type="submit"
+                disabled={isSubmitting}
                 className="inline-flex h-10 items-center justify-center gap-2 bg-[#10c4ff] px-6 text-[14px] font-semibold tracking-[0.06em] text-white transition hover:bg-[#35d1ff]"
               >
-                <span>SEND MESSAGE</span>
+                <span>{isSubmitting ? "SENDING..." : "SEND MESSAGE"}</span>
               </button>
             </form>
           </section>
