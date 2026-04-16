@@ -87,7 +87,6 @@ export default function ModerationPage() {
   return (
     <>
       <div className="admin-page-header">
-        <h1 className="admin-page-title">Moderation</h1>
         <p className="admin-page-subtitle">
           Review and approve pending content before it goes live.
         </p>

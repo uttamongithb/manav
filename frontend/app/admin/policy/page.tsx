@@ -94,7 +94,6 @@ export default function PolicyPage() {
           }}
         >
           <div>
-            <h1 className="admin-page-title">Privacy Policy</h1>
             <p className="admin-page-subtitle">
               Edit the site-wide privacy policy. Content is publicly visible at
               /privacy-policy.

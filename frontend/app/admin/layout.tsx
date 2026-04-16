@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -64,13 +64,13 @@ export default function AdminLayout({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const saved = window.localStorage.getItem("manav-admin-theme");
+    const saved = window.localStorage.getItem("INSAAN-admin-theme");
     setIsDarkMode(saved === "dark");
   }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    window.localStorage.setItem("manav-admin-theme", isDarkMode ? "dark" : "light");
+    window.localStorage.setItem("INSAAN-admin-theme", isDarkMode ? "dark" : "light");
   }, [isDarkMode]);
 
   useEffect(() => {
@@ -195,7 +195,7 @@ export default function AdminLayout({
           <Link href="/admin" className="admin-sidebar-brand">
             <div className="admin-sidebar-logo">M</div>
             <div className="admin-sidebar-brand-text">
-              <span className="admin-sidebar-brand-name">Manav</span>
+              <span className="admin-sidebar-brand-name">INSAAN</span>
               <span className="admin-sidebar-brand-sub">Literary Platform</span>
             </div>
           </Link>
@@ -301,3 +301,4 @@ export default function AdminLayout({
     </div>
   );
 }
+

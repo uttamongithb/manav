@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { ContentPageShell } from "@/app/components/content-page-shell";
@@ -10,7 +10,7 @@ export default function LinksPage() {
         activeHref="/links"
         eyebrow="Links"
         title="Platform Navigation"
-        subtitle="A quick jump table to major reading, writing, and profile areas across Manav."
+        subtitle="A quick jump table to major reading, writing, and profile areas across INSAAN."
         sections={[
           {
             heading: "Reading",
@@ -52,3 +52,4 @@ export default function LinksPage() {
     </>
   );
 }
+

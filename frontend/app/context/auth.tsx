@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   createContext,
@@ -28,8 +28,8 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const USER_CACHE_KEY = "manav-user-cache";
-const AUTH_TOKEN_KEY = "manav-auth-token";
+const USER_CACHE_KEY = "INSAAN-user-cache";
+const AUTH_TOKEN_KEY = "INSAAN-auth-token";
 
 export function getStoredAuthToken(): string | null {
   if (typeof window === "undefined") {
@@ -110,3 +110,4 @@ export function useAuth() {
   }
   return context;
 }
+

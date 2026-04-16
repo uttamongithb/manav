@@ -124,7 +124,6 @@ export default function BannersPage() {
           }}
         >
           <div>
-            <h1 className="admin-page-title">Banner Studio</h1>
             <p className="admin-page-subtitle">
               Manage homepage hero banner slides. Changes go live after saving.
             </p>

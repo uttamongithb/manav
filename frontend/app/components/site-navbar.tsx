@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -62,7 +62,7 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
       return;
     }
 
-    const cacheKey = `manav-profile-cache:${user.id}`;
+    const cacheKey = `INSAAN-profile-cache:${user.id}`;
     const loadAvatar = () => {
       try {
         const raw = localStorage.getItem(cacheKey);
@@ -80,11 +80,11 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
 
     loadAvatar();
     window.addEventListener("storage", loadAvatar);
-    window.addEventListener("manav-profile-updated", loadAvatar);
+    window.addEventListener("INSAAN-profile-updated", loadAvatar);
 
     return () => {
       window.removeEventListener("storage", loadAvatar);
-      window.removeEventListener("manav-profile-updated", loadAvatar);
+      window.removeEventListener("INSAAN-profile-updated", loadAvatar);
     };
   }, [user?.id]);
 
@@ -101,7 +101,7 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
     >
       <div className="mx-auto flex h-16 max-w-full items-center justify-between px-4 md:px-8">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-[24px] font-bold tracking-[-0.02em]">Manav</span>
+          <span className="text-[24px] font-bold tracking-[-0.02em]">INSAAN</span>
         </Link>
 
         <div className="hidden items-center gap-8 md:flex">
@@ -124,7 +124,7 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
                     }`}
                   >
                     {item.label}
-                    <span className="text-[10px]">▼</span>
+                    <span className="text-[10px]">â–¼</span>
                   </Link>
 
                   <div
@@ -215,3 +215,4 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
     </nav>
   );
 }
+

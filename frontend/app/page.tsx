@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -65,7 +65,7 @@ const DEFAULT_HERO_SLIDES: HeroSlide[] = [
   },
 ];
 
-const MANAV_RECENT_CARDS = [
+const INSAAN_RECENT_CARDS = [
   {
     title: "Why Urdu Sounds Like Love | Guftugu with Javed Jaferi",
     image:
@@ -559,7 +559,7 @@ export default function PublicFeed() {
       <section className={`mx-auto w-[92vw] max-w-350 px-1 pb-14 pt-4 ${isDark ? "text-white" : "text-[#0e2138]"}`}>
         <header className="text-center">
           <p className={`text-[22px] font-semibold tracking-[0.28em] md:text-[26px] ${isDark ? "text-white/88" : "text-[#24384f]"}`} style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
-            MANAV RECENT
+            INSAAN RECENT
           </p>
           <p className={`mt-2 text-[14px] md:text-[16px] ${isDark ? "text-white/72" : "text-[#31465e]"}`}>
             Watch. Share. Subscribe.
@@ -582,7 +582,7 @@ export default function PublicFeed() {
             ref={recentCarouselRef}
             className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-1 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            {MANAV_RECENT_CARDS.map((card) => (
+            {INSAAN_RECENT_CARDS.map((card) => (
               <article key={card.title} className="group w-[calc(50%-10px)] min-w-45 shrink-0 snap-start sm:w-60 sm:min-w-60">
                 <a href={card.href} target="_blank" rel="noreferrer" className="block">
                   <div className="relative aspect-4/6 overflow-hidden rounded-3xl">
@@ -625,3 +625,4 @@ export default function PublicFeed() {
     </main>
   );
 }
+

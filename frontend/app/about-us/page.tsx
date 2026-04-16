@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ContentPageShell } from "@/app/components/content-page-shell";
 
@@ -7,12 +7,12 @@ export default function AboutUsPage() {
     <ContentPageShell
       activeHref="/about-us"
       eyebrow="About us"
-      title="About Manav"
+      title="About INSAAN"
       subtitle="A literary platform designed to make poetry, prose, and thoughtful writing accessible, discoverable, and beautifully presented."
       sections={[
         {
           heading: "Who We Are",
-          body: "Manav is a focused reading and writing space where classic voices and contemporary authors can be explored in one place. We blend editorial curation with a modern, distraction-light interface.",
+          body: "INSAAN is a focused reading and writing space where classic voices and contemporary authors can be explored in one place. We blend editorial curation with a modern, distraction-light interface.",
         },
         {
           heading: "What We Build",
@@ -32,3 +32,4 @@ export default function AboutUsPage() {
     />
   );
 }
+

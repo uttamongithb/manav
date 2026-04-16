@@ -1,4 +1,4 @@
-require('dotenv/config');
+﻿require('dotenv/config');
 
 const bcrypt = require('bcrypt');
 const { PrismaClient } = require('@prisma/client');
@@ -22,8 +22,8 @@ async function main() {
   const adapterUrl = databaseUrl.replace(/^mysql:\/\//, 'mariadb://');
   const prisma = new PrismaClient({ adapter: new PrismaMariaDb(adapterUrl) });
 
-  const email = 'admin@manav.local';
-  const username = 'manav_admin';
+  const email = 'admin@INSAAN.local';
+  const username = 'INSAAN_admin';
   const password = 'Admin@12345';
   const passwordHash = await bcrypt.hash(password, 10);
 
@@ -31,7 +31,7 @@ async function main() {
     where: { email },
     update: {
       username,
-      displayName: 'Manav Admin',
+      displayName: 'INSAAN Admin',
       passwordHash,
       role: 'admin',
       status: 'active',
@@ -41,7 +41,7 @@ async function main() {
     create: {
       email,
       username,
-      displayName: 'Manav Admin',
+      displayName: 'INSAAN Admin',
       passwordHash,
       role: 'admin',
       status: 'active',

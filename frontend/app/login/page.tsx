@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -209,7 +209,7 @@ export default function LoginPage() {
             >
               M
             </div>
-            <h1 className="text-[28px] font-bold tracking-[-0.02em]">Manav</h1>
+            <h1 className="text-[28px] font-bold tracking-[-0.02em]">INSAAN</h1>
             <p
               className={`mt-1 text-[14px] ${
                 isDark ? "text-white/60" : "text-[#636e84]"
@@ -306,7 +306,7 @@ export default function LoginPage() {
                 <input
                   id="login-password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   value={loginForm.password}
                   onChange={(e) =>
                     setLoginForm((prev) => ({
@@ -455,7 +455,7 @@ export default function LoginPage() {
                 <input
                   id="register-password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   value={registerForm.password}
                   onChange={(e) =>
                     setRegisterForm((prev) => ({
@@ -484,7 +484,7 @@ export default function LoginPage() {
                 <input
                   id="register-confirm-password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   value={registerForm.confirmPassword}
                   onChange={(e) =>
                     setRegisterForm((prev) => ({
@@ -584,3 +584,4 @@ export default function LoginPage() {
     </main>
   );
 }
+

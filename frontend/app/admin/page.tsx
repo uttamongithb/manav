@@ -212,10 +212,6 @@ export default function AdminOverview() {
 
   return (
     <>
-      <div className="admin-page-header">
-        <h1 className="admin-page-title">Overview</h1>
-      </div>
-
       {apiError && (
         <div className="admin-alert error">
           <svg

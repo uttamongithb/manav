@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -124,7 +124,7 @@ const saveCachedProfile = (cacheKey: string, profile: UserProfile): void => {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(cacheKey, JSON.stringify(profile));
-    window.dispatchEvent(new Event("manav-profile-updated"));
+    window.dispatchEvent(new Event("INSAAN-profile-updated"));
   } catch {
     // Silently fail if localStorage is unavailable
   }
@@ -149,7 +149,7 @@ export function MyProfileContent() {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
   const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null);
-  const cacheKey = `manav-profile-cache:${user?.id ?? "guest"}`;
+  const cacheKey = `INSAAN-profile-cache:${user?.id ?? "guest"}`;
   const defaultProfile = buildDefaultProfile(user?.displayName || user?.username);
   // Use DEFAULT_PROFILE for initial render (server-side compatible)
   const [profile, setProfile] = useState<UserProfile>(defaultProfile);
@@ -439,7 +439,7 @@ export function MyProfileContent() {
               ) : null}
               {profile.timezone.trim() ? (
                 <p className={`mt-1 text-[14px] ${isDark ? "text-white/50" : "text-[#636e84]"}`}>
-                  {profile.timezone} • Local time {localTimeText}
+                  {profile.timezone} â€¢ Local time {localTimeText}
                 </p>
               ) : null}
 
@@ -1052,3 +1052,4 @@ export default function MyProfilePage() {
     </ProtectedRoute>
   );
 }
+
