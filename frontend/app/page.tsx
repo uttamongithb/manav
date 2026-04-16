@@ -706,7 +706,7 @@ export default function PublicFeed() {
                     className="mt-2 text-[30px] font-semibold leading-[0.96] tracking-[-0.03em] md:text-[42px]"
                     style={{ fontFamily: "Georgia, Times New Roman, serif" }}
                   >
-                    Top 5 By Likes & Comments
+                    Today's Top 5 
                   </h2>
                   <p className={`mt-3 max-w-2xl text-[14px] leading-relaxed md:text-[15px] ${isDark ? "text-white/70" : "text-[#49624d]"}`}>
                     These posts are trending now based on total engagement from likes and comments.
