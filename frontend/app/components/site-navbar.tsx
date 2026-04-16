@@ -30,6 +30,7 @@ const NAV_ITEMS = [
   { label: "Contact us", href: "/contact-us" },
   { label: "Donate", href: "/donate" },
   { label: "Privacy Policy", href: "/privacy-policy" },
+  { label: "My Favorites", href: "/favorites" },
   {
     label: "Links",
     href: "/links",

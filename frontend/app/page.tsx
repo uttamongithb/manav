@@ -1,20 +1,32 @@
 ﻿"use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SiteNavbar } from "@/app/components/site-navbar";
 import { SiteFooter } from "@/app/components/site-footer";
-import { useAuth } from "@/app/context/auth";
 import { useTheme } from "@/app/context/theme";
+import { useAuth } from "@/app/context/auth";
 import { getApiBaseUrl } from "@/app/lib/api-base";
 
 type UserPost = {
   id: string;
   section: string;
   author: string;
+  avatarUrl?: string;
   content: string;
   visibility: "public";
+  createdAt: string;
+  likeCount: number;
+  commentCount: number;
+  likedByUser: boolean;
+  favoritedByUser: boolean;
+};
+
+type PostComment = {
+  id: string;
+  postId: string;
+  author: string;
+  content: string;
   createdAt: string;
 };
 
@@ -32,16 +44,6 @@ type HomeConfigResponse = {
 };
 
 const DEFAULT_POSTS: UserPost[] = [];
-
-const QUICK_ACCESS_ITEMS = [
-  { label: "HOME", href: "/" },
-  { label: "ABOUT US", href: "/about-us" },
-  { label: "CONTACT US", href: "/contact-us" },
-  { label: "PRIVACY POLICY", href: "/privacy-policy" },
-  { label: "LINKS", href: "/links" },
-  { label: "EBOOK DOWNLOAD", href: "/ebook-download" },
-  { label: "ARCHIVES", href: "/archives" },
-];
 
 const DEFAULT_HERO_SLIDES: HeroSlide[] = [
   {
@@ -120,9 +122,33 @@ function postPreview(content: string, max = 180) {
   return `${content.slice(0, max).trim()}...`;
 }
 
+function postLineBreak(content: string) {
+  const cleaned = content.replace(/\s+/g, " ").trim();
+  if (cleaned.length <= 70) return [cleaned];
+
+  const midpoint = Math.floor(cleaned.length / 2);
+  const splitPoint = cleaned.indexOf(" ", midpoint);
+  if (splitPoint === -1) return [cleaned];
+
+  return [cleaned.slice(0, splitPoint).trim(), cleaned.slice(splitPoint + 1).trim()];
+}
+
+function buildAvatarFallbackDataUrl(name?: string) {
+  const safeName = (name?.trim() || "User").slice(0, 40);
+  const initials = safeName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "U";
+
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'><rect width='72' height='72' rx='36' fill='#2ce88f'/><text x='50%' y='54%' text-anchor='middle' dominant-baseline='middle' font-family='Georgia, serif' font-size='26' font-weight='700' fill='#0b1112'>${initials}</text></svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
 export default function PublicFeed() {
-  const { user } = useAuth();
   const { isDark, setIsDark } = useTheme();
+  const { user } = useAuth();
   const [allPublicPosts, setAllPublicPosts] = useState<UserPost[]>(DEFAULT_POSTS);
   const [apiError, setApiError] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"latest" | "oldest">("latest");
@@ -130,9 +156,35 @@ export default function PublicFeed() {
   const [activeSection, setActiveSection] = useState("All");
   const [activeHeroSlide, setActiveHeroSlide] = useState(0);
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>(DEFAULT_HERO_SLIDES);
+  const [interactionAuthor, setInteractionAuthor] = useState("guest");
+  const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
+  const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
+  const [commentsByPost, setCommentsByPost] = useState<Record<string, PostComment[]>>({});
+  const [pendingAction, setPendingAction] = useState<Record<string, boolean>>({});
   const recentCarouselRef = useRef<HTMLDivElement | null>(null);
+  const featuredPostsCarouselRef = useRef<HTMLDivElement | null>(null);
 
   const backendUrl = getApiBaseUrl();
+
+  useEffect(() => {
+    if (user?.username?.trim()) {
+      setInteractionAuthor(user.username.trim());
+      return;
+    }
+
+    if (typeof window === "undefined") return;
+
+    const cacheKey = "INSAAN-guest-author";
+    const existing = localStorage.getItem(cacheKey);
+    if (existing?.trim()) {
+      setInteractionAuthor(existing.trim());
+      return;
+    }
+
+    const generated = `guest_${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(cacheKey, generated);
+    setInteractionAuthor(generated);
+  }, [user?.username]);
 
   const loadPosts = useCallback(async () => {
     const controller = new AbortController();
@@ -140,7 +192,7 @@ export default function PublicFeed() {
 
     try {
       setApiError(null);
-      const res = await fetch(`${backendUrl}/posts/public`, {
+      const res = await fetch(`${backendUrl}/posts/public?author=${encodeURIComponent(interactionAuthor)}`, {
         signal: controller.signal,
       });
 
@@ -157,7 +209,7 @@ export default function PublicFeed() {
     } finally {
       window.clearTimeout(timeout);
     }
-  }, [backendUrl]);
+  }, [backendUrl, interactionAuthor]);
 
   useEffect(() => {
     void loadPosts();
@@ -219,6 +271,204 @@ export default function PublicFeed() {
     });
   };
 
+  const scrollFeaturedPosts = (direction: "prev" | "next") => {
+    const container = featuredPostsCarouselRef.current;
+    if (!container) return;
+
+    const step = Math.round(container.clientWidth * 0.86);
+    container.scrollBy({
+      left: direction === "next" ? step : -step,
+      behavior: "smooth",
+    });
+  };
+
+  const setPostMetrics = useCallback((
+    postId: string,
+    updates: Partial<Pick<UserPost, "likeCount" | "commentCount" | "likedByUser" | "favoritedByUser">>,
+  ) => {
+    setAllPublicPosts((prev) =>
+      prev.map((post) => (post.id === postId ? { ...post, ...updates } : post)),
+    );
+  }, []);
+
+  const toggleFavorite = async (postId: string) => {
+    const pendingKey = `favorite-${postId}`;
+    if (pendingAction[pendingKey]) return;
+
+    setPendingAction((prev) => ({ ...prev, [pendingKey]: true }));
+    try {
+      const res = await fetch(`${backendUrl}/posts/${postId}/favorites`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          author: interactionAuthor,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("favorite_failed");
+      }
+
+      const data = (await res.json()) as { postId: string; favoritedByUser: boolean };
+      setPostMetrics(data.postId, { favoritedByUser: data.favoritedByUser });
+      setApiError(null);
+    } catch {
+      setApiError("Unable to update favorite right now.");
+    } finally {
+      setPendingAction((prev) => ({ ...prev, [pendingKey]: false }));
+    }
+  };
+
+  const handleSharePost = async (post: UserPost) => {
+    const shareText = `${post.author}: ${postPreview(post.content, 160)}`;
+    const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/#post-${post.id}` : "";
+
+    try {
+      if (typeof navigator !== "undefined" && navigator.share) {
+        await navigator.share({
+          title: `${post.author} - ${post.section}`,
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      }
+
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`.trim());
+      }
+    } catch {
+      setApiError("Unable to share this post right now.");
+    }
+  };
+
+  const handleDownloadPost = (post: UserPost) => {
+    if (typeof window === "undefined") return;
+    const text = `${post.content}\n\n${post.author}\n${post.section}\n${formatPostDate(post.createdAt)}`;
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = `insaaan-post-${post.id}.txt`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(objectUrl);
+  };
+
+  const handleLikePost = async (postId: string) => {
+    const pendingKey = `like-${postId}`;
+    if (pendingAction[pendingKey]) return;
+
+    setPendingAction((prev) => ({ ...prev, [pendingKey]: true }));
+    try {
+      const res = await fetch(`${backendUrl}/posts/${postId}/likes`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          author: interactionAuthor,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("like_failed");
+      }
+
+      const data = (await res.json()) as {
+        postId: string;
+        likeCount: number;
+        commentCount: number;
+        likedByUser: boolean;
+      };
+      setPostMetrics(data.postId, {
+        likeCount: data.likeCount,
+        commentCount: data.commentCount,
+        likedByUser: data.likedByUser,
+      });
+      setApiError(null);
+    } catch {
+      setApiError("Unable to like this post right now.");
+    } finally {
+      setPendingAction((prev) => ({ ...prev, [pendingKey]: false }));
+    }
+  };
+
+  const loadComments = useCallback(
+    async (postId: string) => {
+      const pendingKey = `comments-load-${postId}`;
+      if (pendingAction[pendingKey]) return;
+
+      setPendingAction((prev) => ({ ...prev, [pendingKey]: true }));
+      try {
+        const res = await fetch(`${backendUrl}/posts/${postId}/comments`);
+        if (!res.ok) {
+          throw new Error("comments_failed");
+        }
+
+        const data = (await res.json()) as PostComment[];
+        setCommentsByPost((prev) => ({ ...prev, [postId]: data }));
+      } catch {
+        setCommentsByPost((prev) => ({ ...prev, [postId]: [] }));
+      } finally {
+        setPendingAction((prev) => ({ ...prev, [pendingKey]: false }));
+      }
+    },
+    [backendUrl, pendingAction],
+  );
+
+  const toggleCommentsForPost = async (postId: string) => {
+    const willOpen = !expandedComments[postId];
+    setExpandedComments((prev) => ({ ...prev, [postId]: willOpen }));
+
+    if (willOpen && !commentsByPost[postId]) {
+      await loadComments(postId);
+    }
+  };
+
+  const handleAddComment = async (post: UserPost) => {
+    const postId = post.id;
+    const content = commentDrafts[postId]?.trim();
+    if (!content) return;
+
+    const pendingKey = `comment-submit-${postId}`;
+    if (pendingAction[pendingKey]) return;
+
+    setPendingAction((prev) => ({ ...prev, [pendingKey]: true }));
+    try {
+      const res = await fetch(`${backendUrl}/posts/${postId}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content,
+          author: interactionAuthor,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("comment_add_failed");
+      }
+
+      const data = (await res.json()) as { comment: PostComment; commentCount: number };
+      setCommentsByPost((prev) => ({
+        ...prev,
+        [postId]: [data.comment, ...(prev[postId] ?? [])],
+      }));
+      setPostMetrics(postId, { commentCount: data.commentCount });
+      setCommentDrafts((prev) => ({ ...prev, [postId]: "" }));
+      setExpandedComments((prev) => ({ ...prev, [postId]: true }));
+      setApiError(null);
+    } catch {
+      setApiError("Unable to add comment right now.");
+    } finally {
+      setPendingAction((prev) => ({ ...prev, [pendingKey]: false }));
+    }
+  };
+
   const sections = ["All", ...Array.from(new Set(allPublicPosts.map((post) => post.section)))];
 
   const filteredPosts = allPublicPosts.filter((post) => {
@@ -239,6 +489,16 @@ export default function PublicFeed() {
 
   const featuredPost = displayPosts[0] ?? null;
   const totalAuthors = new Set(allPublicPosts.map((post) => post.author)).size;
+  const topFeaturedPosts = [...allPublicPosts]
+    .sort((a, b) => {
+      const aScore = a.likeCount + a.commentCount;
+      const bScore = b.likeCount + b.commentCount;
+      if (aScore !== bScore) {
+        return bScore - aScore;
+      }
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    })
+    .slice(0, 5);
 
   return (
     <main className={`relative min-h-screen transition-colors duration-300 ${isDark ? "bg-[#0e1117] text-white" : "bg-[#f3f5f8] text-[#10131a]"}`}>
@@ -322,8 +582,9 @@ export default function PublicFeed() {
         </div>
       </section>
 
-      <section className="mx-auto grid w-[80vw] max-w-none gap-7 px-1 py-7 md:grid-cols-12 md:py-10">
-        <div className="md:col-span-8">
+      <section className="mx-auto w-[92vw] max-w-[1600px] px-1 py-7 md:py-10">
+        <div className="grid gap-7 xl:grid-cols-12">
+          <div className="xl:col-span-12">
           <header className={`overflow-hidden rounded-[34px] border ${isDark ? "border-white/18 bg-[#17181d]" : "border-black/10 bg-white/92"}`}>
             <div className="grid gap-0 lg:grid-cols-[1.2fr_0.95fr]">
               <div className="relative p-6 md:p-8 lg:p-10">
@@ -428,6 +689,119 @@ export default function PublicFeed() {
             </div>
           </header>
 
+          <article
+            className={`relative mt-5 overflow-hidden rounded-[34px] border p-5 md:p-7 ${isDark ? "border-white/15 bg-[#151922]" : "border-black/10 bg-white"}`}
+          >
+            <div
+              className={`pointer-events-none absolute inset-0 ${isDark ? "bg-[radial-gradient(circle_at_top_left,rgba(44,232,143,0.18),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(163,217,255,0.1),transparent_45%)]" : "bg-[radial-gradient(circle_at_top_left,rgba(10,138,91,0.16),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(35,95,168,0.08),transparent_45%)]"}`}
+            />
+
+            <div className="relative z-10">
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <p className={`text-[11px] font-semibold uppercase tracking-[0.17em] ${isDark ? "text-white/55" : "text-[#5b7560]"}`}>
+                    Featured Ranking
+                  </p>
+                  <h2
+                    className="mt-2 text-[30px] font-semibold leading-[0.96] tracking-[-0.03em] md:text-[42px]"
+                    style={{ fontFamily: "Georgia, Times New Roman, serif" }}
+                  >
+                    Top 5 By Likes & Comments
+                  </h2>
+                  <p className={`mt-3 max-w-2xl text-[14px] leading-relaxed md:text-[15px] ${isDark ? "text-white/70" : "text-[#49624d]"}`}>
+                    These posts are trending now based on total engagement from likes and comments.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => scrollFeaturedPosts("prev")}
+                    aria-label="Scroll featured posts left"
+                    className={`flex h-11 w-11 items-center justify-center rounded-full border transition ${isDark ? "border-white/20 bg-[#0f131a]/80 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/90 text-[#2f4c33] hover:bg-[#f0f5ef]"}`}
+                  >
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
+                      <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => scrollFeaturedPosts("next")}
+                    aria-label="Scroll featured posts right"
+                    className={`flex h-11 w-11 items-center justify-center rounded-full border transition ${isDark ? "border-white/20 bg-[#0f131a]/80 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/90 text-[#2f4c33] hover:bg-[#f0f5ef]"}`}
+                  >
+                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
+                      <path d="M9 6l6 6-6 6" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {topFeaturedPosts.length === 0 ? (
+                <div className={`mt-6 rounded-2xl border border-dashed p-6 text-center text-[15px] ${isDark ? "border-white/20 text-white/55" : "border-black/20 text-[#5f7062]"}`}>
+                  Featured posts will appear here once engagement starts building.
+                </div>
+              ) : (
+                <div
+                  ref={featuredPostsCarouselRef}
+                  className="mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                >
+                  {topFeaturedPosts.map((post, index) => {
+                    const totalEngagement = post.likeCount + post.commentCount;
+
+                    return (
+                      <article
+                        key={`featured-top-${post.id}`}
+                        className={`w-[85%] min-w-[85%] shrink-0 snap-start rounded-[26px] border p-5 md:w-[48%] md:min-w-[48%] xl:w-[32%] xl:min-w-[32%] ${isDark ? "border-white/18 bg-[#121722]" : "border-black/10 bg-[#fbfdfb]"}`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.1em] ${isDark ? "border-[#8cf8c1]/45 bg-[#2ce88f]/14 text-[#9af9ca]" : "border-[#0a8a5b]/25 bg-[#0a8a5b]/10 text-[#0a8a5b]"}`}>
+                            #{index + 1}
+                          </span>
+
+                          <span className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${isDark ? "border-white/15 text-white/75" : "border-black/10 text-[#566d58]"}`}>
+                            {post.section}
+                          </span>
+                        </div>
+
+                        <h3
+                          className="mt-4 line-clamp-3 text-[23px] font-semibold leading-tight tracking-[-0.02em]"
+                          style={{ fontFamily: "Georgia, Times New Roman, serif" }}
+                        >
+                          {postPreview(post.content, 120)}
+                        </h3>
+
+                        <p className={`mt-3 line-clamp-3 text-[14px] leading-relaxed ${isDark ? "text-white/74" : "text-[#3f5542]"}`}>
+                          {postPreview(post.content, 210)}
+                        </p>
+
+                        <div className={`mt-5 flex items-center justify-between border-t pt-4 ${isDark ? "border-white/12" : "border-black/10"}`}>
+                          <div>
+                            <p className={`text-[14px] font-semibold ${isDark ? "text-white" : "text-[#243b27]"}`}>{post.author}</p>
+                            <p className={`text-[12px] ${isDark ? "text-white/45" : "text-[#68806b]"}`}>{formatPostDate(post.createdAt)}</p>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${isDark ? "border-white/14 bg-white/6 text-white/85" : "border-black/10 bg-white text-[#325036]"}`}>
+                              {post.likeCount} Likes
+                            </span>
+                            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${isDark ? "border-white/14 bg-white/6 text-white/85" : "border-black/10 bg-white text-[#325036]"}`}>
+                              {post.commentCount} Comments
+                            </span>
+                            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${isDark ? "border-[#2ce88f]/35 bg-[#2ce88f]/12 text-[#9af9ca]" : "border-[#0a8a5b]/20 bg-[#e8f5ee] text-[#0a8a5b]"}`}>
+                              {totalEngagement} Total
+                            </span>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </article>
+
           {apiError ? (
             <div className={`mt-4 rounded-2xl border px-4 py-3 text-sm ${isDark ? "border-rose-400/25 bg-rose-500/10 text-rose-200" : "border-rose-200 bg-rose-50 text-rose-700"}`}>
               {apiError}
@@ -435,136 +809,243 @@ export default function PublicFeed() {
           ) : null}
 
           {featuredPost ? (
-            <article className={`mt-5 rounded-[30px] border p-6 md:p-7 ${isDark ? "border-white/20 bg-[#17181d]" : "border-black/10 bg-white/94"}`}>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${isDark ? "text-white/42" : "text-[#658169]"}`}>
-                    Featured Post
-                  </p>
-                  <h2 className="mt-2 text-[28px] font-semibold leading-tight tracking-[-0.02em]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
-                    {postPreview(featuredPost.content, 90)}
-                  </h2>
-                </div>
-                <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-widest ${isDark ? "border-[#8cf8c1]/45 bg-[#2ce88f]/12 text-[#8cf8c1]" : "border-[#0a8a5b]/30 bg-[#0a8a5b]/10 text-[#0a8a5b]"}`}>
-                  {featuredPost.section}
-                </span>
-              </div>
-
-              <p className={`mt-4 text-[15px] leading-7 ${isDark ? "text-white/82" : "text-[#2d4630]"}`}>
-                {postPreview(featuredPost.content, 240)}
-              </p>
-
-              <div className={`mt-5 flex items-center justify-between border-t pt-4 ${isDark ? "border-white/10" : "border-black/10"}`}>
-                <div>
-                  <p className={`text-[14px] font-semibold ${isDark ? "text-white" : "text-[#263a28]"}`}>{featuredPost.author}</p>
-                  <p className={`text-[12px] ${isDark ? "text-white/45" : "text-[#71836f]"}`}>{formatPostDate(featuredPost.createdAt)}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {"Like,Comment,Share".split(",").map((action) => (
-                    <button
-                      key={action}
-                      type="button"
-                      className={`rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.06em] transition ${isDark ? "border-white/15 bg-white/5 text-white/72 hover:bg-white/10" : "border-black/10 bg-[#f2f7ef] text-[#496249] hover:bg-[#e8f1e4]"}`}
+            <article className="mt-6 pb-8">
+              <div className="mx-auto max-w-5xl px-3 text-center">
+                <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${isDark ? "text-[#8cf8c1]" : "text-[#2f7452]"}`}>
+                  Featured Post
+                </p>
+                <div className="mt-4 space-y-2 md:space-y-3">
+                  {postLineBreak(postPreview(featuredPost.content, 210)).map((line) => (
+                    <p
+                      key={`${featuredPost.id}-${line}`}
+                      className={`text-[31px] leading-[1.35] italic tracking-[0.01em] md:text-[45px] ${isDark ? "text-white/90" : "text-[#212529]"}`}
+                      style={{ fontFamily: "Georgia, Times New Roman, serif" }}
                     >
-                      {action}
-                    </button>
+                      {line}
+                    </p>
                   ))}
                 </div>
+
+                <div className="mt-7 flex items-center justify-center gap-2.5">
+                  <span className="relative h-8 w-8 overflow-hidden rounded-full border border-black/10">
+                    <Image
+                      src={featuredPost.avatarUrl?.trim() || buildAvatarFallbackDataUrl(featuredPost.author)}
+                      alt={featuredPost.author}
+                      fill
+                      sizes="32px"
+                      unoptimized
+                      className="h-full w-full object-cover"
+                    />
+                  </span>
+                  <p className={`text-[22px] font-semibold leading-none ${isDark ? "text-white" : "text-[#171b1e]"}`} style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
+                    {featuredPost.author.toUpperCase()}
+                  </p>
+                </div>
+
+                <p className={`mt-1 text-[13px] ${isDark ? "text-white/45" : "text-[#6c7278]"}`}>
+                  {formatPostDate(featuredPost.createdAt)} · {featuredPost.section}
+                </p>
+
+                <div className={`mx-auto mt-7 flex max-w-4xl flex-wrap items-center justify-center gap-x-5 gap-y-2.5 pt-5 ${isDark ? "border-t border-white/12" : "border-t border-black/10"}`}>
+                  <button
+                    type="button"
+                    onClick={() => void toggleFavorite(featuredPost.id)}
+                    className={`inline-flex items-center gap-2 text-[15px] md:text-[17px] ${isDark ? "text-white/68 hover:text-white" : "text-[#6d6d6d] hover:text-[#333]"}`}
+                  >
+                    <span aria-hidden="true">{featuredPost.favoritedByUser ? "♥" : "♡"}</span>
+                    <span className="text-[15px] md:text-[17px]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>Add To Favorites</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleLikePost(featuredPost.id)}
+                    className={`inline-flex items-center gap-2 text-[15px] md:text-[17px] ${isDark ? "text-white/68 hover:text-white" : "text-[#6d6d6d] hover:text-[#333]"}`}
+                  >
+                    <span aria-hidden="true">{featuredPost.likedByUser ? "💚" : "👍"}</span>
+                    <span className="text-[15px] md:text-[17px]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>Like ({featuredPost.likeCount})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void toggleCommentsForPost(featuredPost.id)}
+                    className={`inline-flex items-center gap-2 text-[15px] md:text-[17px] ${isDark ? "text-white/68 hover:text-white" : "text-[#6d6d6d] hover:text-[#333]"}`}
+                  >
+                    <span aria-hidden="true">💬</span>
+                    <span className="text-[15px] md:text-[17px]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>Comment ({featuredPost.commentCount})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleSharePost(featuredPost)}
+                    className={`inline-flex items-center gap-2 text-[15px] md:text-[17px] ${isDark ? "text-white/68 hover:text-white" : "text-[#6d6d6d] hover:text-[#333]"}`}
+                  >
+                    <span aria-hidden="true">↗</span>
+                    <span className="text-[15px] md:text-[17px]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>Share this</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadPost(featuredPost)}
+                    className={`inline-flex items-center gap-2 text-[15px] md:text-[17px] ${isDark ? "text-white/68 hover:text-white" : "text-[#6d6d6d] hover:text-[#333]"}`}
+                  >
+                    <span aria-hidden="true">⬇</span>
+                    <span className="text-[15px] md:text-[17px]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>Download</span>
+                  </button>
+                </div>
+
+                {expandedComments[featuredPost.id] ? (
+                  <div className={`mx-auto mt-6 max-w-3xl rounded-2xl border p-4 text-left ${isDark ? "border-white/16 bg-white/3" : "border-black/10 bg-white/75"}`}>
+                    <div className="space-y-3">
+                      {(commentsByPost[featuredPost.id] ?? []).map((comment) => (
+                        <div key={comment.id} className={`rounded-xl px-3 py-2 ${isDark ? "bg-white/5" : "bg-[#f4f7f4]"}`}>
+                          <p className={`text-[13px] font-semibold ${isDark ? "text-white" : "text-[#243127]"}`}>{comment.author}</p>
+                          <p className={`text-[14px] ${isDark ? "text-white/82" : "text-[#35453b]"}`}>{comment.content}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-4 flex gap-2">
+                      <input
+                        type="text"
+                        value={commentDrafts[featuredPost.id] ?? ""}
+                        onChange={(event) =>
+                          setCommentDrafts((prev) => ({ ...prev, [featuredPost.id]: event.target.value }))
+                        }
+                        placeholder="Write a comment"
+                        className={`w-full rounded-full border px-4 py-2 text-[14px] outline-none ${isDark ? "border-white/16 bg-[#101318] text-white placeholder:text-white/35" : "border-black/10 bg-white text-[#1f2d23] placeholder:text-[#879488]"}`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void handleAddComment(featuredPost)}
+                        className={`rounded-full px-4 py-2 text-[12px] font-semibold tracking-[0.06em] ${isDark ? "bg-[#2ce88f] text-[#07130d]" : "bg-[#0a8a5b] text-white"}`}
+                      >
+                        POST
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </article>
           ) : null}
 
-          <div className="mt-5 space-y-3.5">
+          <div className="mt-8 space-y-14 md:space-y-16">
             {displayPosts.length === 0 ? (
               <div className={`rounded-2xl border border-dashed p-6 text-center text-[15px] ${isDark ? "border-white/20 text-white/50" : "border-black/20 text-[#6c7488]"}`}>
                 No public posts yet. Be the first to share.
               </div>
             ) : (
               displayPosts.slice(featuredPost ? 1 : 0).map((post) => (
-                <article key={`public-${post.id}`} className={`rounded-2xl border p-4 ${isDark ? "border-white/20 bg-[#1a1c22]" : "border-black/10 bg-white/92"}`}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-full text-[13px] font-semibold ${isDark ? "bg-white/10 text-white" : "bg-[#edf4ea] text-[#2f4732]"}`}>
-                        {post.author.slice(0, 1).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className={`text-[14px] font-semibold ${isDark ? "text-white" : "text-[#223726]"}`}>{post.author}</p>
-                        <p className={`text-[12px] ${isDark ? "text-white/45" : "text-[#738770]"}`}>{formatPostDate(post.createdAt)}</p>
-                      </div>
+                <article key={`public-${post.id}`} className="pb-12 md:pb-16">
+                  <div className="mx-auto max-w-5xl px-3 text-center">
+                    <div className="space-y-1.5 md:space-y-2">
+                      {postLineBreak(postPreview(post.content, 180)).map((line) => (
+                        <p
+                          key={`${post.id}-${line}`}
+                          className={`text-[29px] leading-[1.38] italic tracking-[0.01em] md:text-[41px] ${isDark ? "text-white/88" : "text-[#272b2e]"}`}
+                          style={{ fontFamily: "Georgia, Times New Roman, serif" }}
+                        >
+                          {line}
+                        </p>
+                      ))}
                     </div>
 
-                    <span className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-widest ${isDark ? "border-white/15 text-white/70" : "border-black/10 text-[#5a715a]"}`}>
-                      {post.section}
-                    </span>
-                  </div>
+                    <div className="mt-6 flex items-center justify-center gap-2.5">
+                      <span className="relative h-8 w-8 overflow-hidden rounded-full border border-black/10">
+                        <Image
+                          src={post.avatarUrl?.trim() || buildAvatarFallbackDataUrl(post.author)}
+                          alt={post.author}
+                          fill
+                          sizes="32px"
+                          unoptimized
+                          className="h-full w-full object-cover"
+                        />
+                      </span>
+                      <p className={`text-[20px] font-semibold leading-none ${isDark ? "text-white" : "text-[#171b1e]"}`} style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
+                        {post.author.toUpperCase()}
+                      </p>
+                    </div>
+                    <p className={`mt-1 text-[13px] ${isDark ? "text-white/45" : "text-[#6c7278]"}`}>
+                      {formatPostDate(post.createdAt)} · {post.section}
+                    </p>
 
-                  <p className={`mt-3 text-[15px] leading-7 ${isDark ? "text-white/84" : "text-[#2f4732]"}`}>
-                    {post.content}
-                  </p>
+                    <div className={`mx-auto mt-6 flex max-w-4xl flex-wrap items-center justify-center gap-x-5 gap-y-2.5 pt-4 ${isDark ? "border-t border-white/12" : "border-t border-black/10"}`}>
+                      <button
+                        type="button"
+                        onClick={() => void toggleFavorite(post.id)}
+                        className={`inline-flex items-center gap-2 text-[14px] md:text-[16px] ${isDark ? "text-white/68 hover:text-white" : "text-[#6d6d6d] hover:text-[#333]"}`}
+                      >
+                        <span aria-hidden="true">{post.favoritedByUser ? "♥" : "♡"}</span>
+                        <span className="text-[14px] md:text-[16px]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>Add To Favorites</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleLikePost(post.id)}
+                        className={`inline-flex items-center gap-2 text-[14px] md:text-[16px] ${isDark ? "text-white/68 hover:text-white" : "text-[#6d6d6d] hover:text-[#333]"}`}
+                      >
+                        <span aria-hidden="true">{post.likedByUser ? "💚" : "👍"}</span>
+                        <span className="text-[14px] md:text-[16px]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>Like ({post.likeCount})</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void toggleCommentsForPost(post.id)}
+                        className={`inline-flex items-center gap-2 text-[14px] md:text-[16px] ${isDark ? "text-white/68 hover:text-white" : "text-[#6d6d6d] hover:text-[#333]"}`}
+                      >
+                        <span aria-hidden="true">💬</span>
+                        <span className="text-[14px] md:text-[16px]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>Comment ({post.commentCount})</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void handleSharePost(post)}
+                        className={`inline-flex items-center gap-2 text-[14px] md:text-[16px] ${isDark ? "text-white/68 hover:text-white" : "text-[#6d6d6d] hover:text-[#333]"}`}
+                      >
+                        <span aria-hidden="true">↗</span>
+                        <span className="text-[14px] md:text-[16px]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>Share this</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadPost(post)}
+                        className={`inline-flex items-center gap-2 text-[14px] md:text-[16px] ${isDark ? "text-white/68 hover:text-white" : "text-[#6d6d6d] hover:text-[#333]"}`}
+                      >
+                        <span aria-hidden="true">⬇</span>
+                        <span className="text-[14px] md:text-[16px]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>Download</span>
+                      </button>
+                    </div>
+
+                    {expandedComments[post.id] ? (
+                      <div className={`mx-auto mt-5 max-w-3xl rounded-2xl border p-4 text-left ${isDark ? "border-white/16 bg-white/3" : "border-black/10 bg-white/75"}`}>
+                        <div className="space-y-3">
+                          {(commentsByPost[post.id] ?? []).map((comment) => (
+                            <div key={comment.id} className={`rounded-xl px-3 py-2 ${isDark ? "bg-white/5" : "bg-[#f4f7f4]"}`}>
+                              <p className={`text-[13px] font-semibold ${isDark ? "text-white" : "text-[#243127]"}`}>{comment.author}</p>
+                              <p className={`text-[14px] ${isDark ? "text-white/82" : "text-[#35453b]"}`}>{comment.content}</p>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="mt-4 flex gap-2">
+                          <input
+                            type="text"
+                            value={commentDrafts[post.id] ?? ""}
+                            onChange={(event) => setCommentDrafts((prev) => ({ ...prev, [post.id]: event.target.value }))}
+                            placeholder="Write a comment"
+                            className={`w-full rounded-full border px-4 py-2 text-[14px] outline-none ${isDark ? "border-white/16 bg-[#101318] text-white placeholder:text-white/35" : "border-black/10 bg-white text-[#1f2d23] placeholder:text-[#879488]"}`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => void handleAddComment(post)}
+                            className={`rounded-full px-4 py-2 text-[12px] font-semibold tracking-[0.06em] ${isDark ? "bg-[#2ce88f] text-[#07130d]" : "bg-[#0a8a5b] text-white"}`}
+                          >
+                            POST
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
                 </article>
               ))
             )}
           </div>
-        </div>
-
-        <aside className="md:col-span-4">
-          <div className="space-y-4 md:sticky md:top-24">
-            <section className={`rounded-[26px] border p-5 ${isDark ? "border-white/20 bg-[#17181d]" : "border-black/10 bg-white/94"}`}>
-              <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${isDark ? "text-white/45" : "text-[#68748a]"}`}>
-                Feed Stats
-              </p>
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className={`rounded-2xl border p-3 ${isDark ? "border-white/10" : "border-black/10"}`}>
-                  <p className="text-2xl font-semibold">{allPublicPosts.length}</p>
-                  <p className={`text-[12px] ${isDark ? "text-white/55" : "text-[#687c66]"}`}>Total posts</p>
-                </div>
-                <div className={`rounded-2xl border p-3 ${isDark ? "border-white/10" : "border-black/10"}`}>
-                  <p className="text-2xl font-semibold">{totalAuthors}</p>
-                  <p className={`text-[12px] ${isDark ? "text-white/55" : "text-[#687c66]"}`}>Writers active</p>
-                </div>
-                <div className={`col-span-2 rounded-2xl border p-3 ${isDark ? "border-white/10" : "border-black/10"}`}>
-                  <p className={`text-[12px] ${isDark ? "text-white/55" : "text-[#687c66]"}`}>Current filter</p>
-                  <p className="mt-1 text-[18px] font-semibold tracking-[-0.01em]">{activeSection}</p>
-                </div>
-              </div>
-            </section>
-
-            <section className={`rounded-[26px] border p-5 ${isDark ? "border-white/20 bg-[#17181d]" : "border-black/10 bg-white/94"}`}>
-              <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${isDark ? "text-white/45" : "text-[#68748a]"}`}>
-                Quick Access
-              </p>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                {QUICK_ACCESS_ITEMS.slice(0, 6).map((item) => (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    className={`rounded-xl border px-3 py-2 text-[12px] font-semibold tracking-[0.06em] transition ${isDark ? "border-white/10 text-white/80 hover:bg-white/8" : "border-black/10 text-[#345236] hover:bg-[#edf4ea]"}`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            </section>
-
-            <section className={`rounded-[26px] border p-5 ${isDark ? "border-[#2ce88f]/35 bg-[#123126]/65" : "border-[#0a8a5b]/20 bg-[#e8f7ef]/90"}`}>
-              <p className={`text-[11px] font-semibold uppercase tracking-[0.16em] ${isDark ? "text-[#b5fbd5]" : "text-[#0d7a52]"}`}>
-                Start Writing
-              </p>
-              <p className={`mt-2 text-[14px] leading-relaxed ${isDark ? "text-white/88" : "text-[#1f3a30]"}`}>
-                Share a sher, a reflection, or a complete thought. Your next post can reach every reader in the feed.
-              </p>
-              <Link
-                href={user ? "/my-profile" : "/login"}
-                className={`mt-4 inline-flex rounded-full px-4 py-2 text-[12px] font-bold tracking-[0.08em] transition ${isDark ? "bg-[#2ce88f] text-[#08120d] hover:bg-[#50f7a9]" : "bg-[#0a8a5b] text-white hover:bg-[#0d9d67]"}`}
-              >
-                {user ? "GO TO PROFILE" : "LOGIN TO POST"}
-              </Link>
-            </section>
           </div>
-        </aside>
+        </div>
       </section>
 
-      <section className={`mx-auto w-[92vw] max-w-350 px-1 pb-14 pt-4 ${isDark ? "text-white" : "text-[#0e2138]"}`}>
+      <section className={`mx-auto w-[92vw] max-w-350 px-1 pb-14 pt-6 ${isDark ? "text-white" : "text-[#0e2138]"}`}>
         <header className="text-center">
           <p className={`text-[22px] font-semibold tracking-[0.28em] md:text-[26px] ${isDark ? "text-white/88" : "text-[#24384f]"}`} style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
             INSAAN RECENT

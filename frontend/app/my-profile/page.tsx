@@ -303,13 +303,18 @@ export function MyProfileContent() {
         });
 
         if (!res.ok) {
-          throw new Error("Failed to publish");
+          const errorText = await res.text();
+          throw new Error(errorText || `Failed to publish (${res.status})`);
         }
 
         setDraftByTab((prev) => ({ ...prev, [tab]: "" }));
         await loadPosts(tab);
-      } catch {
-        setApiError("Publish failed. Ensure backend is running and try again.");
+      } catch (error) {
+        const message = error instanceof Error && error.message.trim().length > 0
+          ? error.message
+          : "Unable to publish post right now. Please try again.";
+
+        setApiError(message);
       } finally {
         setIsPosting(false);
       }

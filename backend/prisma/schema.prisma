@@ -59,6 +59,7 @@ model User {
   contents        Content[]
   collections     Collection[]
   comments        Comment[]
+  contentLikes    ContentLike[]
   auditLogs       AuditLog[]
   bookmarks       Bookmark[]
 
@@ -150,9 +151,22 @@ model Content {
   deletedAt       DateTime?      @map("deleted_at")
 
   comments        Comment[]
+  likes           ContentLike[]
   bookmarks       Bookmark[]
 
   @@map("content")
+}
+
+model ContentLike {
+  userId      String    @map("user_id")
+  contentId   String    @map("content_id")
+  createdAt   DateTime? @default(now()) @map("created_at")
+
+  user        User      @relation(fields: [userId], references: [id])
+  content     Content   @relation(fields: [contentId], references: [id])
+
+  @@id([userId, contentId])
+  @@map("content_likes")
 }
 
 model Collection {
