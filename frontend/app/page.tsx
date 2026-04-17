@@ -106,6 +106,30 @@ const INSAAN_RECENT_CARDS = [
       "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?auto=format&fit=crop&w=1000&q=80",
     href: "https://www.youtube.com/",
   },
+  {
+    title: "Young Poet Mushaira feat. Himanshi Babbar & Ali",
+    image:
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1000&q=80",
+    href: "https://www.youtube.com/",
+  },
+  {
+    title: "Soulful Ghazal Medley Live | Hariharan, Pratibha",
+    image:
+      "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1000&q=80",
+    href: "https://www.youtube.com/",
+  },
+  {
+    title: "Javed Akhtar & Zehra Nigah on Poetry and Legacy",
+    image:
+      "https://images.unsplash.com/photo-1521335629791-ce4aec67dd53?auto=format&fit=crop&w=1000&q=80",
+    href: "https://www.youtube.com/",
+  },
+  {
+    title: "Shabnam Virmani Sings Kabir Bhajans | Live Session",
+    image:
+      "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1000&q=80",
+    href: "https://www.youtube.com/",
+  },
 ];
 
 function formatPostDate(value: string) {
@@ -583,51 +607,27 @@ export default function PublicFeed() {
       </section>
 
       <article
-        className={`relative mx-auto mt-4 w-[92vw] md:mt-5 md:w-[80vw] max-w-none overflow-hidden rounded-[28px] border p-4 md:rounded-[34px] md:p-7 ${isDark ? "border-white/15 bg-[#151922]" : "border-black/10 bg-white"}`}
+        className={`relative mx-auto mt-4 w-[92vw] md:mt-5 md:w-[80vw] max-w-none overflow-visible rounded-[24px] border p-3 md:rounded-[34px] md:p-7 ${isDark ? "border-white/15 bg-[#151922]" : "border-black/10 bg-white"}`}
       >
             <div
               className={`pointer-events-none absolute inset-0 ${isDark ? "bg-[radial-gradient(circle_at_top_left,rgba(44,232,143,0.18),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(163,217,255,0.1),transparent_45%)]" : "bg-[radial-gradient(circle_at_top_left,rgba(10,138,91,0.16),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(35,95,168,0.08),transparent_45%)]"}`}
             />
 
             <div className="relative z-10">
-              <div className="flex flex-wrap items-end justify-between gap-3 md:gap-4">
+              <div className="flex flex-wrap items-end justify-between gap-2.5 md:gap-4">
                 <div>
                   <p className={`text-[11px] font-semibold uppercase tracking-[0.17em] ${isDark ? "text-white/55" : "text-[#5b7560]"}`}>
                     Featured Ranking
                   </p>
                   <h2
-                    className="mt-1.5 text-[22px] font-semibold leading-[1] tracking-[-0.02em] md:mt-2 md:text-[42px]"
+                    className="mt-1 text-[20px] font-semibold leading-[1] tracking-[-0.02em] md:mt-2 md:text-[42px]"
                     style={{ fontFamily: "Georgia, Times New Roman, serif" }}
                   >
                     Today's Top 5 
                   </h2>
-                  <p className={`mt-2 max-w-2xl text-[12px] leading-relaxed md:mt-3 md:text-[15px] ${isDark ? "text-white/70" : "text-[#49624d]"}`}>
+                  <p className={`mt-1.5 max-w-2xl text-[11px] leading-relaxed md:mt-3 md:text-[15px] ${isDark ? "text-white/70" : "text-[#49624d]"}`}>
                     These posts are trending now based on total engagement from likes and comments.
                   </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => scrollFeaturedPosts("prev")}
-                    aria-label="Scroll featured posts left"
-                    className={`flex h-9 w-9 items-center justify-center rounded-full border transition md:h-11 md:w-11 ${isDark ? "border-white/20 bg-[#0f131a]/80 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/90 text-[#2f4c33] hover:bg-[#f0f5ef]"}`}
-                  >
-                    <svg viewBox="0 0 24 24" className="h-4 w-4 md:h-5 md:w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
-                      <path d="M15 18l-6-6 6-6" />
-                    </svg>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => scrollFeaturedPosts("next")}
-                    aria-label="Scroll featured posts right"
-                    className={`flex h-9 w-9 items-center justify-center rounded-full border transition md:h-11 md:w-11 ${isDark ? "border-white/20 bg-[#0f131a]/80 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/90 text-[#2f4c33] hover:bg-[#f0f5ef]"}`}
-                  >
-                    <svg viewBox="0 0 24 24" className="h-4 w-4 md:h-5 md:w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
-                      <path d="M9 6l6 6-6 6" />
-                    </svg>
-                  </button>
                 </div>
               </div>
 
@@ -636,60 +636,118 @@ export default function PublicFeed() {
                   Featured posts will appear here once engagement starts building.
                 </div>
               ) : (
-                <div
-                  ref={featuredPostsCarouselRef}
-                  className="mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-1.5 md:mt-6 md:gap-3.5 md:pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                >
+                <div className="relative mt-3 md:mt-6">
+                  <button
+                    type="button"
+                    onClick={() => scrollFeaturedPosts("prev")}
+                    aria-label="Scroll featured posts left"
+                    className={`absolute left-[-30px] top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border transition md:h-11 md:w-11 ${isDark ? "border-white/20 bg-[#0f131a]/85 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/95 text-[#2f4c33] hover:bg-[#f0f5ef]"}`}
+                  >
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 md:h-5 md:w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
+                      <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                  </button>
+
+                  <div
+                    ref={featuredPostsCarouselRef}
+                    className="flex snap-x snap-mandatory gap-0 overflow-x-auto scroll-smooth pb-1 md:gap-3.5 md:pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  >
                   {topFeaturedPosts.map((post, index) => {
                     const totalEngagement = post.likeCount + post.commentCount;
 
                     return (
                       <article
                         key={`featured-top-${post.id}`}
-                        className={`w-[84%] min-w-[84%] shrink-0 snap-start rounded-[22px] border p-4 md:w-[46%] md:min-w-[46%] md:rounded-[26px] md:p-5 xl:w-[30%] xl:min-w-[30%] ${isDark ? "border-white/18 bg-[#121722]" : "border-black/10 bg-[#fbfdfb]"}`}
+                        className={`w-full min-w-full shrink-0 snap-start rounded-[18px] border p-3 md:w-[46%] md:min-w-[46%] md:rounded-[26px] md:p-5 xl:w-[30%] xl:min-w-[30%] ${isDark ? "border-white/18 bg-[#121722]" : "border-black/10 bg-[#fbfdfb]"}`}
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-[0.08em] md:px-3 md:py-1 md:text-[11px] md:tracking-[0.1em] ${isDark ? "border-[#8cf8c1]/45 bg-[#2ce88f]/14 text-[#9af9ca]" : "border-[#0a8a5b]/25 bg-[#0a8a5b]/10 text-[#0a8a5b]"}`}>
-                            #{index + 1}
-                          </span>
-
-                          <span className={`rounded-full border px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] md:px-3 md:py-1 md:text-[10px] md:tracking-[0.12em] ${isDark ? "border-white/15 text-white/75" : "border-black/10 text-[#566d58]"}`}>
-                            {post.section}
-                          </span>
-                        </div>
-
-                        <h3
-                          className="mt-3 line-clamp-2 text-[18px] font-semibold leading-tight tracking-[-0.01em] md:mt-4 md:line-clamp-3 md:text-[23px] md:tracking-[-0.02em]"
-                          style={{ fontFamily: "Georgia, Times New Roman, serif" }}
-                        >
-                          {postPreview(post.content, 120)}
-                        </h3>
-
-                        <p className={`mt-2 line-clamp-2 text-[13px] leading-relaxed md:mt-3 md:line-clamp-3 md:text-[14px] ${isDark ? "text-white/74" : "text-[#3f5542]"}`}>
-                          {postPreview(post.content, 210)}
-                        </p>
-
-                        <div className={`mt-4 flex items-center justify-between border-t pt-3 md:mt-5 md:pt-4 ${isDark ? "border-white/12" : "border-black/10"}`}>
-                          <div>
-                            <p className={`text-[13px] font-semibold md:text-[14px] ${isDark ? "text-white" : "text-[#243b27]"}`}>{post.author}</p>
-                            <p className={`text-[11px] md:text-[12px] ${isDark ? "text-white/45" : "text-[#68806b]"}`}>{formatPostDate(post.createdAt)}</p>
+                        <div className="md:hidden">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-[0.08em] ${isDark ? "border-[#8cf8c1]/45 bg-[#2ce88f]/14 text-[#9af9ca]" : "border-[#0a8a5b]/25 bg-[#0a8a5b]/10 text-[#0a8a5b]"}`}>
+                              #{index + 1}
+                            </span>
+                            <span className={`rounded-full border px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] ${isDark ? "border-white/15 text-white/75" : "border-black/10 text-[#566d58]"}`}>
+                              {post.section}
+                            </span>
                           </div>
 
-                          <div className="flex items-center gap-1.5 md:gap-2">
-                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold md:px-2.5 md:py-1 md:text-[11px] ${isDark ? "border-white/14 bg-white/6 text-white/85" : "border-black/10 bg-white text-[#325036]"}`}>
-                              {post.likeCount} Likes
+                          <h3
+                            className="mt-2 line-clamp-2 text-[15px] font-semibold leading-snug tracking-[-0.01em]"
+                            style={{ fontFamily: "Georgia, Times New Roman, serif" }}
+                          >
+                            {postPreview(post.content, 84)}
+                          </h3>
+
+                          <p className={`mt-1 line-clamp-1 text-[11px] ${isDark ? "text-white/74" : "text-[#3f5542]"}`}>
+                            {postPreview(post.content, 90)}
+                          </p>
+
+                          <div className={`mt-2.5 flex items-center justify-between border-t pt-2 ${isDark ? "border-white/12" : "border-black/10"}`}>
+                            <div>
+                              <p className={`text-[12px] font-semibold ${isDark ? "text-white" : "text-[#243b27]"}`}>{post.author}</p>
+                              <p className={`text-[10px] ${isDark ? "text-white/45" : "text-[#68806b]"}`}>{formatPostDate(post.createdAt)}</p>
+                            </div>
+                            <div className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold ${isDark ? "border-[#2ce88f]/30 bg-[#2ce88f]/10 text-[#9af9ca]" : "border-[#0a8a5b]/20 bg-[#e8f5ee] text-[#0a8a5b]"}`}>
+                              {post.likeCount}L · {post.commentCount}C · {totalEngagement}T
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="hidden md:block">
+                          <div className="flex items-start justify-between gap-3">
+                            <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.1em] ${isDark ? "border-[#8cf8c1]/45 bg-[#2ce88f]/14 text-[#9af9ca]" : "border-[#0a8a5b]/25 bg-[#0a8a5b]/10 text-[#0a8a5b]"}`}>
+                              #{index + 1}
                             </span>
-                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold md:px-2.5 md:py-1 md:text-[11px] ${isDark ? "border-white/14 bg-white/6 text-white/85" : "border-black/10 bg-white text-[#325036]"}`}>
-                              {post.commentCount} Comments
+
+                            <span className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${isDark ? "border-white/15 text-white/75" : "border-black/10 text-[#566d58]"}`}>
+                              {post.section}
                             </span>
-                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold md:px-2.5 md:py-1 md:text-[11px] ${isDark ? "border-[#2ce88f]/35 bg-[#2ce88f]/12 text-[#9af9ca]" : "border-[#0a8a5b]/20 bg-[#e8f5ee] text-[#0a8a5b]"}`}>
-                              {totalEngagement} Total
-                            </span>
+                          </div>
+
+                          <h3
+                            className="mt-4 line-clamp-3 text-[23px] font-semibold leading-tight tracking-[-0.02em]"
+                            style={{ fontFamily: "Georgia, Times New Roman, serif" }}
+                          >
+                            {postPreview(post.content, 120)}
+                          </h3>
+
+                          <p className={`mt-3 line-clamp-3 text-[14px] leading-relaxed ${isDark ? "text-white/74" : "text-[#3f5542]"}`}>
+                            {postPreview(post.content, 210)}
+                          </p>
+
+                          <div className={`mt-5 flex items-center justify-between border-t pt-4 ${isDark ? "border-white/12" : "border-black/10"}`}>
+                            <div>
+                              <p className={`text-[14px] font-semibold ${isDark ? "text-white" : "text-[#243b27]"}`}>{post.author}</p>
+                              <p className={`text-[12px] ${isDark ? "text-white/45" : "text-[#68806b]"}`}>{formatPostDate(post.createdAt)}</p>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${isDark ? "border-white/14 bg-white/6 text-white/85" : "border-black/10 bg-white text-[#325036]"}`}>
+                                {post.likeCount} Likes
+                              </span>
+                              <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${isDark ? "border-white/14 bg-white/6 text-white/85" : "border-black/10 bg-white text-[#325036]"}`}>
+                                {post.commentCount} Comments
+                              </span>
+                              <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${isDark ? "border-[#2ce88f]/35 bg-[#2ce88f]/12 text-[#9af9ca]" : "border-[#0a8a5b]/20 bg-[#e8f5ee] text-[#0a8a5b]"}`}>
+                                {totalEngagement} Total
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </article>
                     );
                   })}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => scrollFeaturedPosts("next")}
+                    aria-label="Scroll featured posts right"
+                    className={`absolute right-[-30px] top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border transition md:h-11 md:w-11 ${isDark ? "border-white/20 bg-[#0f131a]/85 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/95 text-[#2f4c33] hover:bg-[#f0f5ef]"}`}
+                  >
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 md:h-5 md:w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
+                      <path d="M9 6l6 6-6 6" />
+                    </svg>
+                  </button>
                 </div>
               )}
             </div>
@@ -945,63 +1003,63 @@ export default function PublicFeed() {
           </p>
           </header>
 
-          <div className="relative mt-8 overflow-hidden md:mt-10">
-          <button
-            type="button"
-            onClick={() => scrollRecentCards("prev")}
-            aria-label="Scroll previous cards"
-            className={`absolute left-0 top-1/2 z-20 hidden h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border md:flex ${isDark ? "border-white/25 bg-[#0f131a]/85 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/90 text-[#4b5d74] hover:bg-white"}`}
-          >
-            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2">
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
+          <div className="relative mt-8 overflow-visible md:mt-10">
+            <button
+              type="button"
+              onClick={() => scrollRecentCards("prev")}
+              aria-label="Scroll previous cards"
+              className={`absolute left-0 top-1/2 z-20 hidden h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border md:flex ${isDark ? "border-white/25 bg-[#0f131a]/85 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/90 text-[#4b5d74] hover:bg-white"}`}
+            >
+              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
 
-          <div
-            ref={recentCarouselRef}
-            className="flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth px-1 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {INSAAN_RECENT_CARDS.map((card) => (
-              <article key={card.title} className="group w-[calc(50%-10px)] min-w-45 shrink-0 snap-start sm:w-60 sm:min-w-60">
-                <a href={card.href} target="_blank" rel="noreferrer" className="block">
-                  <div className="relative aspect-4/6 overflow-hidden rounded-3xl">
-                    <Image
-                      src={card.image}
-                      alt={card.title}
-                      fill
-                      sizes="(min-width: 640px) 240px, 50vw"
-                      unoptimized
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
-                    />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/15 to-transparent" />
+            <div
+              ref={recentCarouselRef}
+              className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-6 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:px-10"
+            >
+              {INSAAN_RECENT_CARDS.map((card) => (
+                <article key={card.title} className="group w-[calc(50%-10px)] min-w-45 shrink-0 snap-start sm:w-60 sm:min-w-60 lg:w-[calc((100%-4rem)/5)] lg:min-w-[calc((100%-4rem)/5)]">
+                  <a href={card.href} target="_blank" rel="noreferrer" className="block">
+                    <div className="relative aspect-4/6 overflow-hidden rounded-3xl">
+                      <Image
+                        src={card.image}
+                        alt={card.title}
+                        fill
+                        sizes="(min-width: 1024px) 20vw, (min-width: 640px) 240px, 50vw"
+                        unoptimized
+                        className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                      />
+                      <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/15 to-transparent" />
 
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-black/58 text-white backdrop-blur-sm transition group-hover:scale-105">
-                        <svg viewBox="0 0 24 24" className="h-7 w-7" fill="currentColor">
-                          <path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l10.5-6.86a1 1 0 0 0 0-1.72L9.5 4.28A1 1 0 0 0 8 5.14z" />
-                        </svg>
-                      </span>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-black/58 text-white backdrop-blur-sm transition group-hover:scale-105">
+                          <svg viewBox="0 0 24 24" className="h-7 w-7" fill="currentColor">
+                            <path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l10.5-6.86a1 1 0 0 0 0-1.72L9.5 4.28A1 1 0 0 0 8 5.14z" />
+                          </svg>
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  <h3 className={`mt-3 line-clamp-2 text-[14px] font-semibold leading-snug md:text-[16px] ${isDark ? "text-white/92" : "text-[#0e2742]"}`} style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
-                    {card.title}
-                  </h3>
-                </a>
-              </article>
-            ))}
-          </div>
+                    <h3 className={`mt-3 line-clamp-2 text-[14px] font-semibold leading-snug md:text-[16px] ${isDark ? "text-white/92" : "text-[#0e2742]"}`} style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
+                      {card.title}
+                    </h3>
+                  </a>
+                </article>
+              ))}
+            </div>
 
-          <button
-            type="button"
-            onClick={() => scrollRecentCards("next")}
-            aria-label="Scroll next cards"
-            className={`absolute right-0 top-1/2 z-20 hidden h-14 w-14 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border md:flex ${isDark ? "border-white/25 bg-[#0f131a]/85 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/90 text-[#4b5d74] hover:bg-white"}`}
-          >
-            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2">
-              <path d="M9 6l6 6-6 6" />
-            </svg>
-          </button>
+            <button
+              type="button"
+              onClick={() => scrollRecentCards("next")}
+              aria-label="Scroll next cards"
+              className={`absolute right-0 top-1/2 z-20 hidden h-14 w-14 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border md:flex ${isDark ? "border-white/25 bg-[#0f131a]/85 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/90 text-[#4b5d74] hover:bg-white"}`}
+            >
+              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </button>
           </div>
         </div>
       </section>
