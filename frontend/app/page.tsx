@@ -1020,7 +1020,7 @@ export default function PublicFeed() {
               className="flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-6 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:px-10"
             >
               {INSAAN_RECENT_CARDS.map((card) => (
-                <article key={card.title} className="group w-[calc(50%-10px)] min-w-45 shrink-0 snap-start sm:w-60 sm:min-w-60 lg:w-[calc((100%-4rem)/5)] lg:min-w-[calc((100%-4rem)/5)]">
+                <article key={card.title} className="group w-[calc(50%-10px)] min-w-45 shrink-0 snap-start sm:w-60 sm:min-w-60 lg:w-[calc((100%-5rem)/5)] lg:min-w-[calc((100%-5rem)/5)]">
                   <a href={card.href} target="_blank" rel="noreferrer" className="block">
                     <div className="relative aspect-4/6 overflow-hidden rounded-3xl">
                       <Image
