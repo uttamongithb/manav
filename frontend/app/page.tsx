@@ -582,116 +582,9 @@ export default function PublicFeed() {
         </div>
       </section>
 
-      <section className="mx-auto w-[92vw] max-w-[1600px] px-1 py-7 md:py-10">
-        <div className="grid gap-7 xl:grid-cols-12">
-          <div className="xl:col-span-12">
-          <header className={`overflow-hidden rounded-[34px] border ${isDark ? "border-white/18 bg-[#17181d]" : "border-black/10 bg-white/92"}`}>
-            <div className="grid gap-0 lg:grid-cols-[1.2fr_0.95fr]">
-              <div className="relative p-6 md:p-8 lg:p-10">
-                <div className={`absolute inset-0 ${isDark ? "bg-[radial-gradient(circle_at_top_left,rgba(44,232,143,0.16),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.05),transparent_42%)]" : "bg-[radial-gradient(circle_at_top_left,rgba(10,138,91,0.13),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(10,138,91,0.06),transparent_42%)]"}`} />
-                <div className="relative z-10">
-                  <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-white/45" : "text-[#5d755f]"}`}>
-                    Community Timeline
-                  </p>
-                  <h1 className="mt-2 max-w-xl text-[36px] font-semibold leading-[0.98] tracking-[-0.04em] md:text-[56px]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
-                    Public Feed
-                  </h1>
-                  <p className={`mt-3 max-w-lg text-[15px] leading-relaxed ${isDark ? "text-white/68" : "text-[#4a5f4c]"}`}>
-                    Discover fresh writing, reflections, and verses from every section in one curated stream.
-                  </p>
-
-                  <div className="mt-6 flex flex-wrap gap-3">
-                    <div className={`rounded-full border px-4 py-2 text-[12px] font-semibold tracking-[0.08em] ${isDark ? "border-[#8cf8c1]/35 bg-[#2ce88f]/10 text-[#8cf8c1]" : "border-[#0a8a5b]/25 bg-[#0a8a5b]/10 text-[#0a8a5b]"}`}>
-                      {displayPosts.length} POSTS
-                    </div>
-                    <div className={`rounded-full border px-4 py-2 text-[12px] font-semibold tracking-[0.08em] ${isDark ? "border-white/15 bg-white/5 text-white/75" : "border-black/10 bg-white/80 text-[#2f4533]"}`}>
-                      {totalAuthors} WRITERS
-                    </div>
-                    <div className={`rounded-full border px-4 py-2 text-[12px] font-semibold tracking-[0.08em] ${isDark ? "border-white/15 bg-white/5 text-white/75" : "border-black/10 bg-white/80 text-[#2f4533]"}`}>
-                      {sortOrder === "latest" ? "LATEST" : "OLDEST"}
-                    </div>
-                  </div>
-
-                  <div className="mt-6 grid gap-3 sm:grid-cols-[1fr_auto]">
-                    <div className={`flex min-w-0 items-center gap-2 rounded-full border px-4 py-2.5 ${isDark ? "border-white/20 bg-[#101318]" : "border-black/10 bg-[#fbfdf9]"}`}>
-                      <svg viewBox="0 0 24 24" className={`h-4 w-4 shrink-0 ${isDark ? "text-white/45" : "text-[#7a8497]"}`} fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="11" cy="11" r="7" />
-                        <path d="M20 20l-3.2-3.2" />
-                      </svg>
-                      <input
-                        type="text"
-                        placeholder="Search by author, section or phrase"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className={`w-full bg-transparent text-[14px] outline-none ${isDark ? "placeholder:text-white/35" : "placeholder:text-[#81907d]"}`}
-                      />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => setSortOrder((prev) => (prev === "latest" ? "oldest" : "latest"))}
-                      className={`rounded-full border px-5 py-2 text-[12px] font-semibold tracking-[0.08em] transition ${isDark ? "border-white/20 bg-[#1f2229] text-white/85 hover:bg-[#2a2f39]" : "border-black/10 bg-[#fbfdf9] text-[#2f4533] hover:bg-[#edf4ea]"}`}
-                    >
-                      {sortOrder === "latest" ? "LATEST" : "OLDEST"}
-                    </button>
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {sections.map((section) => {
-                      const active = activeSection === section;
-                      return (
-                        <button
-                          key={section}
-                          type="button"
-                          onClick={() => setActiveSection(section)}
-                          className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold tracking-[0.08em] transition ${
-                            active
-                              ? isDark
-                                ? "border-[#2ce88f]/45 bg-[#2ce88f] text-[#09130d]"
-                                : "border-[#0a8a5b]/30 bg-[#0a8a5b] text-white"
-                              : isDark
-                                ? "border-white/12 bg-transparent text-white/72 hover:bg-white/8"
-                                : "border-black/10 bg-transparent text-[#4f684f] hover:bg-[#edf4ea]"
-                          }`}
-                        >
-                          {section}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              <div className="relative min-h-80 lg:min-h-105">
-                <Image
-                  src="https://picsum.photos/seed/public-feed-banner/1200/1200"
-                  alt="Public feed banner"
-                  fill
-                  sizes="(min-width: 1024px) 40vw, 100vw"
-                  unoptimized
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/28 to-transparent" />
-                <div className="absolute inset-x-0 bottom-0 p-6 md:p-7">
-                  <div className={`rounded-[26px] border p-4 backdrop-blur-md ${isDark ? "border-white/15 bg-black/25" : "border-white/20 bg-black/20"}`}>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/75">
-                      Featured Stream
-                    </p>
-                    <h2 className="mt-2 text-[24px] font-semibold leading-tight text-white md:text-[30px]" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
-                      Curated words from every corner of the platform.
-                    </h2>
-                    <p className="mt-2 text-[13px] leading-relaxed text-white/82">
-                      Search, filter, and switch between sections without losing the visual focus of the banner.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </header>
-
-          <article
-            className={`relative mt-5 overflow-hidden rounded-[34px] border p-5 md:p-7 ${isDark ? "border-white/15 bg-[#151922]" : "border-black/10 bg-white"}`}
-          >
+      <article
+        className={`relative mx-auto mt-5 w-[80vw] max-w-none overflow-hidden rounded-[34px] border p-5 md:p-7 ${isDark ? "border-white/15 bg-[#151922]" : "border-black/10 bg-white"}`}
+      >
             <div
               className={`pointer-events-none absolute inset-0 ${isDark ? "bg-[radial-gradient(circle_at_top_left,rgba(44,232,143,0.18),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(163,217,255,0.1),transparent_45%)]" : "bg-[radial-gradient(circle_at_top_left,rgba(10,138,91,0.16),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(35,95,168,0.08),transparent_45%)]"}`}
             />
@@ -745,7 +638,7 @@ export default function PublicFeed() {
               ) : (
                 <div
                   ref={featuredPostsCarouselRef}
-                  className="mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  className="mt-6 flex snap-x snap-mandatory gap-3.5 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
                   {topFeaturedPosts.map((post, index) => {
                     const totalEngagement = post.likeCount + post.commentCount;
@@ -753,7 +646,7 @@ export default function PublicFeed() {
                     return (
                       <article
                         key={`featured-top-${post.id}`}
-                        className={`w-[85%] min-w-[85%] shrink-0 snap-start rounded-[26px] border p-5 md:w-[48%] md:min-w-[48%] xl:w-[32%] xl:min-w-[32%] ${isDark ? "border-white/18 bg-[#121722]" : "border-black/10 bg-[#fbfdfb]"}`}
+                        className={`w-[78%] min-w-[78%] shrink-0 snap-start rounded-[26px] border p-5 md:w-[46%] md:min-w-[46%] xl:w-[30%] xl:min-w-[30%] ${isDark ? "border-white/18 bg-[#121722]" : "border-black/10 bg-[#fbfdfb]"}`}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.1em] ${isDark ? "border-[#8cf8c1]/45 bg-[#2ce88f]/14 text-[#9af9ca]" : "border-[#0a8a5b]/25 bg-[#0a8a5b]/10 text-[#0a8a5b]"}`}>
@@ -1041,21 +934,18 @@ export default function PublicFeed() {
               ))
             )}
           </div>
-          </div>
-        </div>
-      </section>
-
-      <section className={`mx-auto w-[92vw] max-w-350 px-1 pb-14 pt-6 ${isDark ? "text-white" : "text-[#0e2138]"}`}>
-        <header className="text-center">
+      <section className={`mx-auto grid w-[80vw] max-w-none gap-6 px-1 py-6 md:grid-cols-12 md:py-10 ${isDark ? "text-white" : "text-[#0e2138]"}`}>
+        <div className="md:col-span-12">
+          <header className="text-center">
           <p className={`text-[22px] font-semibold tracking-[0.28em] md:text-[26px] ${isDark ? "text-white/88" : "text-[#24384f]"}`} style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
             INSAAN RECENT
           </p>
           <p className={`mt-2 text-[14px] md:text-[16px] ${isDark ? "text-white/72" : "text-[#31465e]"}`}>
             Watch. Share. Subscribe.
           </p>
-        </header>
+          </header>
 
-        <div className="relative mt-8 md:mt-10">
+          <div className="relative mt-8 md:mt-10">
           <button
             type="button"
             onClick={() => scrollRecentCards("prev")}
@@ -1112,6 +1002,7 @@ export default function PublicFeed() {
               <path d="M9 6l6 6-6 6" />
             </svg>
           </button>
+          </div>
         </div>
       </section>
 
