@@ -185,6 +185,7 @@ export default function PublicFeed() {
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
   const [commentsByPost, setCommentsByPost] = useState<Record<string, PostComment[]>>({});
   const [pendingAction, setPendingAction] = useState<Record<string, boolean>>({});
+  const [displayPostCount, setDisplayPostCount] = useState(5);
   const recentCarouselRef = useRef<HTMLDivElement | null>(null);
   const recentDragStateRef = useRef({
     isDragging: false,
@@ -942,7 +943,7 @@ export default function PublicFeed() {
                 No public posts yet. Be the first to share.
               </div>
             ) : (
-              displayPosts.slice(featuredPost ? 1 : 0).map((post) => (
+              displayPosts.slice(featuredPost ? 1 : 0).slice(0, displayPostCount).map((post) => (
                 <article key={`public-${post.id}`} className="pb-12 md:pb-16">
                   <div className="mx-auto max-w-5xl px-3 text-center">
                     <div className="space-y-1.5 md:space-y-2">
@@ -1051,6 +1052,17 @@ export default function PublicFeed() {
                   </div>
                 </article>
               ))
+            )}
+            {displayPosts.length > displayPostCount + (featuredPost ? 1 : 0) && (
+              <div className="flex justify-center pt-8 md:pt-12">
+                <button
+                  type="button"
+                  onClick={() => setDisplayPostCount((prev) => prev + 5)}
+                  className={`rounded-lg px-8 py-3.5 text-[16px] font-semibold transition ${isDark ? "bg-[#2ce88f] text-[#07130d] hover:bg-[#1eb87e]" : "bg-[#0a8a5b] text-white hover:bg-[#068149]"}`}
+                >
+                  See More Posts
+                </button>
+              </div>
             )}
           </div>
       <section className={`mx-auto grid w-[92vw] md:w-[80vw] max-w-none gap-6 px-1 py-6 md:grid-cols-12 md:py-10 ${isDark ? "text-white" : "text-[#0e2138]"}`}>

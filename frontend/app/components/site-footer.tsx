@@ -159,7 +159,18 @@ export function SiteFooter({ isDark = false }: SiteFooterProps) {
       <div className={`${isDark ? "bg-[#0d1511]" : "bg-[#d8e8db]"}`}>
         <div className="mx-auto flex w-[92vw] max-w-350 flex-col gap-3 px-3 py-4 md:flex-row md:items-center md:justify-between md:px-2">
           <p className={`text-[14px] ${isDark ? "text-white/84" : "text-[#224634]"}`}>
-            © {year} INSAAN Foundation. All rights reserved.
+            © {year} INSAAN Foundation. All rights reserved.{" "}
+            <span className={isDark ? "text-white/60" : "text-[#315442]"}>•</span> Developed by{" "}
+            <a
+              href="https://www.uttambhartiya.in/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`font-semibold transition ${
+                isDark ? "text-[#8efcc7] hover:text-[#74ebb7]" : "text-[#0a8a5b] hover:text-[#068149]"
+              }`}
+            >
+              Uttam Bhartiya
+            </a>
           </p>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             {LEGAL_LINKS.map((item) => (
