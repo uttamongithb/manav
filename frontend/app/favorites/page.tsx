@@ -111,10 +111,10 @@ export default function FavoritesPage() {
   };
 
   return (
-    <main className={`min-h-screen transition-colors duration-300 ${isDark ? "bg-[#0e1117] text-white" : "bg-[#f3f5f8] text-[#10131a]"}`}>
+    <main className={`min-h-screen overflow-x-hidden transition-colors duration-300 ${isDark ? "bg-[#0e1117] text-white" : "bg-[#f3f5f8] text-[#10131a]"}`}>
       <SiteNavbar isDark={isDark} onToggleTheme={() => setIsDark((prev) => !prev)} activeHref="/favorites" />
 
-      <section className="mx-auto w-[92vw] max-w-[1200px] px-1 py-8 md:py-12">
+      <section className="mx-auto w-[92vw] md:w-[80vw] max-w-none px-1 py-8 md:py-12">
         <header className={`rounded-[28px] border p-6 md:p-8 ${isDark ? "border-white/18 bg-[#151922]" : "border-black/10 bg-white"}`}>
           <p className={`text-[11px] font-semibold uppercase tracking-[0.18em] ${isDark ? "text-white/48" : "text-[#5d755f]"}`}>
             Personal Library

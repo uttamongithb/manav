@@ -501,7 +501,7 @@ export default function PublicFeed() {
     .slice(0, 5);
 
   return (
-    <main className={`relative min-h-screen transition-colors duration-300 ${isDark ? "bg-[#0e1117] text-white" : "bg-[#f3f5f8] text-[#10131a]"}`}>
+    <main className={`relative min-h-screen overflow-x-hidden transition-colors duration-300 ${isDark ? "bg-[#0e1117] text-white" : "bg-[#f3f5f8] text-[#10131a]"}`}>
       <SiteNavbar isDark={isDark} onToggleTheme={() => setIsDark((prev) => !prev)} />
 
       <section className="w-full px-0 pt-0">
@@ -523,7 +523,7 @@ export default function PublicFeed() {
                   className="h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(100deg,rgba(0,0,0,0.7)_0%,rgba(0,0,0,0.42)_45%,rgba(0,0,0,0.15)_100%)]" />
-                <div className="absolute inset-x-0 bottom-0 top-0 mx-auto flex w-[92vw] max-w-350 items-end pb-8 md:items-center md:pb-0">
+                <div className="absolute inset-x-0 bottom-0 top-0 mx-auto flex w-[92vw] md:w-[80vw] max-w-none items-end pb-8 md:items-center md:pb-0">
                   <div className="max-w-xl rounded-[30px] border border-white/25 bg-black/30 p-5 text-white backdrop-blur-md md:p-7">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/75">
                       {slide.tag}
@@ -583,25 +583,25 @@ export default function PublicFeed() {
       </section>
 
       <article
-        className={`relative mx-auto mt-5 w-[80vw] max-w-none overflow-hidden rounded-[34px] border p-5 md:p-7 ${isDark ? "border-white/15 bg-[#151922]" : "border-black/10 bg-white"}`}
+        className={`relative mx-auto mt-4 w-[92vw] md:mt-5 md:w-[80vw] max-w-none overflow-hidden rounded-[28px] border p-4 md:rounded-[34px] md:p-7 ${isDark ? "border-white/15 bg-[#151922]" : "border-black/10 bg-white"}`}
       >
             <div
               className={`pointer-events-none absolute inset-0 ${isDark ? "bg-[radial-gradient(circle_at_top_left,rgba(44,232,143,0.18),transparent_42%),radial-gradient(circle_at_bottom_right,rgba(163,217,255,0.1),transparent_45%)]" : "bg-[radial-gradient(circle_at_top_left,rgba(10,138,91,0.16),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(35,95,168,0.08),transparent_45%)]"}`}
             />
 
             <div className="relative z-10">
-              <div className="flex flex-wrap items-end justify-between gap-4">
+              <div className="flex flex-wrap items-end justify-between gap-3 md:gap-4">
                 <div>
                   <p className={`text-[11px] font-semibold uppercase tracking-[0.17em] ${isDark ? "text-white/55" : "text-[#5b7560]"}`}>
                     Featured Ranking
                   </p>
                   <h2
-                    className="mt-2 text-[30px] font-semibold leading-[0.96] tracking-[-0.03em] md:text-[42px]"
+                    className="mt-1.5 text-[22px] font-semibold leading-[1] tracking-[-0.02em] md:mt-2 md:text-[42px]"
                     style={{ fontFamily: "Georgia, Times New Roman, serif" }}
                   >
                     Today's Top 5 
                   </h2>
-                  <p className={`mt-3 max-w-2xl text-[14px] leading-relaxed md:text-[15px] ${isDark ? "text-white/70" : "text-[#49624d]"}`}>
+                  <p className={`mt-2 max-w-2xl text-[12px] leading-relaxed md:mt-3 md:text-[15px] ${isDark ? "text-white/70" : "text-[#49624d]"}`}>
                     These posts are trending now based on total engagement from likes and comments.
                   </p>
                 </div>
@@ -611,9 +611,9 @@ export default function PublicFeed() {
                     type="button"
                     onClick={() => scrollFeaturedPosts("prev")}
                     aria-label="Scroll featured posts left"
-                    className={`flex h-11 w-11 items-center justify-center rounded-full border transition ${isDark ? "border-white/20 bg-[#0f131a]/80 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/90 text-[#2f4c33] hover:bg-[#f0f5ef]"}`}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full border transition md:h-11 md:w-11 ${isDark ? "border-white/20 bg-[#0f131a]/80 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/90 text-[#2f4c33] hover:bg-[#f0f5ef]"}`}
                   >
-                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 md:h-5 md:w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
                       <path d="M15 18l-6-6 6-6" />
                     </svg>
                   </button>
@@ -622,9 +622,9 @@ export default function PublicFeed() {
                     type="button"
                     onClick={() => scrollFeaturedPosts("next")}
                     aria-label="Scroll featured posts right"
-                    className={`flex h-11 w-11 items-center justify-center rounded-full border transition ${isDark ? "border-white/20 bg-[#0f131a]/80 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/90 text-[#2f4c33] hover:bg-[#f0f5ef]"}`}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full border transition md:h-11 md:w-11 ${isDark ? "border-white/20 bg-[#0f131a]/80 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/90 text-[#2f4c33] hover:bg-[#f0f5ef]"}`}
                   >
-                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 md:h-5 md:w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
                       <path d="M9 6l6 6-6 6" />
                     </svg>
                   </button>
@@ -638,7 +638,7 @@ export default function PublicFeed() {
               ) : (
                 <div
                   ref={featuredPostsCarouselRef}
-                  className="mt-6 flex snap-x snap-mandatory gap-3.5 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  className="mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-1.5 md:mt-6 md:gap-3.5 md:pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                 >
                   {topFeaturedPosts.map((post, index) => {
                     const totalEngagement = post.likeCount + post.commentCount;
@@ -646,43 +646,43 @@ export default function PublicFeed() {
                     return (
                       <article
                         key={`featured-top-${post.id}`}
-                        className={`w-[78%] min-w-[78%] shrink-0 snap-start rounded-[26px] border p-5 md:w-[46%] md:min-w-[46%] xl:w-[30%] xl:min-w-[30%] ${isDark ? "border-white/18 bg-[#121722]" : "border-black/10 bg-[#fbfdfb]"}`}
+                        className={`w-[84%] min-w-[84%] shrink-0 snap-start rounded-[22px] border p-4 md:w-[46%] md:min-w-[46%] md:rounded-[26px] md:p-5 xl:w-[30%] xl:min-w-[30%] ${isDark ? "border-white/18 bg-[#121722]" : "border-black/10 bg-[#fbfdfb]"}`}
                       >
                         <div className="flex items-start justify-between gap-3">
-                          <span className={`rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.1em] ${isDark ? "border-[#8cf8c1]/45 bg-[#2ce88f]/14 text-[#9af9ca]" : "border-[#0a8a5b]/25 bg-[#0a8a5b]/10 text-[#0a8a5b]"}`}>
+                          <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-[0.08em] md:px-3 md:py-1 md:text-[11px] md:tracking-[0.1em] ${isDark ? "border-[#8cf8c1]/45 bg-[#2ce88f]/14 text-[#9af9ca]" : "border-[#0a8a5b]/25 bg-[#0a8a5b]/10 text-[#0a8a5b]"}`}>
                             #{index + 1}
                           </span>
 
-                          <span className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${isDark ? "border-white/15 text-white/75" : "border-black/10 text-[#566d58]"}`}>
+                          <span className={`rounded-full border px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.1em] md:px-3 md:py-1 md:text-[10px] md:tracking-[0.12em] ${isDark ? "border-white/15 text-white/75" : "border-black/10 text-[#566d58]"}`}>
                             {post.section}
                           </span>
                         </div>
 
                         <h3
-                          className="mt-4 line-clamp-3 text-[23px] font-semibold leading-tight tracking-[-0.02em]"
+                          className="mt-3 line-clamp-2 text-[18px] font-semibold leading-tight tracking-[-0.01em] md:mt-4 md:line-clamp-3 md:text-[23px] md:tracking-[-0.02em]"
                           style={{ fontFamily: "Georgia, Times New Roman, serif" }}
                         >
                           {postPreview(post.content, 120)}
                         </h3>
 
-                        <p className={`mt-3 line-clamp-3 text-[14px] leading-relaxed ${isDark ? "text-white/74" : "text-[#3f5542]"}`}>
+                        <p className={`mt-2 line-clamp-2 text-[13px] leading-relaxed md:mt-3 md:line-clamp-3 md:text-[14px] ${isDark ? "text-white/74" : "text-[#3f5542]"}`}>
                           {postPreview(post.content, 210)}
                         </p>
 
-                        <div className={`mt-5 flex items-center justify-between border-t pt-4 ${isDark ? "border-white/12" : "border-black/10"}`}>
+                        <div className={`mt-4 flex items-center justify-between border-t pt-3 md:mt-5 md:pt-4 ${isDark ? "border-white/12" : "border-black/10"}`}>
                           <div>
-                            <p className={`text-[14px] font-semibold ${isDark ? "text-white" : "text-[#243b27]"}`}>{post.author}</p>
-                            <p className={`text-[12px] ${isDark ? "text-white/45" : "text-[#68806b]"}`}>{formatPostDate(post.createdAt)}</p>
+                            <p className={`text-[13px] font-semibold md:text-[14px] ${isDark ? "text-white" : "text-[#243b27]"}`}>{post.author}</p>
+                            <p className={`text-[11px] md:text-[12px] ${isDark ? "text-white/45" : "text-[#68806b]"}`}>{formatPostDate(post.createdAt)}</p>
                           </div>
 
-                          <div className="flex items-center gap-2">
-                            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${isDark ? "border-white/14 bg-white/6 text-white/85" : "border-black/10 bg-white text-[#325036]"}`}>
+                          <div className="flex items-center gap-1.5 md:gap-2">
+                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold md:px-2.5 md:py-1 md:text-[11px] ${isDark ? "border-white/14 bg-white/6 text-white/85" : "border-black/10 bg-white text-[#325036]"}`}>
                               {post.likeCount} Likes
                             </span>
-                            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${isDark ? "border-white/14 bg-white/6 text-white/85" : "border-black/10 bg-white text-[#325036]"}`}>
+                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold md:px-2.5 md:py-1 md:text-[11px] ${isDark ? "border-white/14 bg-white/6 text-white/85" : "border-black/10 bg-white text-[#325036]"}`}>
                               {post.commentCount} Comments
                             </span>
-                            <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${isDark ? "border-[#2ce88f]/35 bg-[#2ce88f]/12 text-[#9af9ca]" : "border-[#0a8a5b]/20 bg-[#e8f5ee] text-[#0a8a5b]"}`}>
+                            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold md:px-2.5 md:py-1 md:text-[11px] ${isDark ? "border-[#2ce88f]/35 bg-[#2ce88f]/12 text-[#9af9ca]" : "border-[#0a8a5b]/20 bg-[#e8f5ee] text-[#0a8a5b]"}`}>
                               {totalEngagement} Total
                             </span>
                           </div>
@@ -934,7 +934,7 @@ export default function PublicFeed() {
               ))
             )}
           </div>
-      <section className={`mx-auto grid w-[80vw] max-w-none gap-6 px-1 py-6 md:grid-cols-12 md:py-10 ${isDark ? "text-white" : "text-[#0e2138]"}`}>
+      <section className={`mx-auto grid w-[92vw] md:w-[80vw] max-w-none gap-6 px-1 py-6 md:grid-cols-12 md:py-10 ${isDark ? "text-white" : "text-[#0e2138]"}`}>
         <div className="md:col-span-12">
           <header className="text-center">
           <p className={`text-[22px] font-semibold tracking-[0.28em] md:text-[26px] ${isDark ? "text-white/88" : "text-[#24384f]"}`} style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
@@ -945,7 +945,7 @@ export default function PublicFeed() {
           </p>
           </header>
 
-          <div className="relative mt-8 md:mt-10">
+          <div className="relative mt-8 overflow-hidden md:mt-10">
           <button
             type="button"
             onClick={() => scrollRecentCards("prev")}

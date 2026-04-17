@@ -78,10 +78,10 @@ export default function PoetsPage() {
   const featuredPoet = filteredPoets[0] ?? poets[0] ?? POETS[0];
 
   return (
-    <main className={`relative min-h-screen transition-colors duration-300 ${isDark ? "bg-[#0e1117] text-white" : "bg-[#f3f5f8] text-[#10131a]"}`}>
+    <main className={`relative min-h-screen overflow-x-hidden transition-colors duration-300 ${isDark ? "bg-[#0e1117] text-white" : "bg-[#f3f5f8] text-[#10131a]"}`}>
       <SiteNavbar isDark={isDark} onToggleTheme={() => setIsDark((prev) => !prev)} activeHref="/poets" />
 
-      <section className="mx-auto grid w-[80vw] max-w-none gap-6 px-1 py-6 md:grid-cols-12 md:py-10">
+      <section className="mx-auto grid w-[92vw] md:w-[80vw] max-w-none gap-6 px-1 py-6 md:grid-cols-12 md:py-10">
         <div className="md:col-span-12">
           <section
             className={`rounded-[26px] border p-5 md:p-6 ${

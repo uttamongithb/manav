@@ -187,7 +187,7 @@ export default function SectionPage() {
   }
 
   return (
-    <main className={`relative isolate min-h-screen overflow-hidden transition-colors duration-300 ${isDark ? "bg-[#0e1117] text-white" : "bg-[#f3f5f8] text-[#10131a]"}`}>
+    <main className={`relative isolate min-h-screen overflow-x-hidden overflow-hidden transition-colors duration-300 ${isDark ? "bg-[#0e1117] text-white" : "bg-[#f3f5f8] text-[#10131a]"}`}>
 
       <div className="relative z-10">
       <SiteNavbar
@@ -196,7 +196,7 @@ export default function SectionPage() {
         activeHref={`/${sectionSlug}`}
       />
 
-      <div className="mx-auto w-[80vw] max-w-none px-1 py-6 md:py-10">
+      <div className="mx-auto w-[92vw] md:w-[80vw] max-w-none px-1 py-6 md:py-10">
         <section
           className={`mb-6 rounded-[26px] border p-5 md:mb-7 md:p-6 ${
             isDark ? "border-white/20 bg-[#17181d]" : "border-black/10 bg-white/94"

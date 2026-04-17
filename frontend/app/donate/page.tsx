@@ -77,10 +77,10 @@ export default function DonatePage() {
   };
 
   return (
-    <main className={`relative min-h-screen transition-colors duration-300 ${isDark ? "bg-[#0e1117] text-white" : "bg-[#f3f5f8] text-[#10131a]"}`}>
+    <main className={`relative min-h-screen overflow-x-hidden transition-colors duration-300 ${isDark ? "bg-[#0e1117] text-white" : "bg-[#f3f5f8] text-[#10131a]"}`}>
       <SiteNavbar isDark={isDark} onToggleTheme={() => setIsDark((prev) => !prev)} activeHref="/donate" />
 
-      <section className="mx-auto w-[80vw] max-w-none px-1 py-6 md:py-10">
+      <section className="mx-auto w-[92vw] md:w-[80vw] max-w-none px-1 py-6 md:py-10">
         <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
           <article className={`overflow-hidden rounded-4xl border ${isDark ? "border-white/20 bg-[#17181d]" : "border-black/10 bg-white"}`}>
             <div className="p-6 md:p-8">

@@ -57,9 +57,9 @@ export default function PublicFeedPage() {
   }, [backendUrl]);
 
   return (
-    <main className={`relative isolate min-h-screen overflow-hidden px-4 py-4 transition-colors duration-300 md:px-6 lg:px-8 ${isDark ? "text-white" : "text-[#10131a]"}`}>
+    <main className={`relative isolate min-h-screen overflow-x-hidden overflow-hidden px-4 py-4 transition-colors duration-300 md:px-6 lg:px-8 ${isDark ? "text-white" : "text-[#10131a]"}`}>
 
-      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-2rem)] max-w-300 flex-col gap-4">
+      <div className="relative z-10 mx-auto flex min-h-[calc(100vh-2rem)] w-[92vw] md:w-[80vw] max-w-none flex-col gap-4">
         <header className={`rounded-[28px] border p-4 shadow-[0_24px_60px_rgba(0,0,0,0.12)] backdrop-blur-xl md:p-5 ${isDark ? "border-white/10 bg-white/6" : "border-black/10 bg-white"}`}>
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>

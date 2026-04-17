@@ -54,6 +54,7 @@ const NAV_ITEMS = [
 export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProps) {
   const { user } = useAuth();
   const [cachedAvatarUrl, setCachedAvatarUrl] = useState<string>("");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isAdmin = ["admin", "superadmin"].includes(user?.role?.toLowerCase?.() ?? "");
   const visibleNavItems = isAdmin
     ? [...NAV_ITEMS, { label: "Admin", href: "/admin" }]
@@ -90,6 +91,15 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
     };
   }, [user?.id]);
 
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.style.overflow = isMenuOpen ? "hidden" : "";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMenuOpen]);
+
   const avatarSrc =
     cachedAvatarUrl ||
     user?.avatarUrl?.trim() ||
@@ -106,7 +116,7 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
           <span className="text-[24px] font-bold tracking-[-0.02em]">INSAAN</span>
         </Link>
 
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-8 lg:flex">
           {visibleNavItems.map((item) => {
             const isActive = activeHref === item.href || (item.href === "/links" && activeHref?.startsWith("/links"));
 
@@ -176,49 +186,219 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
           })}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             type="button"
             onClick={onToggleTheme}
-            className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-semibold tracking-[0.08em] transition ${
+            className={`flex h-10 w-10 items-center justify-center rounded-full border transition sm:h-auto sm:w-auto sm:gap-2 sm:px-3 sm:py-1.5 sm:text-[11px] sm:font-semibold sm:tracking-[0.08em] ${
               isDark ? "border-white/20 bg-[#1b1e24]" : "border-black/10 bg-white"
             }`}
             aria-label="Toggle theme"
           >
-            <span>{isDark ? "DARK" : "LIGHT"}</span>
+            <span className="hidden sm:inline">{isDark ? "DARK" : "LIGHT"}</span>
             <span className={`relative h-4 w-8 rounded-full transition ${isDark ? "bg-[#2ce88f]" : "bg-[#d9dde5]"}`}>
               <span className={`absolute top-0.5 h-3 w-3 rounded-full transition ${isDark ? "left-4 bg-[#0b1112]" : "left-0.5 bg-[#10131a]"}`} />
             </span>
           </button>
 
-          {user ? (
-            <Link
-              href="/my-profile"
-              aria-label="Open profile"
-              className={`group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border transition ${
-                isDark
-                  ? "border-[#2ce88f]/45 bg-[#11161d] hover:border-[#2ce88f]/75"
-                  : "border-[#0a8a5b]/30 bg-white hover:border-[#0a8a5b]/55"
-              }`}
-              title="Profile"
-            >
-              <Image
-                src={avatarSrc}
-                alt="Profile"
-                fill
-                sizes="40px"
-                unoptimized
-                className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.04]"
+          <div className="lg:hidden">
+            {user ? (
+              <Link
+                href="/my-profile"
+                aria-label="Open profile"
+                className={`group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border transition ${
+                  isDark
+                    ? "border-[#2ce88f]/45 bg-[#11161d] hover:border-[#2ce88f]/75"
+                    : "border-[#0a8a5b]/30 bg-white hover:border-[#0a8a5b]/55"
+                }`}
+                title="Profile"
+              >
+                <Image
+                  src={avatarSrc}
+                  alt="Profile"
+                  fill
+                  sizes="40px"
+                  unoptimized
+                  className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.04]"
+                />
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                aria-label="Open login"
+                className={`flex h-10 w-10 items-center justify-center rounded-full border transition ${
+                  isDark
+                    ? "border-[#2ce88f]/35 bg-[#2ce88f]/10 text-[#8cf8c1] hover:bg-[#2ce88f]/20"
+                    : "border-[#0a8a5b]/25 bg-[#0a8a5b]/10 text-[#0a8a5b] hover:bg-[#0a8a5b]/15"
+                }`}
+                title="Sign in"
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.9">
+                  <circle cx="12" cy="8" r="3.5" />
+                  <path d="M4.5 20c1.2-3.6 3.9-5.5 7.5-5.5S18.3 16.4 19.5 20" strokeLinecap="round" />
+                </svg>
+              </Link>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen((prev) => !prev)}
+            className={`inline-flex h-10 w-10 items-center justify-center rounded-full border transition lg:hidden ${
+              isDark ? "border-white/20 bg-[#1b1e24] text-white" : "border-black/10 bg-white text-[#10131a]"
+            }`}
+            aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={isMenuOpen}
+            aria-controls="site-mobile-navigation"
+          >
+            <span className="relative block h-4 w-4">
+              <span
+                className={`absolute left-0 top-0 h-0.5 w-4 rounded-full bg-current transition-transform duration-200 ${
+                  isMenuOpen ? "translate-y-[7px] rotate-45" : ""
+                }`}
               />
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="rounded-full bg-[#2ce88f] px-4 py-2 text-[12px] font-bold tracking-[0.08em] text-[#0b1112] transition hover:bg-[#45f39f]"
-            >
-              SIGN IN
-            </Link>
-          )}
+              <span
+                className={`absolute left-0 top-[7px] h-0.5 w-4 rounded-full bg-current transition-opacity duration-200 ${
+                  isMenuOpen ? "opacity-0" : "opacity-100"
+                }`}
+              />
+              <span
+                className={`absolute left-0 top-[14px] h-0.5 w-4 rounded-full bg-current transition-transform duration-200 ${
+                  isMenuOpen ? "translate-y-[-7px] -rotate-45" : ""
+                }`}
+              />
+            </span>
+          </button>
+
+          <div className="hidden lg:block">
+            {user ? (
+              <Link
+                href="/my-profile"
+                aria-label="Open profile"
+                className={`group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border transition ${
+                  isDark
+                    ? "border-[#2ce88f]/45 bg-[#11161d] hover:border-[#2ce88f]/75"
+                    : "border-[#0a8a5b]/30 bg-white hover:border-[#0a8a5b]/55"
+                }`}
+                title="Profile"
+              >
+                <Image
+                  src={avatarSrc}
+                  alt="Profile"
+                  fill
+                  sizes="40px"
+                  unoptimized
+                  className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.04]"
+                />
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="rounded-full bg-[#2ce88f] px-4 py-2 text-[12px] font-bold tracking-[0.08em] text-[#0b1112] transition hover:bg-[#45f39f]"
+              >
+                SIGN IN
+              </Link>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="site-mobile-navigation"
+        className={`lg:hidden ${isMenuOpen ? "block" : "hidden"}`}
+      >
+        <div className={`border-t px-4 py-4 ${isDark ? "border-white/15 bg-[#13161c]" : "border-black/10 bg-[#f8faf5]"}`}>
+          <div className="grid gap-3">
+            <div className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 ${isDark ? "border-white/10 bg-white/5" : "border-black/10 bg-white"}`}>
+              <button
+                type="button"
+                onClick={onToggleTheme}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-semibold tracking-[0.08em] transition ${
+                  isDark ? "border-white/20 bg-[#1b1e24] text-white" : "border-black/10 bg-white text-[#10131a]"
+                }`}
+              >
+                <span>{isDark ? "DARK" : "LIGHT"}</span>
+                <span className={`relative h-4 w-8 rounded-full transition ${isDark ? "bg-[#2ce88f]" : "bg-[#d9dde5]"}`}>
+                  <span className={`absolute top-0.5 h-3 w-3 rounded-full transition ${isDark ? "left-4 bg-[#0b1112]" : "left-0.5 bg-[#10131a]"}`} />
+                </span>
+              </button>
+
+              {user ? (
+                <Link
+                  href="/my-profile"
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-semibold tracking-[0.08em] transition ${
+                    isDark ? "border-[#2ce88f]/35 bg-[#2ce88f]/10 text-[#8cf8c1]" : "border-[#0a8a5b]/20 bg-[#0a8a5b]/10 text-[#0a8a5b]"
+                  }`}
+                >
+                  PROFILE
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="inline-flex items-center gap-2 rounded-full bg-[#2ce88f] px-3 py-2 text-[11px] font-bold tracking-[0.08em] text-[#0b1112]"
+                >
+                  SIGN IN
+                </Link>
+              )}
+            </div>
+
+            <div className={`rounded-3xl border p-3 ${isDark ? "border-white/10 bg-[#151922]" : "border-black/10 bg-white"}`}>
+              <div className="grid gap-2">
+                {visibleNavItems.map((item) => {
+                  const isActive = activeHref === item.href || (item.href === "/links" && activeHref?.startsWith("/links"));
+
+                  if (item.dropdownItems?.length) {
+                    return (
+                      <div key={item.label} className={`rounded-2xl border px-3 py-3 ${isDark ? "border-white/10 bg-white/5" : "border-black/10 bg-[#fbfcfa]"}`}>
+                        <Link
+                          href={item.href}
+                          onClick={() => setIsMenuOpen(false)}
+                          className={`block text-[13px] font-semibold tracking-[0.08em] ${
+                            isActive ? (isDark ? "text-[#8cf8c1]" : "text-[#0a8a5b]") : isDark ? "text-white/85" : "text-[#203022]"
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                        <div className="mt-3 grid gap-2 pl-3">
+                          {item.dropdownItems.map((entry) => (
+                            <Link
+                              key={entry.label}
+                              href={entry.href}
+                              onClick={() => setIsMenuOpen(false)}
+                              className={`text-[12px] font-medium transition ${isDark ? "text-white/70 hover:text-white" : "text-[#44534a] hover:text-[#10131a]"}`}
+                            >
+                              {entry.label}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      onClick={() => setIsMenuOpen(false)}
+                      className={`rounded-2xl border px-3 py-3 text-[13px] font-semibold tracking-[0.08em] transition ${
+                        isActive
+                          ? isDark
+                            ? "border-[#2ce88f]/35 bg-[#2ce88f]/10 text-[#8cf8c1]"
+                            : "border-[#0a8a5b]/20 bg-[#0a8a5b]/10 text-[#0a8a5b]"
+                          : isDark
+                            ? "border-white/10 bg-white/5 text-white/85 hover:bg-white/8"
+                            : "border-black/10 bg-[#fbfcfa] text-[#203022] hover:bg-[#f2f6ef]"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </nav>
