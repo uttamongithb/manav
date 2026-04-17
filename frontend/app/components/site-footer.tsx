@@ -53,8 +53,8 @@ export function SiteFooter({ isDark = false }: SiteFooterProps) {
       }`}
     >
       <div className="mx-auto w-[92vw] max-w-350 px-3 pb-10 pt-12 md:px-2 md:pt-14">
-        <div className="grid gap-y-10 md:gap-x-8 md:grid-cols-2 lg:grid-cols-12">
-          <section className="md:col-span-2 lg:col-span-5">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:gap-x-8 lg:grid-cols-12">
+          <section className="col-span-2 md:col-span-2 lg:col-span-5">
             <p className={`text-[12px] font-semibold uppercase tracking-[0.2em] ${isDark ? "text-[#8efcc7]" : "text-[#0a8a5b]"}`}>
               INSAAN Foundation
             </p>
@@ -88,9 +88,9 @@ export function SiteFooter({ isDark = false }: SiteFooterProps) {
             </div>
           </section>
 
-          <section className="lg:col-span-2">
+          <section className="min-w-0 lg:col-span-2">
             <h3 className={sectionTitleClass}>Explore</h3>
-            <ul className="mt-4 space-y-2.5">
+            <ul className="mt-3 space-y-1.5 sm:mt-4 sm:space-y-2.5">
               {PRIMARY_LINKS.map((item) => (
                 <li key={item.label}>
                   <Link href={item.href} className={navLinkClass}>
@@ -101,9 +101,9 @@ export function SiteFooter({ isDark = false }: SiteFooterProps) {
             </ul>
           </section>
 
-          <section className="lg:col-span-2">
+          <section className="min-w-0 lg:col-span-2">
             <h3 className={sectionTitleClass}>Community</h3>
-            <ul className="mt-4 space-y-2.5">
+            <ul className="mt-3 space-y-1.5 sm:mt-4 sm:space-y-2.5">
               {COMMUNITY_LINKS.map((item) => (
                 <li key={item.label}>
                   <Link href={item.href} className={navLinkClass}>
@@ -114,7 +114,7 @@ export function SiteFooter({ isDark = false }: SiteFooterProps) {
             </ul>
           </section>
 
-          <section className="space-y-7 md:col-span-2 lg:col-span-3">
+          <section className="col-span-2 space-y-7 md:col-span-2 lg:col-span-3">
             <div>
               <h3 className={sectionTitleClass}>Connect</h3>
               <p className={`mt-4 text-[15px] leading-relaxed ${isDark ? "text-white/74" : "text-[#2f523f]"}`}>

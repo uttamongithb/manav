@@ -1,4 +1,4 @@
-﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    INSAAN Admin Dashboard â€” Custom Styles
    Mirrors Material Kit React layout with INSAAN green accent
    â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
@@ -439,6 +439,7 @@
   max-width: none;
   width: 100%;
   margin: 0;
+  overflow-x: hidden;
 }
 
 .admin-page-header {
@@ -1249,8 +1250,28 @@
 }
 
 @media (max-width: 767px) {
+  /* Stat card strip — horizontal scroll on mobile */
   .admin-grid-4 {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    gap: 16px;
+    padding-bottom: 8px;
+    /* Hide scrollbar track but keep it functional */
+    scrollbar-width: none;
+  }
+
+  .admin-grid-4::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Each stat card: fixed width so they don't collapse */
+  .admin-grid-4 > * {
+    flex: 0 0 220px;
+    min-width: 220px;
+    scroll-snap-align: start;
   }
 
   .admin-grid-2 {
@@ -1259,6 +1280,7 @@
 
   .admin-content {
     padding: 20px 16px 32px;
+    overflow-x: hidden;
   }
 
   .admin-topnav-section-value {
@@ -1275,6 +1297,18 @@
 
   .admin-chart-bar {
     width: 10px;
+  }
+
+  /* Chart/content grids stack to 1 col */
+  .admin-grid-8-4,
+  .admin-grid-4-8 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Table horizontal scroll */
+  .admin-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

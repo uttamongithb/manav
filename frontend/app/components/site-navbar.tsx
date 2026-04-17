@@ -59,6 +59,21 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
   const visibleNavItems = isAdmin
     ? [...NAV_ITEMS, { label: "Admin", href: "/admin" }]
     : NAV_ITEMS;
+  const mobileExploreItems = [
+    { label: "Home", href: "/" },
+    { label: "Poets", href: "/poets" },
+    { label: "Public Feed", href: "/public-feed" },
+    { label: "Donate", href: "/donate" },
+    { label: "Archives", href: "/archives" },
+    { label: "EBook Download", href: "/ebook-download" },
+  ];
+  const mobileCommunityItems = [
+    { label: "About Us", href: "/about-us" },
+    { label: "Contact Us", href: "/contact-us" },
+    { label: "Links", href: "/links" },
+    { label: "My Profile", href: "/my-profile" },
+    { label: "Login", href: "/login" },
+  ];
 
   useEffect(() => {
     if (!user?.id || typeof window === "undefined") {
@@ -344,58 +359,70 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
               )}
             </div>
 
-            <div className={`rounded-3xl border p-3 ${isDark ? "border-white/10 bg-[#151922]" : "border-black/10 bg-white"}`}>
-              <div className="grid gap-2">
-                {visibleNavItems.map((item) => {
-                  const isActive = activeHref === item.href || (item.href === "/links" && activeHref?.startsWith("/links"));
+            <div className={`rounded-3xl border p-4 ${isDark ? "border-white/10 bg-[#151922]" : "border-black/10 bg-white"}`}>
+              <div className="grid w-full items-start gap-4 sm:gap-5" style={{ gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)" }}>
+                <div className="min-w-0 w-full">
+                  <p className={`text-[12px] font-bold tracking-[0.2em] ${isDark ? "text-[#8cf8c1]" : "text-[#0a8a5b]"}`}>
+                    EXPLORE
+                  </p>
+                  <div className="mt-3 grid min-w-0 gap-2">
+                    {mobileExploreItems.map((item) => {
+                      const isActive = activeHref === item.href || (item.href === "/public-feed" && activeHref?.startsWith("/public-feed"));
 
-                  if (item.dropdownItems?.length) {
-                    return (
-                      <div key={item.label} className={`rounded-2xl border px-3 py-3 ${isDark ? "border-white/10 bg-white/5" : "border-black/10 bg-[#fbfcfa]"}`}>
+                      return (
                         <Link
+                          key={item.label}
                           href={item.href}
                           onClick={() => setIsMenuOpen(false)}
-                          className={`block text-[13px] font-semibold tracking-[0.08em] ${
-                            isActive ? (isDark ? "text-[#8cf8c1]" : "text-[#0a8a5b]") : isDark ? "text-white/85" : "text-[#203022]"
+                          className={`rounded-xl px-2.5 py-2 text-[13px] font-semibold transition ${
+                            isActive
+                              ? isDark
+                                ? "bg-[#2ce88f]/12 text-[#8cf8c1]"
+                                : "bg-[#0a8a5b]/10 text-[#0a8a5b]"
+                              : isDark
+                                ? "text-white/82 hover:bg-white/8"
+                                : "text-[#203022] hover:bg-[#f2f6ef]"
                           }`}
                         >
                           {item.label}
                         </Link>
-                        <div className="mt-3 grid gap-2 pl-3">
-                          {item.dropdownItems.map((entry) => (
-                            <Link
-                              key={entry.label}
-                              href={entry.href}
-                              onClick={() => setIsMenuOpen(false)}
-                              className={`text-[12px] font-medium transition ${isDark ? "text-white/70 hover:text-white" : "text-[#44534a] hover:text-[#10131a]"}`}
-                            >
-                              {entry.label}
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  }
+                      );
+                    })}
+                  </div>
+                </div>
 
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      onClick={() => setIsMenuOpen(false)}
-                      className={`rounded-2xl border px-3 py-3 text-[13px] font-semibold tracking-[0.08em] transition ${
-                        isActive
-                          ? isDark
-                            ? "border-[#2ce88f]/35 bg-[#2ce88f]/10 text-[#8cf8c1]"
-                            : "border-[#0a8a5b]/20 bg-[#0a8a5b]/10 text-[#0a8a5b]"
-                          : isDark
-                            ? "border-white/10 bg-white/5 text-white/85 hover:bg-white/8"
-                            : "border-black/10 bg-[#fbfcfa] text-[#203022] hover:bg-[#f2f6ef]"
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })}
+                <div className="min-w-0 w-full">
+                  <p className={`text-[12px] font-bold tracking-[0.2em] ${isDark ? "text-[#8cf8c1]" : "text-[#0a8a5b]"}`}>
+                    COMMUNITY
+                  </p>
+                  <div className="mt-3 grid min-w-0 gap-2">
+                    {mobileCommunityItems.map((item) => {
+                      const isHiddenByAuth = (item.href === "/login" && !!user) || (item.href === "/my-profile" && !user);
+                      if (isHiddenByAuth) return null;
+
+                      const isActive = activeHref === item.href || (item.href === "/links" && activeHref?.startsWith("/links"));
+
+                      return (
+                        <Link
+                          key={item.label}
+                          href={item.href}
+                          onClick={() => setIsMenuOpen(false)}
+                          className={`rounded-xl px-2.5 py-2 text-[13px] font-semibold transition ${
+                            isActive
+                              ? isDark
+                                ? "bg-[#2ce88f]/12 text-[#8cf8c1]"
+                                : "bg-[#0a8a5b]/10 text-[#0a8a5b]"
+                              : isDark
+                                ? "text-white/82 hover:bg-white/8"
+                                : "text-[#203022] hover:bg-[#f2f6ef]"
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent, type PointerEvent } from "react";
 import { SiteNavbar } from "@/app/components/site-navbar";
 import { SiteFooter } from "@/app/components/site-footer";
 import { useTheme } from "@/app/context/theme";
@@ -186,6 +186,13 @@ export default function PublicFeed() {
   const [commentsByPost, setCommentsByPost] = useState<Record<string, PostComment[]>>({});
   const [pendingAction, setPendingAction] = useState<Record<string, boolean>>({});
   const recentCarouselRef = useRef<HTMLDivElement | null>(null);
+  const recentDragStateRef = useRef({
+    isDragging: false,
+    pointerId: -1,
+    startX: 0,
+    startScrollLeft: 0,
+    didDrag: false,
+  });
   const featuredPostsCarouselRef = useRef<HTMLDivElement | null>(null);
 
   const backendUrl = getApiBaseUrl();
@@ -293,6 +300,60 @@ export default function PublicFeed() {
       left: direction === "next" ? step : -step,
       behavior: "smooth",
     });
+  };
+
+
+
+  const handleRecentPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+
+    const container = recentCarouselRef.current;
+    if (!container) return;
+
+    recentDragStateRef.current.isDragging = true;
+    recentDragStateRef.current.pointerId = event.pointerId;
+    recentDragStateRef.current.startX = event.clientX;
+    recentDragStateRef.current.startScrollLeft = container.scrollLeft;
+    recentDragStateRef.current.didDrag = false;
+
+    container.setPointerCapture(event.pointerId);
+  };
+
+  const handleRecentPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const container = recentCarouselRef.current;
+    if (!container) return;
+    if (!recentDragStateRef.current.isDragging) return;
+    if (recentDragStateRef.current.pointerId !== event.pointerId) return;
+
+    const deltaX = event.clientX - recentDragStateRef.current.startX;
+    if (Math.abs(deltaX) > 3) {
+      recentDragStateRef.current.didDrag = true;
+    }
+
+    container.scrollLeft = recentDragStateRef.current.startScrollLeft - deltaX;
+  };
+
+  const handleRecentPointerEnd = (event: PointerEvent<HTMLDivElement>) => {
+    const container = recentCarouselRef.current;
+    if (!container) return;
+    if (recentDragStateRef.current.pointerId !== event.pointerId) return;
+
+    try {
+      container.releasePointerCapture(event.pointerId);
+    } catch {
+      // Ignore if already released.
+    }
+
+    recentDragStateRef.current.isDragging = false;
+    recentDragStateRef.current.pointerId = -1;
+  };
+
+  const handleRecentClickCapture = (event: MouseEvent<HTMLDivElement>) => {
+    if (!recentDragStateRef.current.didDrag) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    recentDragStateRef.current.didDrag = false;
   };
 
   const scrollFeaturedPosts = (direction: "prev" | "next") => {
@@ -1010,24 +1071,40 @@ export default function PublicFeed() {
               aria-label="Scroll previous cards"
               className={`absolute left-0 top-1/2 z-20 hidden h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border md:flex ${isDark ? "border-white/25 bg-[#0f131a]/85 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/90 text-[#4b5d74] hover:bg-white"}`}
             >
-              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <svg viewBox="0 0 24 24" className="h-5 w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" strokeWidth="2.2">
                 <path d="M15 18l-6-6 6-6" />
               </svg>
             </button>
 
             <div
               ref={recentCarouselRef}
-              className="flex max-w-full snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-smooth px-3 py-2 touch-pan-x [scrollbar-width:none] [-webkit-overflow-scrolling:touch] [&::-webkit-scrollbar]:hidden sm:gap-4 sm:px-4 lg:px-10"
+              onPointerDown={handleRecentPointerDown}
+              onPointerMove={handleRecentPointerMove}
+              onPointerUp={handleRecentPointerEnd}
+              onPointerCancel={handleRecentPointerEnd}
+              onClickCapture={handleRecentClickCapture}
+              className="flex w-full snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden px-4 py-4 md:px-0 lg:gap-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
             >
-              {INSAAN_RECENT_CARDS.map((card) => (
-                <article key={card.title} className="group w-[44vw] min-w-[9.75rem] max-w-[11rem] shrink-0 snap-start select-none sm:w-60 sm:min-w-60 sm:max-w-none lg:w-[calc((100%-5rem)/5)] lg:min-w-[calc((100%-5rem)/5)]">
+              {INSAAN_RECENT_CARDS.map((card, idx) => (
+                <article 
+                  key={card.title} 
+                  className={`group relative shrink-0 snap-start 
+                    w-[calc((100%-0.35rem)/2)] min-w-[calc((100%-0.35rem)/2)] max-w-none 
+                    sm:w-[calc((100%-0.75rem)/2)] sm:min-w-[calc((100%-0.75rem)/2)]
+                    md:w-[calc((100%-3rem)/5)] md:min-w-[calc((100%-3rem)/5)]
+                    lg:w-[calc((100%-6rem)/5)] lg:min-w-[calc((100%-6rem)/5)] lg:max-w-none
+                    ${idx === 0 ? "ml-0" : ""}
+                    ${idx === INSAAN_RECENT_CARDS.length - 1 ? "mr-4 md:mr-0" : ""}
+                  `}
+                >
                   <a href={card.href} target="_blank" rel="noreferrer" className="block">
-                    <div className="relative aspect-[3/4] overflow-hidden rounded-2xl sm:aspect-4/6 sm:rounded-3xl">
+                    <div className="relative aspect-[5/6] overflow-hidden rounded-2xl sm:aspect-4/6 sm:rounded-3xl">
                       <Image
                         src={card.image}
                         alt={card.title}
                         fill
-                        sizes="(min-width: 1024px) 20vw, (min-width: 640px) 240px, 44vw"
+                        sizes="(min-width: 1024px) 20vw, (min-width: 768px) 20vw, 50vw"
                         unoptimized
                         className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
                       />
@@ -1056,10 +1133,34 @@ export default function PublicFeed() {
               aria-label="Scroll next cards"
               className={`absolute right-0 top-1/2 z-20 hidden h-14 w-14 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border md:flex ${isDark ? "border-white/25 bg-[#0f131a]/85 text-white hover:bg-[#1b2331]" : "border-black/10 bg-white/90 text-[#4b5d74] hover:bg-white"}`}
             >
-              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <svg viewBox="0 0 24 24" className="h-5 w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" strokeWidth="2.2">
                 <path d="M9 6l6 6-6 6" />
               </svg>
             </button>
+
+            <div className="mt-3 flex items-center justify-center gap-4 px-3 md:hidden">
+              <button
+                type="button"
+                onClick={() => scrollRecentCards("prev")}
+                aria-label="Scroll previous cards mobile"
+                className={`inline-flex h-10 w-10 items-center justify-center rounded-full border shadow-sm ${isDark ? "border-white/25 bg-[#0f131a]/92 text-white" : "border-black/12 bg-white text-[#4b5d74]"}`}
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => scrollRecentCards("next")}
+                aria-label="Scroll next cards mobile"
+                className={`inline-flex h-10 w-10 items-center justify-center rounded-full border shadow-sm ${isDark ? "border-white/25 bg-[#0f131a]/92 text-white" : "border-black/12 bg-white text-[#4b5d74]"}`}
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </section>
