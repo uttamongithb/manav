@@ -1,0 +1,66 @@
+[
+  {
+    "id": "user-1775625021869-qw0hatk8v",
+    "email": "alice@example.com",
+    "username": "aliceatwonder",
+    "displayName": "Alice",
+    "passwordHash": "$2b$10$5Sg8pU2wKOtfHvLhQ6Nk9uUgN/z6De4YOVtyvPuOfqDXUiCxt6PrK",
+    "role": "reader"
+  },
+  {
+    "id": "user-1775625032673-qdez37n30",
+    "email": "bob@example.com",
+    "username": "bobbybob",
+    "displayName": "Bob",
+    "passwordHash": "$2b$10$tuoGGCQljHgd.4YOWcb0F.SVn/QA1MiNTTelOUEEVZy7bVV9RoCHS",
+    "role": "reader"
+  },
+  {
+    "id": "user-seeded-test-001",
+    "email": "tester@manav.local",
+    "username": "manavtester",
+    "displayName": "Manav Tester",
+    "passwordHash": "$2b$10$HcYeFZafNUy8I8HLTJqwVObcbX2I0HUHjfPDQeoXIM4pADvgdMTTy",
+    "role": "reader"
+  },
+  {
+    "id": "user-1775626269396-si2m77xvk",
+    "email": "uttam@gmail.com",
+    "username": "uttam",
+    "displayName": "Uttan",
+    "passwordHash": "$2b$10$7gX5yn1sJfa/Apup446cFOxnMTPLTPlASOmYMUFC/TAIXLaXCEqTO",
+    "role": "reader"
+  },
+  {
+    "id": "user-1775723865323-c95u5k471",
+    "email": "qa_1975475284@example.com",
+    "username": "qa375038453",
+    "displayName": "qa375038453",
+    "passwordHash": "$2b$10$q8qGVy478MbsYN3WB8TKYOwIC7rdSo4UOLyumXXTNUS8mDgvWuFqC",
+    "role": "reader"
+  },
+  {
+    "id": "user-1775723905802-1akd31jd6",
+    "email": "qa_1711332164@example.com",
+    "username": "qa667513916",
+    "displayName": "qa667513916",
+    "passwordHash": "$2b$10$WLYW41uZHiU.jwqmIX4LXuoNvxnJ.1W5tHMwokSLZwNhHAKFQIUlO",
+    "role": "reader"
+  },
+  {
+    "id": "user-1775723909561-m1c67371e",
+    "email": "qa_1145898138@example.com",
+    "username": "qa2075517305",
+    "displayName": "qa2075517305",
+    "passwordHash": "$2b$10$0MZV3O9oyoKg.rFk/P00xOkcecQivfEo9uIAOSyG9pCxVFUbZct9S",
+    "role": "reader"
+  },
+  {
+    "id": "user-1775724021195-dnb4jup8i",
+    "email": "qa_final_184006710@example.com",
+    "username": "qafinal2034378037",
+    "displayName": "qafinal2034378037",
+    "passwordHash": "$2b$10$Wnofq/shQbvvC9LngjBDy.vy9PfPprzta3zD2BN8YOZfdMFLikS3W",
+    "role": "reader"
+  }
+]
