@@ -13,18 +13,15 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { existsSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { memoryStorage } from 'multer';
+import type { FileFilterCallback } from 'multer';
+import type { Request } from 'express';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminRoleGuard } from './admin-role.guard';
 import { AdminManagementService } from './admin-management.service';
 import { AdminService } from './admin.service';
-
-function resolveMediaUploadsPath() {
-  return join(process.env.VERCEL ? '/tmp' : process.cwd(), 'uploads', 'media');
-}
+import { MediaService } from '../shared/media.service';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, AdminRoleGuard)
@@ -32,6 +29,7 @@ export class AdminController {
   constructor(
     private readonly adminService: AdminService,
     private readonly adminManagementService: AdminManagementService,
+    private readonly mediaService: MediaService,
   ) {}
 
   @Get('dashboard')
@@ -180,36 +178,61 @@ export class AdminController {
   @Post('media/upload')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: (_req, _file, cb) => {
-          const uploadDir = resolveMediaUploadsPath();
-          if (!existsSync(uploadDir)) {
-            mkdirSync(uploadDir, { recursive: true });
-          }
-          cb(null, uploadDir);
-        },
-        filename: (_req, file, cb) => {
-          const timestamp = Date.now();
-          const random = Math.round(Math.random() * 1e9);
-          const extension = file.originalname.includes('.')
-            ? `.${file.originalname.split('.').pop()}`
-            : '';
-          cb(null, `media-${timestamp}-${random}${extension}`);
-        },
-      }),
+      storage: memoryStorage(),
       limits: { fileSize: 15 * 1024 * 1024 },
+      fileFilter: (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
+        // Allow images and videos
+        const allowedMimes = [
+          'image/jpeg',
+          'image/png',
+          'image/gif',
+          'image/webp',
+          'image/svg+xml',
+          'video/mp4',
+          'video/webm',
+          'application/pdf',
+        ];
+        if (allowedMimes.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(null, false);
+        }
+      },
     }),
   )
-  async uploadMedia(@UploadedFile() file: Express.Multer.File) {
+  async uploadMedia(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: { sub: string },
+  ) {
     if (!file) {
       throw new BadRequestException('file is required');
     }
 
-    return this.adminManagementService.listMediaAssets();
+    const fileName = `media-${Date.now()}-${Math.round(Math.random() * 1e9)}-${file.originalname}`;
+    const mediaUrl = await this.mediaService.uploadFile(
+      file,
+      fileName,
+      'media',
+    );
+
+    // Store in tenant settings
+    return this.adminManagementService.addMediaAsset(
+      {
+        url: mediaUrl,
+        filename: fileName,
+        mimeType: file.mimetype,
+        size: file.size,
+      },
+      user.sub,
+    );
   }
 
-  @Delete('media/:filename')
-  deleteMedia(@Param('filename') filename: string) {
-    return this.adminManagementService.deleteMediaAsset(filename);
+  @Delete('media/:url')
+  async deleteMedia(
+    @Param('url') encodedUrl: string,
+    @CurrentUser() user: { sub: string },
+  ) {
+    const url = decodeURIComponent(encodedUrl);
+    return this.adminManagementService.deleteMediaAsset(url, user.sub);
   }
 }

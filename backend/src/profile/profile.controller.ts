@@ -5,30 +5,26 @@ import {
   Get,
   Post,
   Put,
-  Req,
   UploadedFile,
   UseInterceptors,
   UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProfileRecord, ProfileService } from './profile.service';
+import { MediaService } from '../shared/media.service';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { diskStorage } from 'multer';
-import { extname, join } from 'node:path';
-import { existsSync, mkdirSync } from 'node:fs';
 import type { Request } from 'express';
+import { memoryStorage } from 'multer';
 import type { FileFilterCallback } from 'multer';
-
-function resolveUploadsPath() {
-  const basePath = process.env.VERCEL ? '/tmp' : process.cwd();
-  return join(basePath, 'uploads');
-}
 
 @Controller('profile')
 @UseGuards(JwtAuthGuard)
 export class ProfileController {
-  constructor(private readonly profileService: ProfileService) {}
+  constructor(
+    private readonly profileService: ProfileService,
+    private readonly mediaService: MediaService,
+  ) {}
 
   @Get()
   async getProfile(
@@ -55,28 +51,7 @@ export class ProfileController {
   @Post('avatar')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: (
-          _req: Request,
-          _file: Express.Multer.File,
-          cb: (error: Error | null, destination: string) => void,
-        ) => {
-          const uploadDir = resolveUploadsPath();
-          if (!existsSync(uploadDir)) {
-            mkdirSync(uploadDir, { recursive: true });
-          }
-          cb(null, uploadDir);
-        },
-        filename: (
-          _req: Request,
-          file: Express.Multer.File,
-          cb: (error: Error | null, filename: string) => void,
-        ) => {
-          const timestamp = Date.now();
-          const random = Math.round(Math.random() * 1e9);
-          cb(null, `avatar-${timestamp}-${random}${extname(file.originalname)}`);
-        },
-      }),
+      storage: memoryStorage(),
       limits: { fileSize: 5 * 1024 * 1024 },
       fileFilter: (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
         if (!file.mimetype.startsWith('image/')) {
@@ -90,13 +65,18 @@ export class ProfileController {
   async uploadAvatar(
     @CurrentUser() user: { sub: string; displayName?: string | null },
     @UploadedFile() file: Express.Multer.File,
-    @Req() req: Request,
   ): Promise<ProfileRecord> {
     if (!file) {
       throw new BadRequestException('file is required');
     }
 
-    const avatarUrl = `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+    const fileName = `${user.sub}-${Date.now()}-${file.originalname}`;
+    const avatarUrl = await this.mediaService.uploadFile(
+      file,
+      fileName,
+      'profiles',
+    );
+
     return this.profileService.updateProfile(
       { avatarUrl },
       user.sub,

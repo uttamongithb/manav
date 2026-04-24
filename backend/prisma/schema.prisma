@@ -39,7 +39,7 @@ model User {
   username        String      @unique @db.VarChar(50)
   displayName     String?     @map("display_name") @db.VarChar(100)
   passwordHash    String?     @map("password_hash") @db.VarChar(255)
-  avatarUrl       String?     @map("avatar_url")
+  avatarUrl       String?     @map("avatar_url") @db.LongText
   bio             String?     @db.Text
   languagePrefs   Json?       @map("language_prefs") // Used instead of arrays in MySQL
   role            UserRole    @default(reader)
@@ -261,7 +261,7 @@ model UserProfile {
   country     String    @db.VarChar(100)
   timezone    String    @db.VarChar(80)
   bio         String    @db.Text
-  avatarUrl   String?   @map("avatar_url") @db.VarChar(500)
+  avatarUrl   String?   @map("avatar_url") @db.LongText
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
 

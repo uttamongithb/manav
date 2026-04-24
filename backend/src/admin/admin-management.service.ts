@@ -1,9 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { readdir, stat, unlink } from 'node:fs/promises';
-import { existsSync, mkdirSync } from 'node:fs';
-import { extname, join } from 'node:path';
 
 type PageSection = {
   heading: string;
@@ -55,7 +52,7 @@ type AdminUserRecord = {
 
 type MediaAssetRecord = {
   filename: string;
-  path: string;
+  url: string;
   size: number;
   mimeType: string;
   updatedAt: string;
@@ -297,17 +294,13 @@ const DEFAULT_POETS: PoetRecord[] = [
   },
 ];
 
-function resolveUploadsPath() {
-  return join(process.env.VERCEL ? '/tmp' : process.cwd(), 'uploads', 'media');
-}
-
-function toBoolean(value: unknown) {
-  return Boolean(value);
-}
-
 @Injectable()
 export class AdminManagementService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private toBoolean(value: unknown): boolean {
+    return Boolean(value);
+  }
 
   private getSettingsObject(rawSettings: unknown) {
     return (rawSettings as Record<string, unknown> | null) ?? {};
@@ -434,29 +427,6 @@ export class AdminManagementService {
     };
   }
 
-  private normalizeMediaMimeType(filename: string) {
-    const extension = extname(filename).toLowerCase();
-    if (['.jpg', '.jpeg'].includes(extension)) return 'image/jpeg';
-    if (extension === '.png') return 'image/png';
-    if (extension === '.gif') return 'image/gif';
-    if (extension === '.webp') return 'image/webp';
-    if (extension === '.svg') return 'image/svg+xml';
-    if (extension === '.pdf') return 'application/pdf';
-    return 'application/octet-stream';
-  }
-
-  private normalizeMediaPath(filename: string) {
-    return `/uploads/media/${encodeURIComponent(filename)}`;
-  }
-
-  private async ensureMediaDirectory() {
-    const directory = resolveUploadsPath();
-    if (!existsSync(directory)) {
-      mkdirSync(directory, { recursive: true });
-    }
-    return directory;
-  }
-
   private mapUserRecord(row: {
     id: string;
     email: string;
@@ -482,7 +452,7 @@ export class AdminManagementService {
       role: row.role,
       status: row.status,
       avatarUrl: row.avatarUrl,
-      isVerified: toBoolean(row.isVerified),
+      isVerified: this.toBoolean(row.isVerified),
       lastLoginAt: row.lastLoginAt ? row.lastLoginAt.toISOString() : null,
       createdAt: row.createdAt ? row.createdAt.toISOString() : null,
       followersCount: row._count.followers,
@@ -647,39 +617,56 @@ export class AdminManagementService {
   }
 
   async listMediaAssets(): Promise<MediaAssetRecord[]> {
-    const directory = await this.ensureMediaDirectory();
-    try {
-      const entries = await readdir(directory, { withFileTypes: true });
-      const files = entries.filter((entry) => entry.isFile());
-
-      const assets = await Promise.all(
-        files.map(async (entry) => {
-          const filePath = join(directory, entry.name);
-          const fileStat = await stat(filePath);
-          return {
-            filename: entry.name,
-            path: this.normalizeMediaPath(entry.name),
-            size: fileStat.size,
-            mimeType: this.normalizeMediaMimeType(entry.name),
-            updatedAt: fileStat.mtime.toISOString(),
-          } satisfies MediaAssetRecord;
-        }),
-      );
-
-      return assets.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-    } catch {
-      return [];
-    }
+    const tenant = await this.ensurePublicTenant();
+    const settings = this.getSettingsObject(tenant.settings);
+    const media = (settings.media as MediaAssetRecord[] | undefined) ?? [];
+    
+    return media.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   }
 
-  async deleteMediaAsset(filename: string) {
-    const safeFilename = filename.trim().replace(/[^a-zA-Z0-9._-]/g, '');
-    if (!safeFilename) {
-      throw new NotFoundException('Invalid file name');
-    }
+  async addMediaAsset(
+    asset: Omit<MediaAssetRecord, 'updatedAt'>,
+    adminUserId: string,
+  ): Promise<MediaAssetRecord[]> {
+    const tenant = await this.ensurePublicTenant();
+    const settings = this.getSettingsObject(tenant.settings);
+    const media = Array.isArray(settings.media) ? settings.media : [];
 
-    const filePath = join(await this.ensureMediaDirectory(), safeFilename);
-    await unlink(filePath);
+    const newAsset: MediaAssetRecord = {
+      ...asset,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const nextSettings = {
+      ...settings,
+      media: [newAsset, ...media],
+      mediaMeta: {
+        updatedAt: new Date().toISOString(),
+        updatedBy: adminUserId,
+      },
+    };
+
+    await this.updateSettings(nextSettings);
+    return this.listMediaAssets();
+  }
+
+  async deleteMediaAsset(url: string, adminUserId: string): Promise<MediaAssetRecord[]> {
+    const tenant = await this.ensurePublicTenant();
+    const settings = this.getSettingsObject(tenant.settings);
+    const media = Array.isArray(settings.media) ? settings.media : [];
+
+    const filteredMedia = media.filter((asset) => asset.url !== url);
+
+    const nextSettings = {
+      ...settings,
+      media: filteredMedia,
+      mediaMeta: {
+        updatedAt: new Date().toISOString(),
+        updatedBy: adminUserId,
+      },
+    };
+
+    await this.updateSettings(nextSettings);
     return this.listMediaAssets();
   }
 }

@@ -1,4 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+import { basename, join } from 'node:path';
 import { PrismaService } from '../prisma/prisma.service';
 
 export type ProfileRecord = {
@@ -32,6 +35,64 @@ const DEFAULT_PROFILE: ProfileRecord = {
 @Injectable()
 export class ProfileService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private resolveUploadsPath() {
+    const basePath = process.env.VERCEL ? '/tmp' : process.cwd();
+    return join(basePath, 'uploads');
+  }
+
+  private isDataUrl(value: string) {
+    return value.startsWith('data:');
+  }
+
+  private extractUploadsFilename(value: string) {
+    try {
+      if (value.startsWith('http://') || value.startsWith('https://')) {
+        const parsed = new URL(value);
+        const uploadsIndex = parsed.pathname.indexOf('/uploads/');
+        if (uploadsIndex === -1) return null;
+        return basename(parsed.pathname.slice(uploadsIndex + '/uploads/'.length));
+      }
+    } catch {
+      // Fall through to pathname parsing.
+    }
+
+    const match = value.match(/(?:^|\/)(?:uploads\/)([^\s?#/]+)$/i);
+    return match ? match[1] : null;
+  }
+
+  private async convertLegacyAvatarUrl(avatarUrl: string | null): Promise<string> {
+    if (!avatarUrl) return '';
+
+    const trimmed = avatarUrl.trim();
+    if (!trimmed || this.isDataUrl(trimmed)) {
+      return trimmed;
+    }
+
+    const filename = this.extractUploadsFilename(trimmed);
+    if (!filename) {
+      return trimmed;
+    }
+
+    const filePath = join(this.resolveUploadsPath(), filename);
+    if (!existsSync(filePath)) {
+      return trimmed;
+    }
+
+    const mimeType =
+      filename.toLowerCase().endsWith('.png')
+        ? 'image/png'
+        : filename.toLowerCase().endsWith('.gif')
+          ? 'image/gif'
+          : filename.toLowerCase().endsWith('.webp')
+            ? 'image/webp'
+            : filename.toLowerCase().endsWith('.svg')
+              ? 'image/svg+xml'
+              : 'image/jpeg';
+
+    const buffer = await readFile(filePath);
+    return `data:${mimeType};base64,${buffer.toString('base64')}`;
+  }
 
   private async getFollowCounts(userId: string): Promise<{
     followersCount: number;
@@ -74,7 +135,7 @@ export class ProfileService {
       userId: resolvedUserId,
       displayName: user?.displayName?.trim() || displayNameHint?.trim() || DEFAULT_PROFILE.name,
       role: user?.role ? String(user.role) : DEFAULT_PROFILE.role,
-      avatarUrl: user?.avatarUrl?.trim() || DEFAULT_PROFILE.avatarUrl,
+      avatarUrl: await this.convertLegacyAvatarUrl(user?.avatarUrl) || DEFAULT_PROFILE.avatarUrl,
     };
   }
 
@@ -129,7 +190,7 @@ export class ProfileService {
       country: record.country,
       timezone: record.timezone,
       bio: record.bio,
-      avatarUrl: record.avatarUrl ?? context.avatarUrl,
+      avatarUrl: (await this.convertLegacyAvatarUrl(record.avatarUrl)) || context.avatarUrl,
       followersCount: counts.followersCount,
       followingCount: counts.followingCount,
     };
@@ -142,6 +203,7 @@ export class ProfileService {
   ): Promise<ProfileRecord> {
     const context = await this.resolveUserContext(userId, displayNameHint);
     const current = await this.getProfile(context.userId);
+    const nextAvatarUrl = typeof input.avatarUrl === 'string' ? input.avatarUrl.trim() : '';
 
     const updated = await this.prisma.userProfile.upsert({
       where: { userId: context.userId },
@@ -169,6 +231,29 @@ export class ProfileService {
         avatarUrl: (input.avatarUrl ?? context.avatarUrl).trim() || context.avatarUrl,
       },
     });
+
+    const normalizedAvatarUrl = await this.convertLegacyAvatarUrl(updated.avatarUrl ?? context.avatarUrl);
+
+    if (normalizedAvatarUrl && normalizedAvatarUrl !== updated.avatarUrl) {
+      await this.prisma.userProfile.update({
+        where: { userId: context.userId },
+        data: { avatarUrl: normalizedAvatarUrl },
+      });
+
+      await this.prisma.user.update({
+        where: { id: context.userId },
+        data: { avatarUrl: normalizedAvatarUrl },
+      });
+    }
+
+    if (nextAvatarUrl) {
+      await this.prisma.user.update({
+        where: { id: context.userId },
+        data: {
+          avatarUrl: nextAvatarUrl,
+        },
+      });
+    }
 
     return {
       name: updated.name,
