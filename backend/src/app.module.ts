@@ -6,9 +6,10 @@ import { AuthModule } from './auth/auth.module';
 import { FollowsModule } from './follows/follows.module';
 import { AdminModule } from './admin/admin.module';
 import { ContactMessagesModule } from './contact-messages/contact-messages.module';
+import { ArticlesModule } from './articles/articles.module';
 
 @Module({
-  imports: [PrismaModule, PostsModule, ProfileModule, AuthModule, FollowsModule, AdminModule, ContactMessagesModule],
+  imports: [PrismaModule, PostsModule, ProfileModule, AuthModule, FollowsModule, AdminModule, ContactMessagesModule, ArticlesModule],
   controllers: [],
   providers: [],
 })
