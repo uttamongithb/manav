@@ -561,21 +561,6 @@ export function MyProfileContent() {
                 >
                   Edit Profile
                 </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    logout();
-                    router.push("/login");
-                  }}
-                  className={`w-full rounded-none border px-4 py-2.5 text-[13px] font-semibold transition md:rounded-full ${
-                    isDark
-                      ? "border-red-500/35 bg-white/5 text-red-300 hover:bg-red-500/12"
-                      : "border-red-300/60 bg-white text-red-500 hover:bg-red-50"
-                  }`}
-                >
-                  Logout
-                </button>
               </div>
             </div>
 

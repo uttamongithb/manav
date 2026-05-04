@@ -48,6 +48,15 @@ const NAV_ITEMS = [
     ),
   },
   {
+    label: "Links",
+    href: "/admin/sections",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M4.5 6.75h15M4.5 12h15M4.5 17.25h15" />
+      </svg>
+    ),
+  },
+  {
     label: "Poets",
     href: "/admin/poets",
     icon: (

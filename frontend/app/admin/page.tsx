@@ -40,6 +40,17 @@ const SECTION_COLORS = [
   "#607d8b",
 ];
 
+const SECTION_PUBLISHING = [
+  { id: "news", label: "News" },
+  { id: "literature", label: "Literature" },
+  { id: "activities", label: "Activities" },
+  { id: "special_report", label: "Special Report" },
+  { id: "health", label: "Health" },
+  { id: "interesting", label: "Interesting" },
+  { id: "sport", label: "Sport" },
+  { id: "entertainment", label: "Entertainment" },
+];
+
 function formatDate(raw: string) {
   return new Date(raw).toLocaleDateString(undefined, {
     month: "short",
@@ -344,10 +355,10 @@ export default function AdminOverview() {
           </div>
         </div>
 
-        {/* Donut Chart — Content Sections */}
+        {/* Donut Chart — Content Links */}
         <div className="admin-card">
           <div className="admin-card-header">
-            <h2 className="admin-card-title">Content Sections</h2>
+            <h2 className="admin-card-title">Content Links</h2>
           </div>
           <div className="admin-card-body">
             <div className="admin-donut-wrapper">
@@ -540,6 +551,50 @@ export default function AdminOverview() {
                 <path d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
               </svg>
             </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Row 4: Links Publishing ────────────────────────── */}
+      <div className="admin-card" style={{ marginTop: 24 }}>
+        <div className="admin-card-header">
+          <h2 className="admin-card-title">Links Publishing</h2>
+          <Link href="/admin/sections" className="admin-card-action">
+            Open Links
+          </Link>
+        </div>
+        <div className="admin-card-body">
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+              gap: 12,
+            }}
+          >
+            {SECTION_PUBLISHING.map((section) => (
+              <div
+                key={section.id}
+                style={{
+                  border: "1px solid #e8ecf1",
+                  borderRadius: 12,
+                  padding: 12,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <div style={{ fontWeight: 600, color: "#111927", fontSize: 14 }}>{section.label}</div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <Link href={`/admin/sections/${section.id}`} className="admin-btn admin-btn-outline admin-btn-sm">
+                    Manage
+                  </Link>
+                  <Link href={`/admin/sections/${section.id}/new`} className="admin-btn admin-btn-primary admin-btn-sm">
+                    New
+                  </Link>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

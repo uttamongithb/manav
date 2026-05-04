@@ -32,35 +32,34 @@ const NAV_ITEMS = [
   { label: "Donate", href: "/donate" },
   { label: "Privacy Policy", href: "/privacy-policy" },
   { label: "My Favorites", href: "/favorites" },
-  {
-    label: "Links",
-    href: "/links",
-    dropdownItems: [
-      { label: "News", href: "/links?topic=News" },
-      { label: "Literature", href: "/links?topic=Literature" },
-      { label: "Activities", href: "/links?topic=Activities" },
-      { label: "Special Report", href: "/links?topic=Special%20Report" },
-      { label: "Health", href: "/links?topic=Health" },
-      { label: "Interesting", href: "/links?topic=Interesting" },
-      { label: "Sport", href: "/links?topic=Sport" },
-      { label: "Entertainment", href: "/links?topic=Entertainment" },
-    ],
-  },
   { label: "EBook Download", href: "/ebook-download" },
   { label: "Archives", href: "/archives" },
+  {
+    label: "Links",
+    href: "/sections/news",
+    activePrefix: "/sections",
+    dropdownItems: [
+      { label: "News", href: "/sections/news" },
+      { label: "Literature", href: "/sections/literature" },
+      { label: "Activities", href: "/sections/activities" },
+      { label: "Special Report", href: "/sections/special_report" },
+      { label: "Health", href: "/sections/health" },
+      { label: "Interesting", href: "/sections/interesting" },
+      { label: "Sport", href: "/sections/sport" },
+      { label: "Entertainment", href: "/sections/entertainment" },
+    ],
+  },
 ];
 
 export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProps) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const pathname = usePathname();
   const [cachedAvatarUrl, setCachedAvatarUrl] = useState<string>("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openDesktopDropdown, setOpenDesktopDropdown] = useState<string | null>(null);
   const [openMobileDropdown, setOpenMobileDropdown] = useState<string | null>(null);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const isAdmin = ["admin", "superadmin"].includes(user?.role?.toLowerCase?.() ?? "");
-  const visibleNavItems = isAdmin
-    ? [...NAV_ITEMS, { label: "Admin", href: "/admin" }]
-    : NAV_ITEMS;
   const currentPath = activeHref ?? pathname;
 
   useEffect(() => {
@@ -126,8 +125,11 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
         </Link>
 
         <div className="hidden items-center gap-8 lg:flex">
-          {visibleNavItems.map((item) => {
-            const isActive = currentPath === item.href || (item.href === "/links" && currentPath?.startsWith("/links"));
+          {NAV_ITEMS.map((item) => {
+            const isActive =
+              currentPath === item.href ||
+              (typeof (item as { activePrefix?: string }).activePrefix === "string" &&
+                currentPath?.startsWith((item as { activePrefix?: string }).activePrefix!));
 
             if (item.dropdownItems?.length) {
               const isDropdownOpen = openDesktopDropdown === item.label;
@@ -293,25 +295,71 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
 
           <div className="hidden lg:block">
             {user ? (
-              <Link
-                href="/my-profile"
-                aria-label="Open profile"
-                className={`group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border transition ${
-                  isDark
-                    ? "border-[#2ce88f]/45 bg-[#11161d] hover:border-[#2ce88f]/75"
-                    : "border-[#0a8a5b]/30 bg-white hover:border-[#0a8a5b]/55"
-                }`}
-                title="Profile"
-              >
-                <Image
-                  src={avatarSrc}
-                  alt="Profile"
-                  fill
-                  sizes="40px"
-                  unoptimized
-                  className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.04]"
-                />
-              </Link>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsProfileDropdownOpen((prev) => !prev)}
+                  aria-expanded={isProfileDropdownOpen}
+                  aria-haspopup="menu"
+                  className="group relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border transition"
+                >
+                  <Image
+                    src={avatarSrc}
+                    alt="Profile"
+                    fill
+                    sizes="40px"
+                    unoptimized
+                    className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.04]"
+                  />
+                </button>
+
+                <div
+                  className={`absolute right-0 top-full z-50 mt-2 w-48 rounded-2xl border p-2 shadow-xl transition-all duration-200 ${
+                    isProfileDropdownOpen ? "visible translate-y-0 opacity-100" : "invisible translate-y-1 opacity-0"
+                  } ${
+                    isDark ? "border-white/20 bg-[#17181d]" : "border-black/10 bg-white"
+                  }`}
+                >
+                  <Link
+                    href="/my-profile"
+                    onClick={() => setIsProfileDropdownOpen(false)}
+                    className={`block rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${
+                      isDark
+                        ? "text-white/80 hover:bg-white/8"
+                        : "text-[#203022] hover:bg-[#edf4ea]"
+                    }`}
+                  >
+                    My Profile
+                  </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                      className={`block rounded-xl px-3 py-2.5 text-[13px] font-semibold transition ${
+                        isDark
+                          ? "text-white/80 hover:bg-white/8"
+                          : "text-[#203022] hover:bg-[#edf4ea]"
+                      }`}
+                    >
+                      Admin
+                    </Link>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsProfileDropdownOpen(false);
+                      logout();
+                    }}
+                    className={`w-full rounded-xl px-3 py-2.5 text-left text-[13px] font-semibold transition ${
+                      isDark
+                        ? "text-red-400 hover:bg-white/8"
+                        : "text-red-600 hover:bg-[#edf4ea]"
+                    }`}
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
             ) : (
               <Link
                 href="/login"
@@ -381,10 +429,11 @@ export function SiteNavbar({ isDark, onToggleTheme, activeHref }: SiteNavbarProp
             </div>
 
             <div className="space-y-2">
-              {visibleNavItems.map((item) => {
+              {NAV_ITEMS.map((item) => {
                 const isActive =
                   currentPath === item.href ||
-                  (item.href === "/links" && currentPath?.startsWith("/links"));
+                  (typeof (item as { activePrefix?: string }).activePrefix === "string" &&
+                    currentPath?.startsWith((item as { activePrefix?: string }).activePrefix!));
                 const isMobileDropdownOpen = openMobileDropdown === item.label;
 
                 return (

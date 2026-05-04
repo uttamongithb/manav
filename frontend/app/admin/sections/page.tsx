@@ -62,9 +62,9 @@ export default function AdminSectionsPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-3 mb-2">
             <BarChart3 className="w-8 h-8 text-teal-600" />
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Content Sections</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Content Links</h1>
           </div>
-          <p className="text-gray-600">Manage articles across all sections</p>
+          <p className="text-gray-600">Manage articles across all links</p>
         </div>
       </div>
 

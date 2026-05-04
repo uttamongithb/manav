@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { ArticlesService } from './articles.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { AdminRoleGuard } from '../admin/admin-role.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { ArticleSection } from '@prisma/client';
 
@@ -42,6 +43,44 @@ export class ArticlesController {
     return { articles };
   }
 
+  @Get('sections/:section/slug/:slug')
+  async getArticleBySlug(
+    @Param('section') section: string,
+    @Param('slug') slug: string,
+    @Query('userId') userId?: string,
+  ) {
+    const normalizedSection = section.toLowerCase();
+    if (!Object.values(ArticleSection).includes(normalizedSection as ArticleSection)) {
+      throw new BadRequestException('Invalid section');
+    }
+
+    return this.articlesService.getBySectionAndSlug(
+      normalizedSection as ArticleSection,
+      decodeURIComponent(slug),
+      userId,
+    );
+  }
+
+  @Get('admin/sections/:section')
+  @UseGuards(JwtAuthGuard, AdminRoleGuard)
+  async getArticlesBySectionForAdmin(@Param('section') section: string) {
+    const normalizedSection = section.toLowerCase();
+    if (!Object.values(ArticleSection).includes(normalizedSection as ArticleSection)) {
+      throw new BadRequestException('Invalid section');
+    }
+
+    const articles = await this.articlesService.listBySectionForAdmin(
+      normalizedSection as ArticleSection,
+    );
+    return { articles };
+  }
+
+  @Get('admin/:id')
+  @UseGuards(JwtAuthGuard, AdminRoleGuard)
+  async getArticleForAdmin(@Param('id') id: string) {
+    return this.articlesService.getByIdForAdmin(id);
+  }
+
   @Get(':id')
   async getArticle(
     @Param('id') id: string,
@@ -52,7 +91,7 @@ export class ArticlesController {
   }
 
   @Post(':section')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminRoleGuard)
   async createArticle(
     @Param('section') section: string,
     @Body()
@@ -86,7 +125,7 @@ export class ArticlesController {
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminRoleGuard)
   async updateArticle(
     @Param('id') id: string,
     @Body()
@@ -97,7 +136,7 @@ export class ArticlesController {
       coverImageUrl?: string;
       status?: string;
     },
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: { sub: string; role?: string },
   ) {
     const article = await this.articlesService.update(
       id,
@@ -109,18 +148,19 @@ export class ArticlesController {
         status: (body.status as any) || undefined,
       },
       user.sub,
+      user.role,
     );
 
     return article;
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, AdminRoleGuard)
   async deleteArticle(
     @Param('id') id: string,
-    @CurrentUser() user: { sub: string },
+    @CurrentUser() user: { sub: string; role?: string },
   ) {
-    return this.articlesService.delete(id, user.sub);
+    return this.articlesService.delete(id, user.sub, user.role);
   }
 
   @Post(':id/like')

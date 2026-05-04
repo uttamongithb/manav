@@ -32,6 +32,11 @@ export class ArticlesService {
 
   constructor(private readonly prisma: PrismaService) {}
 
+  private isAdminRole(role?: string) {
+    const normalized = role?.toLowerCase?.();
+    return normalized === 'admin' || normalized === 'superadmin';
+  }
+
   private formatArticle(article: any, likedByUser: boolean = false): ArticleDTO {
     return {
       id: article.id,
@@ -89,6 +94,25 @@ export class ArticlesService {
     return articles.map((a) => this.formatArticle(a, likedSet.has(a.id)));
   }
 
+  async listBySectionForAdmin(section: ArticleSection) {
+    const articles = await this.prisma.article.findMany({
+      where: {
+        section,
+        deletedAt: null,
+      },
+      include: {
+        author: {
+          select: { id: true, displayName: true, avatarUrl: true },
+        },
+        _count: { select: { comments: true } },
+      },
+      orderBy: [{ isPinned: 'desc' }, { updatedAt: 'desc' }],
+      take: 200,
+    });
+
+    return articles.map((a) => this.formatArticle(a, false));
+  }
+
   async getById(id: string, userId?: string) {
     const article = await this.prisma.article.findUnique({
       where: { id },
@@ -100,7 +124,7 @@ export class ArticlesService {
       },
     });
 
-    if (!article || (article.status !== 'published' && article.deletedAt)) {
+    if (!article || article.deletedAt || article.status !== 'published') {
       throw new NotFoundException('Article not found');
     }
 
@@ -113,6 +137,59 @@ export class ArticlesService {
     const likedByUser =
       userId && (await this.prisma.articleLike.findUnique({
         where: { userId_articleId: { userId, articleId: id } },
+      }))
+        ? true
+        : false;
+
+    return this.formatArticle(article, likedByUser);
+  }
+
+  async getByIdForAdmin(id: string) {
+    const article = await this.prisma.article.findUnique({
+      where: { id },
+      include: {
+        author: {
+          select: { id: true, displayName: true, avatarUrl: true },
+        },
+        _count: { select: { comments: true } },
+      },
+    });
+
+    if (!article || article.deletedAt) {
+      throw new NotFoundException('Article not found');
+    }
+
+    return this.formatArticle(article, false);
+  }
+
+  async getBySectionAndSlug(section: ArticleSection, slug: string, userId?: string) {
+    const article = await this.prisma.article.findFirst({
+      where: {
+        section,
+        slug,
+        deletedAt: null,
+      },
+      include: {
+        author: {
+          select: { id: true, displayName: true, avatarUrl: true },
+        },
+        _count: { select: { comments: true } },
+      },
+    });
+
+    if (!article || article.status !== 'published') {
+      throw new NotFoundException('Article not found');
+    }
+
+    await this.prisma.article.update({
+      where: { id: article.id },
+      data: { viewCount: { increment: 1 } },
+    });
+
+    const likedByUser =
+      userId &&
+      (await this.prisma.articleLike.findUnique({
+        where: { userId_articleId: { userId, articleId: article.id } },
       }))
         ? true
         : false;
@@ -172,6 +249,7 @@ export class ArticlesService {
       status?: ContentStatus;
     },
     authorId: string,
+    requesterRole?: string,
   ) {
     const article = await this.prisma.article.findUnique({
       where: { id },
@@ -182,7 +260,7 @@ export class ArticlesService {
       throw new NotFoundException('Article not found');
     }
 
-    if (article.authorId !== authorId) {
+    if (article.authorId !== authorId && !this.isAdminRole(requesterRole)) {
       throw new BadRequestException('Unauthorized to update this article');
     }
 
@@ -212,7 +290,7 @@ export class ArticlesService {
     return this.formatArticle(updated, false);
   }
 
-  async delete(id: string, authorId: string) {
+  async delete(id: string, authorId: string, requesterRole?: string) {
     const article = await this.prisma.article.findUnique({
       where: { id },
       select: { authorId: true },
@@ -222,7 +300,7 @@ export class ArticlesService {
       throw new NotFoundException('Article not found');
     }
 
-    if (article.authorId !== authorId) {
+    if (article.authorId !== authorId && !this.isAdminRole(requesterRole)) {
       throw new BadRequestException('Unauthorized to delete this article');
     }
 

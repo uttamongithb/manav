@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { getApiBaseUrl } from '@/app/lib/api-base';
+import { getStoredAuthToken } from '@/app/context/auth';
 import { Plus, Edit2, Trash2, Eye } from 'lucide-react';
 import Link from 'next/link';
 
@@ -37,6 +38,7 @@ export default function AdminSectionPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'published' | 'draft'>('all');
+  const authToken = getStoredAuthToken();
 
   const sectionName = SECTIONS.find((s) => s.id === section)?.name || section;
 
@@ -45,7 +47,9 @@ export default function AdminSectionPage() {
       try {
         setLoading(true);
         const backendUrl = getApiBaseUrl();
-        const response = await fetch(`${backendUrl}/articles/sections/${section}`);
+        const response = await fetch(`${backendUrl}/articles/admin/sections/${section}`, {
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
+        });
         if (response.ok) {
           const data = await response.json();
           setArticles(data.articles);
@@ -57,10 +61,10 @@ export default function AdminSectionPage() {
       }
     };
 
-    if (section) {
+    if (section && authToken) {
       fetchArticles();
     }
-  }, [section]);
+  }, [section, authToken]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this article?')) return;
@@ -69,6 +73,7 @@ export default function AdminSectionPage() {
       const backendUrl = getApiBaseUrl();
       const response = await fetch(`${backendUrl}/articles/${id}`, {
         method: 'DELETE',
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
       });
       if (response.ok) {
         setArticles(articles.filter((a) => a.id !== id));

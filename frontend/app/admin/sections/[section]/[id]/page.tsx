@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { getApiBaseUrl } from '@/app/lib/api-base';
+import { getStoredAuthToken } from '@/app/context/auth';
 import { ArrowLeft, Upload } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -43,6 +44,7 @@ export default function ArticleEditorPage() {
   const [loading, setLoading] = useState(isEdit);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const authToken = getStoredAuthToken();
 
   const sectionName = SECTIONS.find((s) => s.id === section)?.name || section;
 
@@ -51,7 +53,9 @@ export default function ArticleEditorPage() {
       const fetchArticle = async () => {
         try {
           const backendUrl = getApiBaseUrl();
-          const response = await fetch(`${backendUrl}/articles/${articleId}`);
+          const response = await fetch(`${backendUrl}/articles/admin/${articleId}`, {
+            headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
+          });
           if (response.ok) {
             const article = await response.json();
             setForm({
@@ -71,7 +75,7 @@ export default function ArticleEditorPage() {
 
       fetchArticle();
     }
-  }, [isEdit, articleId]);
+  }, [isEdit, articleId, authToken]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,6 +88,7 @@ export default function ArticleEditorPage() {
         const backendUrl = getApiBaseUrl();
         const response = await fetch(`${backendUrl}/profile/avatar`, {
         method: 'POST',
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
         body: formData,
       });
 
@@ -116,7 +121,10 @@ export default function ArticleEditorPage() {
 
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        },
         body: JSON.stringify(form),
       });
 
