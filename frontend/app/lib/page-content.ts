@@ -6,6 +6,7 @@ import { getApiBaseUrl } from "./api-base";
 export type PageSection = {
   heading: string;
   body: string;
+  imageUrl?: string;
 };
 
 export type PageContent = {

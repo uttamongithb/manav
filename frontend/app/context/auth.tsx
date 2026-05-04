@@ -20,6 +20,7 @@ export type AuthUser = {
 
 type AuthContextType = {
   user: AuthUser | null;
+  authToken: string | null;
   isLoadingAuth: boolean;
   isAuthenticated: boolean;
   login: (user: AuthUser, token?: string) => void;
@@ -40,6 +41,7 @@ export function getStoredAuthToken(): string | null {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [authToken, setAuthToken] = useState<string | null>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
   const login = useCallback((nextUser: AuthUser, token?: string) => {
@@ -48,12 +50,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(USER_CACHE_KEY, JSON.stringify(nextUser));
       if (token) {
         localStorage.setItem(AUTH_TOKEN_KEY, token);
+        setAuthToken(token);
       }
     }
   }, []);
 
   const logout = useCallback(() => {
     setUser(null);
+    setAuthToken(null);
     if (typeof window !== "undefined") {
       localStorage.removeItem(USER_CACHE_KEY);
       localStorage.removeItem(AUTH_TOKEN_KEY);
@@ -77,13 +81,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (cachedUser && hasJwtShape) {
           const userData = JSON.parse(cachedUser) as AuthUser;
           setUser(userData);
+          setAuthToken(token);
         } else if (cachedUser || token) {
           localStorage.removeItem(USER_CACHE_KEY);
           localStorage.removeItem(AUTH_TOKEN_KEY);
+          setUser(null);
+          setAuthToken(null);
         }
       } catch (error) {
         console.error("Failed to initialize auth:", error);
         setUser(null);
+        setAuthToken(null);
       } finally {
         setIsLoadingAuth(false);
       }
@@ -94,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value: AuthContextType = {
     user,
+    authToken,
     isLoadingAuth,
     isAuthenticated: !!user,
     login,

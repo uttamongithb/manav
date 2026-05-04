@@ -28,23 +28,25 @@ export class ProfileController {
 
   @Get()
   async getProfile(
-    @CurrentUser() user: { sub: string; displayName?: string | null },
+    @CurrentUser() user: { sub: string; displayName?: string | null; role?: string | null },
   ): Promise<ProfileRecord> {
     return this.profileService.getProfile(
       user.sub,
       user.displayName ?? undefined,
+      user.role ?? undefined,
     );
   }
 
   @Put()
   async updateProfile(
-    @CurrentUser() user: { sub: string; displayName?: string | null },
+    @CurrentUser() user: { sub: string; displayName?: string | null; role?: string | null },
     @Body() body: Partial<ProfileRecord>,
   ): Promise<ProfileRecord> {
     return this.profileService.updateProfile(
       body,
       user.sub,
       user.displayName ?? undefined,
+      user.role ?? undefined,
     );
   }
 
@@ -63,7 +65,7 @@ export class ProfileController {
     }),
   )
   async uploadAvatar(
-    @CurrentUser() user: { sub: string; displayName?: string | null },
+    @CurrentUser() user: { sub: string; displayName?: string | null; role?: string | null },
     @UploadedFile() file: Express.Multer.File,
   ): Promise<ProfileRecord> {
     if (!file) {
@@ -81,6 +83,7 @@ export class ProfileController {
       { avatarUrl },
       user.sub,
       user.displayName ?? undefined,
+      user.role ?? undefined,
     );
   }
 }

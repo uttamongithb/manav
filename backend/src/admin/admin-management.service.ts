@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 type PageSection = {
   heading: string;
   body: string;
+  imageUrl?: string;
 };
 
 type PageContent = {

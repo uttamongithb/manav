@@ -85,8 +85,8 @@ export default function ArticleEditorPage() {
       const formData = new FormData();
       formData.append('file', file);
 
-        const backendUrl = getApiBaseUrl();
-        const response = await fetch(`${backendUrl}/profile/avatar`, {
+      const backendUrl = getApiBaseUrl();
+      const response = await fetch(`${backendUrl}/admin/articles/upload`, {
         method: 'POST',
         headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
         body: formData,
@@ -94,7 +94,7 @@ export default function ArticleEditorPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setForm((prev) => ({ ...prev, coverImageUrl: data.avatarUrl }));
+        setForm((prev) => ({ ...prev, coverImageUrl: data.imageUrl }));
       } else {
         setError('Failed to upload image');
       }

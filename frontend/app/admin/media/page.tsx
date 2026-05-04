@@ -7,7 +7,7 @@ import { getApiBaseUrl } from "@/app/lib/api-base";
 
 type MediaAsset = {
   filename: string;
-  path: string;
+  url: string;
   size: number;
   mimeType: string;
   updatedAt: string;
@@ -148,7 +148,7 @@ export default function AdminMediaPage() {
               {isImage(asset.mimeType) ? (
                 <div style={{ position: "relative", height: 160, background: "#f3f4f6" }}>
                   <Image
-                    src={`${backendUrl}${asset.path}`}
+                    src={asset.url}
                     alt={asset.filename}
                     fill
                     sizes="(min-width: 1200px) 25vw, (min-width: 768px) 33vw, 100vw"
@@ -170,7 +170,7 @@ export default function AdminMediaPage() {
                   {formatSize(asset.size)} • {new Date(asset.updatedAt).toLocaleString()}
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <a className="admin-btn admin-btn-outline admin-btn-sm" href={`${backendUrl}${asset.path}`} target="_blank" rel="noreferrer">
+                  <a className="admin-btn admin-btn-outline admin-btn-sm" href={asset.url} target="_blank" rel="noreferrer">
                     Open
                   </a>
                   <button

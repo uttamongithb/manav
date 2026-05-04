@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { getStoredAuthToken } from "@/app/context/auth";
 import { getApiBaseUrl } from "@/app/lib/api-base";
 import { DEFAULT_PAGE_CONTENTS, getDefaultPageContent, type PageContent, type PageSection } from "@/app/lib/page-content";
+import { Upload } from "lucide-react";
 
 const PAGE_SLUGS = Object.keys(DEFAULT_PAGE_CONTENTS);
 
@@ -71,6 +73,25 @@ export default function AdminPagesPage() {
         sectionIndex === index ? { ...section, [field]: value } : section,
       ),
     }));
+  };
+
+  const uploadSectionImage = async (index: number, file: File | null) => {
+    if (!authHeaders || !file) return;
+    try {
+      setApiError(null);
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch(`${backendUrl}/admin/pages/upload`, {
+        method: "POST",
+        headers: authHeaders,
+        body: formData,
+      });
+      if (!res.ok) throw new Error("upload_failed");
+      const data = await res.json();
+      updateSection(index, "imageUrl", data.imageUrl);
+    } catch {
+      setApiError("Unable to upload image for section.");
+    }
   };
 
   const addSection = () => {
@@ -240,6 +261,34 @@ export default function AdminPagesPage() {
                         placeholder="Section body"
                         style={{ minHeight: 110 }}
                       />
+                      
+                      {/* Image Upload for Section */}
+                      <div style={{ borderTop: "1px solid #e6ece3", paddingTop: 12 }}>
+                        <label className="block">
+                          <span className="mb-2 block text-[12px] font-semibold uppercase tracking-[0.12em] text-[#5e775f]">Section Image</span>
+                          {section.imageUrl && (
+                            <div style={{ position: "relative", width: "100%", height: 120, borderRadius: 8, overflow: "hidden", marginBottom: 8, background: "#f3f4f6" }}>
+                              <Image
+                                src={section.imageUrl}
+                                alt="Section preview"
+                                fill
+                                style={{ objectFit: "cover" }}
+                                unoptimized
+                              />
+                            </div>
+                          )}
+                          <label style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: 12, border: "2px dashed #d0d5dd", borderRadius: 8, cursor: "pointer", background: "#fafbfc" }}>
+                            <Upload style={{ width: 16, height: 16, color: "#6c737f" }} />
+                            <span style={{ fontSize: 13, color: "#6c737f" }}>Click to upload image</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => void uploadSectionImage(index, e.target.files?.[0] ?? null)}
+                              style={{ display: "none" }}
+                            />
+                          </label>
+                        </label>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -258,8 +307,23 @@ export default function AdminPagesPage() {
               <div style={{ display: "grid", gap: 10 }}>
                 {draft.sections.map((section) => (
                   <div key={section.heading || Math.random().toString(36)} style={{ borderRadius: 16, border: "1px solid #e6ece3", padding: 14 }}>
-                    <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>{section.heading || "Untitled section"}</div>
-                    <div style={{ fontSize: 13, color: "#6c737f", lineHeight: 1.7 }}>{section.body || "Section text"}</div>
+                    <div style={{ display: "grid", gridTemplateColumns: section.imageUrl ? "1fr 1fr" : "1fr", gap: 12 }}>
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>{section.heading || "Untitled section"}</div>
+                        <div style={{ fontSize: 13, color: "#6c737f", lineHeight: 1.7 }}>{section.body || "Section text"}</div>
+                      </div>
+                      {section.imageUrl && (
+                        <div style={{ position: "relative", height: 140, borderRadius: 8, overflow: "hidden", background: "#f3f4f6" }}>
+                          <Image
+                            src={section.imageUrl}
+                            alt={section.heading}
+                            fill
+                            style={{ objectFit: "cover" }}
+                            unoptimized
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { existsSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { basename, dirname, join } from 'node:path';
 import { PrismaService } from '../prisma/prisma.service';
 
 export type ProfileRecord = {
@@ -32,13 +32,90 @@ const DEFAULT_PROFILE: ProfileRecord = {
   followingCount: 0,
 };
 
+type FallbackProfileStore = Record<string, ProfileRecord>;
+
 @Injectable()
 export class ProfileService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private getFallbackStorePath() {
+    return join(process.cwd(), 'data', 'profile.json');
+  }
+
   private resolveUploadsPath() {
     const basePath = process.env.VERCEL ? '/tmp' : process.cwd();
     return join(basePath, 'uploads');
+  }
+
+  private isDatabaseUnavailableError(error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    const code = typeof error === 'object' && error !== null ? (error as { code?: string }).code : undefined;
+
+    return (
+      code === 'P1001' ||
+      code === 'P1017' ||
+      /timeout|socket|connect|ECONNREFUSED|database is temporarily unavailable/i.test(message)
+    );
+  }
+
+  private async readFallbackStore(): Promise<FallbackProfileStore> {
+    try {
+      const raw = await readFile(this.getFallbackStorePath(), 'utf8');
+      const parsed = JSON.parse(raw) as Partial<FallbackProfileStore> | null;
+
+      if (!parsed || typeof parsed !== 'object') {
+        return {};
+      }
+
+      return Object.fromEntries(
+        Object.entries(parsed).filter((entry): entry is [string, ProfileRecord] => {
+          const value = entry[1] as Partial<ProfileRecord> | undefined;
+          return Boolean(
+            value &&
+              typeof value.name === 'string' &&
+              typeof value.role === 'string' &&
+              typeof value.visibility === 'string' &&
+              typeof value.city === 'string' &&
+              typeof value.state === 'string' &&
+              typeof value.country === 'string' &&
+              typeof value.timezone === 'string' &&
+              typeof value.bio === 'string' &&
+              typeof value.avatarUrl === 'string' &&
+              typeof value.followersCount === 'number' &&
+              typeof value.followingCount === 'number',
+          );
+        }),
+      );
+    } catch {
+      return {};
+    }
+  }
+
+  private async writeFallbackStore(store: FallbackProfileStore) {
+    const fallbackPath = this.getFallbackStorePath();
+    await mkdir(dirname(fallbackPath), { recursive: true });
+    await writeFile(fallbackPath, `${JSON.stringify(store, null, 2)}\n`, 'utf8');
+  }
+
+  private async saveFallbackProfile(userId: string, profile: ProfileRecord) {
+    const store = await this.readFallbackStore();
+    store[userId] = profile;
+    await this.writeFallbackStore(store);
+  }
+
+  private async readFallbackProfile(userId: string, displayNameHint?: string, roleHint?: string) {
+    const store = await this.readFallbackStore();
+    const profile = store[userId];
+
+    if (profile) {
+      return profile;
+    }
+
+    return {
+      ...DEFAULT_PROFILE,
+      name: displayNameHint?.trim() || DEFAULT_PROFILE.name,
+      role: roleHint?.trim() || DEFAULT_PROFILE.role,
+    };
   }
 
   private isDataUrl(value: string) {
@@ -114,7 +191,7 @@ export class ProfileService {
     return this.normalizeVisibility(record.visibility);
   }
 
-  private async resolveUserContext(userId: string, displayNameHint?: string) {
+  private async resolveUserContext(userId: string, displayNameHint?: string, roleHint?: string) {
     const resolvedUserId = userId.trim();
 
     const user = await this.prisma.user.findUnique({
@@ -134,80 +211,191 @@ export class ProfileService {
     return {
       userId: resolvedUserId,
       displayName: user?.displayName?.trim() || displayNameHint?.trim() || DEFAULT_PROFILE.name,
-      role: user?.role ? String(user.role) : DEFAULT_PROFILE.role,
+      role: user?.role ? String(user.role) : roleHint?.trim() || DEFAULT_PROFILE.role,
       avatarUrl: await this.convertLegacyAvatarUrl(user?.avatarUrl) || DEFAULT_PROFILE.avatarUrl,
     };
   }
 
-  async getProfile(userId: string, displayNameHint?: string): Promise<ProfileRecord> {
-    const context = await this.resolveUserContext(userId, displayNameHint);
+  async getProfile(userId: string, displayNameHint?: string, roleHint?: string): Promise<ProfileRecord> {
+    let context;
 
-    const record = await this.prisma.userProfile.findUnique({
-      where: { userId: context.userId },
-    });
+    try {
+      context = await this.resolveUserContext(userId, displayNameHint, roleHint);
+    } catch (error) {
+      if (!this.isDatabaseUnavailableError(error)) {
+        throw error;
+      }
 
-    if (!record) {
-      const created = await this.prisma.userProfile.create({
-        data: {
-          userId: context.userId,
-          name: context.displayName,
-          role: context.role,
-          visibility: DEFAULT_PROFILE.visibility,
-          city: DEFAULT_PROFILE.city,
-          state: DEFAULT_PROFILE.state,
-          country: DEFAULT_PROFILE.country,
-          timezone: DEFAULT_PROFILE.timezone,
-          bio: DEFAULT_PROFILE.bio,
-          avatarUrl: context.avatarUrl,
-        },
+      return this.readFallbackProfile(userId.trim(), displayNameHint, roleHint);
+    }
+
+    try {
+      const record = await this.prisma.userProfile.findUnique({
+        where: { userId: context.userId },
       });
 
-      const counts = await this.getFollowCounts(context.userId);
+      if (!record) {
+        const created = await this.prisma.userProfile.create({
+          data: {
+            userId: context.userId,
+            name: context.displayName,
+            role: context.role,
+            visibility: DEFAULT_PROFILE.visibility,
+            city: DEFAULT_PROFILE.city,
+            state: DEFAULT_PROFILE.state,
+            country: DEFAULT_PROFILE.country,
+            timezone: DEFAULT_PROFILE.timezone,
+            bio: DEFAULT_PROFILE.bio,
+            avatarUrl: context.avatarUrl,
+          },
+        });
 
-      return {
-        name: created.name,
-        role: created.role,
-        visibility: this.readVisibility(created as { visibility?: unknown }),
-        city: created.city,
-        state: created.state,
-        country: created.country,
-        timezone: created.timezone,
-        bio: created.bio,
-        avatarUrl: created.avatarUrl ?? context.avatarUrl,
+        const counts = await this.getFollowCounts(context.userId);
+        const profile = {
+          name: created.name,
+          role: created.role,
+          visibility: this.readVisibility(created as { visibility?: unknown }),
+          city: created.city,
+          state: created.state,
+          country: created.country,
+          timezone: created.timezone,
+          bio: created.bio,
+          avatarUrl: created.avatarUrl ?? context.avatarUrl,
+          followersCount: counts.followersCount,
+          followingCount: counts.followingCount,
+        };
+
+        await this.saveFallbackProfile(context.userId, profile);
+
+        return profile;
+      }
+
+      const counts = await this.getFollowCounts(context.userId);
+      const profile = {
+        name: record.name,
+        role: record.role,
+        visibility: this.readVisibility(record as { visibility?: unknown }),
+        city: record.city,
+        state: record.state,
+        country: record.country,
+        timezone: record.timezone,
+        bio: record.bio,
+        avatarUrl: (await this.convertLegacyAvatarUrl(record.avatarUrl)) || context.avatarUrl,
         followersCount: counts.followersCount,
         followingCount: counts.followingCount,
       };
+
+      await this.saveFallbackProfile(context.userId, profile);
+
+      return profile;
+    } catch (error) {
+      if (!this.isDatabaseUnavailableError(error)) {
+        throw error;
+      }
+
+      return this.readFallbackProfile(context.userId, context.displayName, context.role);
     }
-
-    const counts = await this.getFollowCounts(context.userId);
-
-    return {
-      name: record.name,
-      role: record.role,
-      visibility: this.readVisibility(record as { visibility?: unknown }),
-      city: record.city,
-      state: record.state,
-      country: record.country,
-      timezone: record.timezone,
-      bio: record.bio,
-      avatarUrl: (await this.convertLegacyAvatarUrl(record.avatarUrl)) || context.avatarUrl,
-      followersCount: counts.followersCount,
-      followingCount: counts.followingCount,
-    };
   }
 
   async updateProfile(
     input: Partial<ProfileRecord>,
     userId: string,
     displayNameHint?: string,
+    roleHint?: string,
   ): Promise<ProfileRecord> {
-    const context = await this.resolveUserContext(userId, displayNameHint);
-    const current = await this.getProfile(context.userId);
+    let context;
+    try {
+      context = await this.resolveUserContext(userId, displayNameHint, roleHint);
+    } catch (error) {
+      if (!this.isDatabaseUnavailableError(error)) {
+        throw error;
+      }
+
+      context = {
+        userId: userId.trim(),
+        displayName: displayNameHint?.trim() || DEFAULT_PROFILE.name,
+        role: roleHint?.trim() || DEFAULT_PROFILE.role,
+        avatarUrl: DEFAULT_PROFILE.avatarUrl,
+      };
+    }
+
+    const current = await this.getProfile(context.userId, context.displayName, context.role);
     const nextAvatarUrl = typeof input.avatarUrl === 'string' ? input.avatarUrl.trim() : '';
 
-    const updated = await this.prisma.userProfile.upsert({
-      where: { userId: context.userId },
-      update: {
+    try {
+      const updated = await this.prisma.userProfile.upsert({
+        where: { userId: context.userId },
+        update: {
+          name: (input.name ?? current.name).trim() || current.name,
+          role: (input.role ?? current.role).trim() || current.role,
+          visibility: this.normalizeVisibility(input.visibility ?? current.visibility),
+          city: (input.city ?? current.city).trim() || current.city,
+          state: (input.state ?? current.state).trim() || current.state,
+          country: (input.country ?? current.country).trim() || current.country,
+          timezone: (input.timezone ?? current.timezone).trim() || current.timezone,
+          bio: (input.bio ?? current.bio).trim() || current.bio,
+          avatarUrl: (input.avatarUrl ?? current.avatarUrl).trim() || current.avatarUrl,
+        },
+        create: {
+          userId: context.userId,
+          name: (input.name ?? context.displayName).trim() || context.displayName,
+          role: (input.role ?? context.role).trim() || context.role,
+          visibility: this.normalizeVisibility(input.visibility ?? DEFAULT_PROFILE.visibility),
+          city: (input.city ?? DEFAULT_PROFILE.city).trim() || DEFAULT_PROFILE.city,
+          state: (input.state ?? DEFAULT_PROFILE.state).trim() || DEFAULT_PROFILE.state,
+          country: (input.country ?? DEFAULT_PROFILE.country).trim() || DEFAULT_PROFILE.country,
+          timezone: (input.timezone ?? DEFAULT_PROFILE.timezone).trim() || DEFAULT_PROFILE.timezone,
+          bio: (input.bio ?? DEFAULT_PROFILE.bio).trim() || DEFAULT_PROFILE.bio,
+          avatarUrl: (input.avatarUrl ?? context.avatarUrl).trim() || context.avatarUrl,
+        },
+      });
+
+      const normalizedAvatarUrl = await this.convertLegacyAvatarUrl(updated.avatarUrl ?? context.avatarUrl);
+
+      if (normalizedAvatarUrl && normalizedAvatarUrl !== updated.avatarUrl) {
+        await this.prisma.userProfile.update({
+          where: { userId: context.userId },
+          data: { avatarUrl: normalizedAvatarUrl },
+        });
+
+        await this.prisma.user.update({
+          where: { id: context.userId },
+          data: { avatarUrl: normalizedAvatarUrl },
+        });
+      }
+
+      if (nextAvatarUrl) {
+        await this.prisma.user.update({
+          where: { id: context.userId },
+          data: {
+            avatarUrl: nextAvatarUrl,
+          },
+        });
+      }
+
+      const profile = {
+        name: updated.name,
+        role: updated.role,
+        visibility: this.readVisibility(updated as { visibility?: unknown }),
+        city: updated.city,
+        state: updated.state,
+        country: updated.country,
+        timezone: updated.timezone,
+        bio: updated.bio,
+        avatarUrl: updated.avatarUrl ?? context.avatarUrl,
+        followersCount: current.followersCount,
+        followingCount: current.followingCount,
+      };
+
+      await this.saveFallbackProfile(context.userId, profile);
+
+      return profile;
+    } catch (error) {
+      if (!this.isDatabaseUnavailableError(error)) {
+        throw error;
+      }
+
+      const profile: ProfileRecord = {
         name: (input.name ?? current.name).trim() || current.name,
         role: (input.role ?? current.role).trim() || current.role,
         visibility: this.normalizeVisibility(input.visibility ?? current.visibility),
@@ -217,56 +405,13 @@ export class ProfileService {
         timezone: (input.timezone ?? current.timezone).trim() || current.timezone,
         bio: (input.bio ?? current.bio).trim() || current.bio,
         avatarUrl: (input.avatarUrl ?? current.avatarUrl).trim() || current.avatarUrl,
-      },
-      create: {
-        userId: context.userId,
-        name: (input.name ?? context.displayName).trim() || context.displayName,
-        role: (input.role ?? context.role).trim() || context.role,
-        visibility: this.normalizeVisibility(input.visibility ?? DEFAULT_PROFILE.visibility),
-        city: (input.city ?? DEFAULT_PROFILE.city).trim() || DEFAULT_PROFILE.city,
-        state: (input.state ?? DEFAULT_PROFILE.state).trim() || DEFAULT_PROFILE.state,
-        country: (input.country ?? DEFAULT_PROFILE.country).trim() || DEFAULT_PROFILE.country,
-        timezone: (input.timezone ?? DEFAULT_PROFILE.timezone).trim() || DEFAULT_PROFILE.timezone,
-        bio: (input.bio ?? DEFAULT_PROFILE.bio).trim() || DEFAULT_PROFILE.bio,
-        avatarUrl: (input.avatarUrl ?? context.avatarUrl).trim() || context.avatarUrl,
-      },
-    });
+        followersCount: current.followersCount,
+        followingCount: current.followingCount,
+      };
 
-    const normalizedAvatarUrl = await this.convertLegacyAvatarUrl(updated.avatarUrl ?? context.avatarUrl);
+      await this.saveFallbackProfile(context.userId, profile);
 
-    if (normalizedAvatarUrl && normalizedAvatarUrl !== updated.avatarUrl) {
-      await this.prisma.userProfile.update({
-        where: { userId: context.userId },
-        data: { avatarUrl: normalizedAvatarUrl },
-      });
-
-      await this.prisma.user.update({
-        where: { id: context.userId },
-        data: { avatarUrl: normalizedAvatarUrl },
-      });
+      return profile;
     }
-
-    if (nextAvatarUrl) {
-      await this.prisma.user.update({
-        where: { id: context.userId },
-        data: {
-          avatarUrl: nextAvatarUrl,
-        },
-      });
-    }
-
-    return {
-      name: updated.name,
-      role: updated.role,
-      visibility: this.readVisibility(updated as { visibility?: unknown }),
-      city: updated.city,
-      state: updated.state,
-      country: updated.country,
-      timezone: updated.timezone,
-      bio: updated.bio,
-      avatarUrl: updated.avatarUrl ?? context.avatarUrl,
-      followersCount: current.followersCount,
-      followingCount: current.followingCount,
-    };
   }
 }

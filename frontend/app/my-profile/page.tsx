@@ -133,7 +133,7 @@ const saveCachedProfile = (cacheKey: string, profile: UserProfile): void => {
 
 export function MyProfileContent() {
   const router = useRouter();
-  const { logout, user } = useAuth();
+  const { logout, user, authToken } = useAuth();
   const { isDark, setIsDark } = useTheme();
   const [activeTab, setActiveTab] = useState("POETRY");
 
@@ -159,7 +159,6 @@ export function MyProfileContent() {
   const [draftProfile, setDraftProfile] = useState<UserProfile>(defaultProfile);
 
   const backendUrl = getApiBaseUrl();
-  const authToken = getStoredAuthToken();
   const authHeaders = useMemo(
     () => (authToken ? { Authorization: `Bearer ${authToken}` } : undefined),
     [authToken],
@@ -340,6 +339,10 @@ export function MyProfileContent() {
     setIsUploadingAvatar(true);
 
     try {
+      if (!authToken) {
+        throw new Error("Authentication expired. Please sign in again.");
+      }
+
       const formData = new FormData();
       formData.append("file", file);
 
@@ -359,6 +362,13 @@ export function MyProfileContent() {
       setDraftProfile(updated);
       saveCachedProfile(cacheKey, updated); // Save updated profile to cache
       return updated;
+    } catch (error) {
+      if (error instanceof Error && /Unauthorized|Invalid or expired JWT token|Missing or invalid Authorization header/i.test(error.message)) {
+        logout();
+        router.push("/login");
+      }
+
+      throw error;
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -400,7 +410,8 @@ export function MyProfileContent() {
         });
 
         if (!res.ok) {
-          throw new Error("failed_response");
+          const errorText = await res.text();
+          throw new Error(errorText || `Profile save failed (${res.status})`);
         }
 
         const updated = (await res.json()) as UserProfile;
@@ -410,8 +421,12 @@ export function MyProfileContent() {
         setPendingAvatarFile(null);
         setPendingAvatarPreview(null);
         setIsEditingProfile(false);
-      } catch {
-        setApiError("Unable to save profile. Ensure backend is running.");
+      } catch (error) {
+        const message = error instanceof Error && error.message.trim().length > 0
+          ? error.message
+          : "Unable to save profile.";
+
+        setApiError(message);
       } finally {
         setIsSavingProfile(false);
       }
