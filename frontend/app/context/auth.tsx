@@ -8,6 +8,7 @@ import {
   ReactNode,
   useCallback,
 } from "react";
+import { getApiBaseUrl } from "@/app/lib/api-base";
 
 export type AuthUser = {
   id: string;
@@ -63,6 +64,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem(AUTH_TOKEN_KEY);
     }
   }, []);
+
+  // Intercept fetch to handle 401s globally
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const originalFetch = window.fetch;
+
+    window.fetch = async (...args) => {
+      const response = await originalFetch(...args);
+      if (response.status === 401) {
+        let url = "";
+        if (typeof args[0] === "string") {
+          url = args[0];
+        } else if (args[0] instanceof Request) {
+          url = args[0].url;
+        } else if (args[0] instanceof URL) {
+          url = args[0].href;
+        }
+        
+        const backendUrl = getApiBaseUrl();
+        if (url.startsWith(backendUrl)) {
+          logout();
+        }
+      }
+      return response;
+    };
+
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, [logout]);
 
   // Initialize auth on mount
   useEffect(() => {
