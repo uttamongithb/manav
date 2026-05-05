@@ -9,6 +9,7 @@ export interface PostRecord {
   section: string;
   author: string;
   avatarUrl?: string;
+  videoUrl?: string;
   content: string;
   visibility: Visibility;
   createdAt: string;
@@ -276,6 +277,7 @@ export class PostsService {
         section: post.collection?.title ?? normalizedSection ?? 'GENERAL',
         author: post.author.displayName ?? post.author.username,
         avatarUrl: post.author.avatarUrl ?? undefined,
+        videoUrl: post.videoUrl ?? undefined,
         content: post.body ?? post.excerpt ?? post.title,
         visibility: 'public',
         createdAt: (post.createdAt ?? new Date()).toISOString(),
@@ -302,7 +304,7 @@ export class PostsService {
     }
   }
 
-  async create(input: { section: string; content: string; author?: string }): Promise<PostRecord> {
+  async create(input: { section: string; content: string; author?: string; videoUrl?: string }): Promise<PostRecord> {
     const normalizedSection = this.normalizeSection(input.section);
     const trimmedContent = input.content.trim();
     const excerpt = trimmedContent.slice(0, 240);
@@ -326,8 +328,9 @@ export class PostsService {
           authorId: author.id,
           tenantId: this.defaultTenantId,
           collectionId: collection.id,
-          status: 'review',
-          publishedAt: null,
+          status: normalizedSection === 'INSAAN_RECENT' ? 'published' : 'review',
+          publishedAt: normalizedSection === 'INSAAN_RECENT' ? new Date() : null,
+          videoUrl: input.videoUrl,
           metadata: {
             section: normalizedSection,
             visibility: 'public',
@@ -350,6 +353,7 @@ export class PostsService {
         section: normalizedSection,
         author: created.author.displayName ?? created.author.username,
         avatarUrl: created.author.avatarUrl ?? undefined,
+        videoUrl: created.videoUrl ?? undefined,
         content: created.body ?? created.excerpt ?? created.title,
         visibility: 'public',
         createdAt: (created.createdAt ?? new Date()).toISOString(),
@@ -357,7 +361,7 @@ export class PostsService {
         commentCount: 0,
         likedByUser: false,
         favoritedByUser: false,
-        moderationStatus: 'review',
+        moderationStatus: normalizedSection === 'INSAAN_RECENT' ? 'published' : 'review',
       };
     } catch (error) {
       this.logger.warn(`Failed to create post in database, using in-memory fallback: ${String(error)}`);
@@ -366,6 +370,7 @@ export class PostsService {
         section: normalizedSection,
         author: (input.author?.trim() || 'User').slice(0, 50),
         avatarUrl: undefined,
+        videoUrl: input.videoUrl,
         content: trimmedContent,
         visibility: 'public',
         createdAt: new Date().toISOString(),
@@ -373,7 +378,7 @@ export class PostsService {
         commentCount: 0,
         likedByUser: false,
         favoritedByUser: false,
-        moderationStatus: 'review',
+        moderationStatus: normalizedSection === 'INSAAN_RECENT' ? 'published' : 'review',
       };
       this.inMemoryPosts.unshift(fallback);
       return fallback;

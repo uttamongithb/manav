@@ -3,19 +3,20 @@
 import { Suspense, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { INSAAN_RECENT_CARDS } from "@/app/page";
+import { useInsaanShorts } from "@/app/lib/use-insaan-shorts";
 
 function ShortsContent() {
   const searchParams = useSearchParams();
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const { shorts } = useInsaanShorts();
 
   useEffect(() => {
     // Initial scroll based on search param
     const vParam = searchParams.get("v");
     if (vParam !== null) {
       const idx = parseInt(vParam, 10);
-      if (!isNaN(idx) && idx >= 0 && idx < INSAAN_RECENT_CARDS.length) {
+      if (!isNaN(idx) && idx >= 0 && idx < shorts.length) {
         // Timeout to ensure DOM is ready
         setTimeout(() => {
           const container = containerRef.current;
@@ -28,7 +29,7 @@ function ShortsContent() {
         }, 100);
       }
     }
-  }, [searchParams]);
+  }, [searchParams, shorts.length]);
 
   useEffect(() => {
     const observerOptions = {
@@ -65,7 +66,7 @@ function ShortsContent() {
     }
 
     return () => observer.disconnect();
-  }, []);
+  }, [shorts]);
 
   const togglePlayPause = (idx: number) => {
     const video = videoRefs.current[idx];
@@ -94,9 +95,9 @@ function ShortsContent() {
           </svg>
         </Link>
 
-        {INSAAN_RECENT_CARDS.map((card, idx) => (
+        {shorts.map((card, idx) => (
           <div 
-            key={idx} 
+            key={card.id || card.title} 
             data-index={idx}
             className="h-[100dvh] w-full snap-start snap-always relative sm:h-full"
             onClick={() => togglePlayPause(idx)}

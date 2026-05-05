@@ -4,7 +4,7 @@ import NextImage from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getStoredAuthToken, useAuth } from "@/app/context/auth";
+import { useAuth } from "@/app/context/auth";
 import { useTheme } from "@/app/context/theme";
 import { ProtectedRoute } from "@/app/components/protected-route";
 import { getApiBaseUrl } from "@/app/lib/api-base";
@@ -137,7 +137,7 @@ export function MyProfileContent() {
   const { isDark, setIsDark } = useTheme();
   const [activeTab, setActiveTab] = useState("POETRY");
 
-  const favoriteTabs = ["POETRY", "AAMOZISH", "WORD", "BOOKS", "POET", "SUFINAMA", "HINDWI"];
+  const favoriteTabs = ["POETRY", "AAMOZISH", "WORD", "BOOKS", "POET", "SUFINAMA", "HINDWI", "UPLOAD SHORT"];
   const [draftByTab, setDraftByTab] = useState<Record<string, string>>(() =>
     Object.fromEntries(favoriteTabs.map((tab) => [tab, ""])) as Record<string, string>,
   );
@@ -149,6 +149,12 @@ export function MyProfileContent() {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
   const [pendingAvatarPreview, setPendingAvatarPreview] = useState<string | null>(null);
+  
+  const [shortTitle, setShortTitle] = useState("");
+  const [shortFile, setShortFile] = useState<File | null>(null);
+  const [isUploadingShort, setIsUploadingShort] = useState(false);
+  const [shortDuration, setShortDuration] = useState<number>(0);
+
   const cacheKey = `INSAAN-profile-cache:${user?.id ?? "guest"}`;
   const defaultProfile = useMemo(
     () => buildDefaultProfile(user?.displayName || user?.username),
@@ -325,6 +331,69 @@ export function MyProfileContent() {
         setIsPosting(false);
       }
     })();
+  };
+
+  const handleUploadShort = async () => {
+    if (!shortTitle.trim() || !shortFile) {
+      setApiError("Please provide both a title and a video file.");
+      return;
+    }
+
+    if (!authToken) {
+      setApiError("Authentication expired. Please sign in again.");
+      router.push("/login");
+      return;
+    }
+
+    if (shortFile.size > 200 * 1024 * 1024) {
+      setApiError("Video size exceeds the 200 MB limit.");
+      return;
+    }
+
+    if (!Number.isFinite(shortDuration) || shortDuration <= 0) {
+      setApiError("Unable to read video duration. Please wait for metadata and try again.");
+      return;
+    }
+
+    if (shortDuration > 60) {
+      setApiError("Video duration must be less than 1 minute.");
+      return;
+    }
+
+    try {
+      setApiError(null);
+      setIsUploadingShort(true);
+
+      const formData = new FormData();
+      formData.append("file", shortFile);
+      formData.append("title", shortTitle.trim());
+      formData.append("durationSeconds", String(shortDuration));
+
+      const res = await fetch(`${backendUrl}/posts/shorts`, {
+        method: "POST",
+        headers: authHeaders,
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || "Upload failed.");
+      }
+
+      setShortTitle("");
+      setShortFile(null);
+      setShortDuration(0);
+      alert("Short uploaded successfully!");
+      // Optionally reload posts to see the new short
+      await loadPosts();
+    } catch (error) {
+      const message = error instanceof Error && error.message.trim().length > 0
+        ? error.message
+        : "Unable to upload video right now.";
+      setApiError(message);
+    } finally {
+      setIsUploadingShort(false);
+    }
   };
 
   const openEditProfile = () => {
@@ -683,63 +752,151 @@ export function MyProfileContent() {
                   </span>
                 </div>
 
-                <div className="mt-4 flex items-start gap-3">
-                  <div className="flex-1">
-                    <textarea
-                      value={activeDraft}
-                      onChange={(e) => handleDraftChange(activeTab, e.target.value)}
-                      placeholder={`Write something inspiring in ${activeTab.toLowerCase()}...`}
-                      className={`min-h-44 w-full resize-none rounded-none border px-4 py-4 text-[16px] leading-relaxed outline-none transition md:rounded-[22px] ${
-                        isDark
-                          ? "border-white/20 bg-[#101318] text-white/95 placeholder:text-white/40 focus:border-[#2ce88f]/70"
-                          : "border-black/10 bg-white text-[#1f2633] placeholder:text-[#7f8799] focus:border-[#00a86b]/60"
-                      }`}
-                    />
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {["Poetry mood", "Draft saved", "Public visibility"].map((chip) => (
-                        <span
-                          key={chip}
-                          className={`rounded-none border px-3 py-1 text-[11px] font-semibold md:rounded-full ${
+                {activeTab === "UPLOAD SHORT" ? (
+                  <>
+                    <div className="mt-4 flex flex-col gap-4">
+                      <div className="flex-1">
+                        <label className={`text-[13px] uppercase tracking-[0.14em] font-semibold mb-2 block ${isDark ? "text-white/70" : "text-[#4b5563]"}`}>
+                          Short Title
+                        </label>
+                        <input
+                          type="text"
+                          value={shortTitle}
+                          onChange={(e) => setShortTitle(e.target.value)}
+                          placeholder="E.g., Beautiful morning ghazal..."
+                          className={`w-full rounded-none border px-4 py-3 text-[15px] outline-none transition md:rounded-[14px] ${
                             isDark
-                              ? "border-white/18 bg-[#1f2229] text-white/78"
-                              : "border-black/10 bg-[#ffffff] text-[#516074]"
+                              ? "border-white/20 bg-[#101318] text-white focus:border-[#2ce88f]/70"
+                              : "border-black/10 bg-white text-[#1f2633] focus:border-[#00a86b]/60"
+                          }`}
+                        />
+                      </div>
+                      
+                      <div className="flex-1">
+                        <label className={`text-[13px] uppercase tracking-[0.14em] font-semibold mb-2 block ${isDark ? "text-white/70" : "text-[#4b5563]"}`}>
+                          Video File (Max 1 min, Max 200MB)
+                        </label>
+                        <input
+                          type="file"
+                          accept="video/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            setShortFile(file);
+                            const url = URL.createObjectURL(file);
+                            const video = document.createElement("video");
+                            video.src = url;
+                            video.onloadedmetadata = () => {
+                              setShortDuration(video.duration);
+                              URL.revokeObjectURL(url);
+                            };
+                          }}
+                          className={`w-full rounded-none border px-4 py-3 text-[14px] outline-none transition md:rounded-[14px] file:mr-4 file:rounded-full file:border-0 file:bg-[#2ce88f]/20 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-[#2ce88f] hover:file:bg-[#2ce88f]/30 ${
+                            isDark
+                              ? "border-white/20 bg-[#101318] text-white"
+                              : "border-black/10 bg-white text-[#1f2633]"
+                          }`}
+                        />
+                        {shortFile && (
+                          <p className={`mt-2 text-[12px] ${shortDuration > 60 || shortFile.size > 200 * 1024 * 1024 ? "text-rose-500" : (isDark ? "text-[#2ce88f]" : "text-[#0a8a5b]")}`}>
+                            Selected: {shortFile.name} ({(shortFile.size / 1024 / 1024).toFixed(1)} MB, {shortDuration.toFixed(1)}s)
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-col items-stretch justify-between gap-3 border-t pt-4 sm:flex-row sm:items-center">
+                      <div className={`text-[13px] ${isDark ? "text-white/65" : "text-[#70798d]"}`}>
+                        <p className="font-medium">Visible in Insaan Recent</p>
+                      </div>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShortTitle("");
+                            setShortFile(null);
+                            setShortDuration(0);
+                          }}
+                          className={`rounded-none px-4 py-2 text-[14px] font-semibold transition md:rounded-full ${
+                            isDark
+                              ? "border border-white/20 bg-[#1f2229] text-white/85 hover:bg-[#2a2f39]"
+                              : "border border-black/10 bg-white text-[#334056] hover:bg-[#f2f4f8]"
                           }`}
                         >
-                          {chip}
-                        </span>
-                      ))}
+                          Clear
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleUploadShort}
+                          className="rounded-none bg-[#2ce88f] px-5 py-2 text-[14px] font-semibold text-[#0b1112] shadow-[0_12px_24px_rgba(44,232,143,0.25)] transition hover:bg-[#45f39f] disabled:cursor-not-allowed disabled:opacity-60 md:rounded-full"
+                          disabled={isUploadingShort || !shortTitle.trim() || !shortFile}
+                        >
+                          {isUploadingShort ? "Uploading..." : "Upload Short"}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="mt-4 flex items-start gap-3">
+                      <div className="flex-1">
+                        <textarea
+                          value={activeDraft}
+                          onChange={(e) => handleDraftChange(activeTab, e.target.value)}
+                          placeholder={`Write something inspiring in ${activeTab.toLowerCase()}...`}
+                          className={`min-h-44 w-full resize-none rounded-none border px-4 py-4 text-[16px] leading-relaxed outline-none transition md:rounded-[22px] ${
+                            isDark
+                              ? "border-white/20 bg-[#101318] text-white/95 placeholder:text-white/40 focus:border-[#2ce88f]/70"
+                              : "border-black/10 bg-white text-[#1f2633] placeholder:text-[#7f8799] focus:border-[#00a86b]/60"
+                          }`}
+                        />
 
-                <div className="mt-4 flex flex-col items-stretch justify-between gap-3 border-t pt-4 sm:flex-row sm:items-center">
-                  <div className={`text-[13px] ${isDark ? "text-white/65" : "text-[#70798d]"}`}>
-                    <p className="font-medium">Visible to everyone</p>
-                    <p className="mt-0.5 text-[12px]">{activeDraft.length}/500 characters</p>
-                  </div>
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setDraftByTab((prev) => ({ ...prev, [activeTab]: "" }))}
-                      className={`rounded-none px-4 py-2 text-[14px] font-semibold transition md:rounded-full ${
-                        isDark
-                          ? "border border-white/20 bg-[#1f2229] text-white/85 hover:bg-[#2a2f39]"
-                          : "border border-black/10 bg-white text-[#334056] hover:bg-[#f2f4f8]"
-                      }`}
-                    >
-                      Clear
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleCreatePost(activeTab)}
-                      className="rounded-none bg-[#2ce88f] px-5 py-2 text-[14px] font-semibold text-[#0b1112] shadow-[0_12px_24px_rgba(44,232,143,0.25)] transition hover:bg-[#45f39f] disabled:cursor-not-allowed disabled:opacity-60 md:rounded-full"
-                      disabled={isPosting || !activeDraft.trim()}
-                    >
-                      {isPosting ? "Publishing..." : "Publish post"}
-                    </button>
-                  </div>
-                </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {["Poetry mood", "Draft saved", "Public visibility"].map((chip) => (
+                            <span
+                              key={chip}
+                              className={`rounded-none border px-3 py-1 text-[11px] font-semibold md:rounded-full ${
+                                isDark
+                                  ? "border-white/18 bg-[#1f2229] text-white/78"
+                                  : "border-black/10 bg-[#ffffff] text-[#516074]"
+                              }`}
+                            >
+                              {chip}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex flex-col items-stretch justify-between gap-3 border-t pt-4 sm:flex-row sm:items-center">
+                      <div className={`text-[13px] ${isDark ? "text-white/65" : "text-[#70798d]"}`}>
+                        <p className="font-medium">Visible to everyone</p>
+                        <p className="mt-0.5 text-[12px]">{activeDraft.length}/500 characters</p>
+                      </div>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setDraftByTab((prev) => ({ ...prev, [activeTab]: "" }))}
+                          className={`rounded-none px-4 py-2 text-[14px] font-semibold transition md:rounded-full ${
+                            isDark
+                              ? "border border-white/20 bg-[#1f2229] text-white/85 hover:bg-[#2a2f39]"
+                              : "border border-black/10 bg-white text-[#334056] hover:bg-[#f2f4f8]"
+                          }`}
+                        >
+                          Clear
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleCreatePost(activeTab)}
+                          className="rounded-none bg-[#2ce88f] px-5 py-2 text-[14px] font-semibold text-[#0b1112] shadow-[0_12px_24px_rgba(44,232,143,0.25)] transition hover:bg-[#45f39f] disabled:cursor-not-allowed disabled:opacity-60 md:rounded-full"
+                          disabled={isPosting || !activeDraft.trim()}
+                        >
+                          {isPosting ? "Publishing..." : "Publish post"}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 {apiError ? (
                   <p className={`mt-2 text-[12px] ${isDark ? "text-rose-300" : "text-rose-600"}`}>

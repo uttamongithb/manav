@@ -1,9 +1,19 @@
-import { BadRequestException, Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { PostsService } from './posts.service';
+import { MediaService } from '../shared/media.service';
+import { memoryStorage } from 'multer';
+import type { Request } from 'express';
+import type { FileFilterCallback } from 'multer';
+import { CurrentUser } from '../auth/current-user.decorator';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+  constructor(
+    private readonly postsService: PostsService,
+    private readonly mediaService: MediaService,
+  ) {}
 
   @Get()
   async list(@Query('section') section?: string, @Query('author') author?: string) {
@@ -11,8 +21,8 @@ export class PostsController {
   }
 
   @Get('public')
-  async listPublic(@Query('author') author?: string) {
-    return this.postsService.list(undefined, author);
+  async listPublic(@Query('section') section?: string, @Query('author') author?: string) {
+    return this.postsService.list(section, author);
   }
 
   @Get('favorites')
@@ -34,6 +44,57 @@ export class PostsController {
       section: body.section,
       content: body.content,
       author: body.author,
+    });
+  }
+
+  @Post('shorts')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 200 * 1024 * 1024 }, // 200 MB
+      fileFilter: (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
+        if (!file.mimetype.startsWith('video/')) {
+          cb(null, false);
+          return;
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  async createShort(
+    @Body() body: { title?: string; durationSeconds?: string },
+    @CurrentUser() user: { displayName?: string | null; username?: string | null },
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('video file is required');
+    }
+
+    if (!body.title?.trim()) {
+      throw new BadRequestException('title is required');
+    }
+
+    const durationSeconds = Number.parseFloat(String(body.durationSeconds ?? ''));
+    if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) {
+      throw new BadRequestException('video duration is required');
+    }
+    if (durationSeconds > 60) {
+      throw new BadRequestException('video duration must be less than 1 minute');
+    }
+
+    const fileName = `short-${Date.now()}-${file.originalname}`;
+    const videoUrl = await this.mediaService.uploadFile(
+      file,
+      fileName,
+      'shorts',
+    );
+
+    return this.postsService.create({
+      section: 'INSAAN_RECENT',
+      content: body.title,
+      author: user.displayName ?? user.username ?? 'User',
+      videoUrl,
     });
   }
 

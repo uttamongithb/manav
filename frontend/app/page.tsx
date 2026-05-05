@@ -7,8 +7,10 @@ import { SiteFooter } from "@/app/components/site-footer";
 import { useTheme } from "@/app/context/theme";
 import { useAuth } from "@/app/context/auth";
 import { getApiBaseUrl } from "@/app/lib/api-base";
+import { INSAAN_RECENT_CARDS } from "@/app/lib/insaan-recent-cards";
 
 import Link from "next/link";
+import { useInsaanShorts } from "@/app/lib/use-insaan-shorts";
 
 type UserPost = {
   id: string;
@@ -68,69 +70,6 @@ const DEFAULT_HERO_SLIDES: HeroSlide[] = [
       "Clean typography, focused rhythm, and thoughtful pacing built for desktop and mobile alike.",
     image: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=2200&q=80",
     tag: "Reader First",
-  },
-];
-
-export const INSAAN_RECENT_CARDS = [
-  {
-    title: "Why Urdu Sounds Like Love | Guftugu with Javed Jaferi",
-    image:
-      "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1000&q=80",
-    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-  },
-  {
-    title: "Kal Chaudhvin Ki Raat Thi | Papon Live",
-    image:
-      "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=1000&q=80",
-    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/friday.mp4",
-  },
-  {
-    title: "Wasim Barelvi & Shakeel Azmi Mushaira | Best Moments",
-    image:
-      "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1000&q=80",
-    video: "https://www.w3schools.com/html/mov_bbb.mp4",
-  },
-  {
-    title: "Raj Babbar and Zeeshan Ayyub on Urdu Ishq and Cinema",
-    image:
-      "https://images.unsplash.com/photo-1460723237483-7a6dc9d0b212?auto=format&fit=crop&w=1000&q=80",
-    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-  },
-  {
-    title: "Why Mirza Ghalib is Timeless | Javed Akhtar Special",
-    image:
-      "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1000&q=80",
-    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/friday.mp4",
-  },
-  {
-    title: "Rang-e-Ghazal: Voices That Shaped Modern Urdu",
-    image:
-      "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?auto=format&fit=crop&w=1000&q=80",
-    video: "https://www.w3schools.com/html/mov_bbb.mp4",
-  },
-  {
-    title: "Young Poet Mushaira feat. Himanshi Babbar & Ali",
-    image:
-      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1000&q=80",
-    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-  },
-  {
-    title: "Soulful Ghazal Medley Live | Hariharan, Pratibha",
-    image:
-      "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1000&q=80",
-    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/friday.mp4",
-  },
-  {
-    title: "Javed Akhtar & Zehra Nigah on Poetry and Legacy",
-    image:
-      "https://images.unsplash.com/photo-1521335629791-ce4aec67dd53?auto=format&fit=crop&w=1000&q=80",
-    video: "https://www.w3schools.com/html/mov_bbb.mp4",
-  },
-  {
-    title: "Shabnam Virmani Sings Kabir Bhajans | Live Session",
-    image:
-      "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1000&q=80",
-    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
   },
 ];
 
@@ -199,6 +138,7 @@ export default function PublicFeed() {
   const featuredPostsCarouselRef = useRef<HTMLDivElement | null>(null);
 
   const backendUrl = getApiBaseUrl();
+  const { shorts } = useInsaanShorts();
 
   useEffect(() => {
     if (user?.username?.trim()) {
@@ -1105,16 +1045,16 @@ export default function PublicFeed() {
               className="flex w-full snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden px-4 py-4 md:px-0 lg:gap-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
             >
-              {INSAAN_RECENT_CARDS.map((card, idx) => (
+              {shorts.map((card, idx) => (
                 <article 
-                  key={card.title} 
+                  key={card.id || card.title} 
                   className={`group relative shrink-0 snap-start 
                     w-[140px] min-w-[140px] max-w-none 
                     sm:w-[180px] sm:min-w-[180px]
                     md:w-[220px] md:min-w-[220px]
                     lg:w-[260px] lg:min-w-[260px]
                     ${idx === 0 ? "ml-0" : ""}
-                    ${idx === INSAAN_RECENT_CARDS.length - 1 ? "mr-4 md:mr-0" : ""}
+                    ${idx === shorts.length - 1 ? "mr-4 md:mr-0" : ""}
                   `}
                 >
                   <Link href={`/shorts?v=${idx}`} className="block">
