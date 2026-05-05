@@ -100,6 +100,7 @@ export class ArticlesController {
       content: string;
       excerpt?: string;
       coverImageUrl?: string;
+      galleryImageUrls?: string[];
       status?: string;
     },
     @CurrentUser() user: { sub: string },
@@ -116,6 +117,7 @@ export class ArticlesController {
         content: body.content,
         excerpt: body.excerpt,
         coverImageUrl: body.coverImageUrl,
+        galleryImageUrls: body.galleryImageUrls,
         status: (body.status as any) || 'draft',
       },
       user.sub,
@@ -134,6 +136,7 @@ export class ArticlesController {
       content?: string;
       excerpt?: string;
       coverImageUrl?: string;
+      galleryImageUrls?: string[];
       status?: string;
     },
     @CurrentUser() user: { sub: string; role?: string },
@@ -145,6 +148,7 @@ export class ArticlesController {
         content: body.content,
         excerpt: body.excerpt,
         coverImageUrl: body.coverImageUrl,
+        galleryImageUrls: body.galleryImageUrls,
         status: (body.status as any) || undefined,
       },
       user.sub,

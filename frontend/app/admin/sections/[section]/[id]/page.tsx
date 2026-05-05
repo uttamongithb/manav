@@ -13,6 +13,7 @@ interface ArticleForm {
   excerpt: string;
   content: string;
   coverImageUrl: string;
+  galleryImageUrls: string[];
   status: 'draft' | 'published';
 }
 
@@ -39,6 +40,7 @@ export default function ArticleEditorPage() {
     excerpt: '',
     content: '',
     coverImageUrl: '',
+    galleryImageUrls: [],
     status: 'draft',
   });
   const [loading, setLoading] = useState(isEdit);
@@ -63,6 +65,7 @@ export default function ArticleEditorPage() {
               excerpt: article.excerpt || '',
               content: article.content,
               coverImageUrl: article.coverImageUrl || '',
+              galleryImageUrls: article.galleryImageUrls || [],
               status: article.status,
             });
           }
@@ -101,6 +104,45 @@ export default function ArticleEditorPage() {
     } catch (err) {
       setError('Error uploading image');
     }
+  };
+
+  const handleGalleryImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const backendUrl = getApiBaseUrl();
+        const response = await fetch(`${backendUrl}/admin/articles/upload`, {
+          method: 'POST',
+          headers: authToken ? { Authorization: `Bearer ${authToken}` } : undefined,
+          body: formData,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setForm((prev) => ({
+            ...prev,
+            galleryImageUrls: [...prev.galleryImageUrls, data.imageUrl],
+          }));
+        } else {
+          setError('Failed to upload one or more images');
+        }
+      }
+    } catch (err) {
+      setError('Error uploading gallery images');
+    }
+  };
+
+  const removeGalleryImage = (index: number) => {
+    setForm((prev) => ({
+      ...prev,
+      galleryImageUrls: prev.galleryImageUrls.filter((_, i) => i !== index),
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -224,6 +266,50 @@ export default function ArticleEditorPage() {
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Gallery Images - For Right Side Display */}
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-gray-900 mb-2">Gallery Images</label>
+            <p className="text-xs text-gray-600 mb-4">Add images that will appear in the right sidebar on the article page (up to 5-8 images)</p>
+            <div className="flex flex-col gap-4">
+              {form.galleryImageUrls.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {form.galleryImageUrls.map((url, index) => (
+                    <div key={index} className="relative group">
+                      <div className="relative w-full h-32 rounded-lg overflow-hidden">
+                        <Image
+                          src={url}
+                          alt={`Gallery ${index + 1}`}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeGalleryImage(index)}
+                        className="absolute top-1 right-1 bg-red-600 text-white p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                <Upload className="w-5 h-5 text-gray-600" />
+                <span className="text-gray-600">Click to upload gallery images</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleGalleryImageUpload}
                   className="hidden"
                 />
               </label>

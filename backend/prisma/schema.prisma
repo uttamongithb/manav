@@ -334,6 +334,7 @@ model Article {
   excerpt         String?          @db.Text
   content         String           @db.LongText
   coverImageUrl   String?          @map("cover_image_url")
+  galleryImageUrls Json?           @map("gallery_image_urls") // Array of image URLs for side gallery
   section         ArticleSection   @map("section")
   authorId        String           @map("author_id")
   author          User             @relation("ArticleAuthor", fields: [authorId], references: [id])

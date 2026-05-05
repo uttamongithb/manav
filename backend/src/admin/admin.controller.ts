@@ -303,4 +303,39 @@ export class AdminController {
 
     return { imageUrl };
   }
+
+  @Post('articles/:id/gallery/upload')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 15 * 1024 * 1024 },
+      fileFilter: (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
+        // Allow only images
+        const allowedMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (allowedMimes.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(null, false);
+        }
+      },
+    }),
+  )
+  async uploadArticleGalleryImage(
+    @Param('id') articleId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: { sub: string },
+  ) {
+    if (!file) {
+      throw new BadRequestException('file is required');
+    }
+
+    const fileName = `article-gallery-${Date.now()}-${Math.round(Math.random() * 1e9)}-${file.originalname}`;
+    const imageUrl = await this.mediaService.uploadFile(
+      file,
+      fileName,
+      'articles',
+    );
+
+    return { imageUrl };
+  }
 }

@@ -16,6 +16,7 @@ interface Article {
   excerpt: string | null;
   content: string;
   coverImageUrl: string | null;
+  galleryImageUrls?: string[];
   author: {
     id: string;
     displayName: string | null;
@@ -87,12 +88,11 @@ export default function ArticleDetailPage() {
   const sideGalleryImages = useMemo(() => {
     if (!article) return [] as string[];
 
-    const merged = [
-      ...(article.coverImageUrl ? [article.coverImageUrl] : []),
-      ...inlineImageUrls,
-    ];
+    if (article.galleryImageUrls && article.galleryImageUrls.length > 0) {
+      return Array.from(new Set(article.galleryImageUrls.filter(Boolean))).slice(0, 8);
+    }
 
-    return Array.from(new Set(merged)).slice(0, 8);
+    return Array.from(new Set(inlineImageUrls.filter(Boolean))).slice(0, 8);
   }, [article, inlineImageUrls]);
 
   useEffect(() => {
@@ -338,10 +338,10 @@ export default function ArticleDetailPage() {
       <aside className="mt-6 hidden lg:block lg:mt-0">
         {sideGalleryImages.length > 0 ? (
           <div className="sticky top-24 space-y-4">
-            {Array.from({ length: 5 }).map((_, idx) => (
-              <div key={idx} className="relative h-52 w-full overflow-hidden">
+            {sideGalleryImages.map((imageUrl, idx) => (
+              <div key={`${imageUrl}-${idx}`} className="relative h-52 w-full overflow-hidden rounded-2xl border border-black/10 shadow-sm">
                 <Image
-                  src={sideGalleryImages[idx % sideGalleryImages.length]}
+                  src={imageUrl}
                   alt={`Article image ${idx + 1}`}
                   fill
                   className="object-cover"

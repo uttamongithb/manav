@@ -9,6 +9,7 @@ export interface ArticleDTO {
   excerpt: string | null;
   content: string;
   coverImageUrl: string | null;
+  galleryImageUrls?: string[];
   section: ArticleSection;
   author: {
     id: string;
@@ -45,6 +46,7 @@ export class ArticlesService {
       excerpt: article.excerpt,
       content: article.content,
       coverImageUrl: article.coverImageUrl,
+      galleryImageUrls: article.galleryImageUrls || [],
       section: article.section,
       author: {
         id: article.author.id,
@@ -204,6 +206,7 @@ export class ArticlesService {
       content: string;
       excerpt?: string;
       coverImageUrl?: string;
+      galleryImageUrls?: string[];
       status?: ContentStatus;
       publishedAt?: Date;
     },
@@ -223,6 +226,7 @@ export class ArticlesService {
         content: data.content.trim(),
         excerpt: data.excerpt?.trim(),
         coverImageUrl: data.coverImageUrl,
+        galleryImageUrls: data.galleryImageUrls || [],
         authorId,
         tenantId: this.defaultTenantId,
         status: data.status || 'draft',
@@ -246,6 +250,7 @@ export class ArticlesService {
       content?: string;
       excerpt?: string;
       coverImageUrl?: string;
+      galleryImageUrls?: string[];
       status?: ContentStatus;
     },
     authorId: string,
@@ -269,6 +274,7 @@ export class ArticlesService {
     if (data.content) updateData.content = data.content.trim();
     if (data.excerpt !== undefined) updateData.excerpt = data.excerpt?.trim();
     if (data.coverImageUrl !== undefined) updateData.coverImageUrl = data.coverImageUrl;
+    if (data.galleryImageUrls !== undefined) updateData.galleryImageUrls = data.galleryImageUrls;
     if (data.status) {
       updateData.status = data.status;
       if (data.status === 'published') {
@@ -376,6 +382,33 @@ export class ArticlesService {
     });
 
     return comment;
+  }
+
+  async addGalleryImages(articleId: string, imageUrls: string[]) {
+    const article = await this.prisma.article.findUnique({
+      where: { id: articleId },
+      select: { galleryImageUrls: true },
+    });
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+
+    const currentImages = (article.galleryImageUrls as string[]) || [];
+    const updatedImages = [...currentImages, ...imageUrls];
+
+    const updated = await this.prisma.article.update({
+      where: { id: articleId },
+      data: { galleryImageUrls: updatedImages },
+      include: {
+        author: {
+          select: { id: true, displayName: true, avatarUrl: true },
+        },
+        _count: { select: { comments: true } },
+      },
+    });
+
+    return this.formatArticle(updated, false);
   }
 
   private generateSlug(title: string): string {
