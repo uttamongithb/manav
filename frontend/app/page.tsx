@@ -8,6 +8,8 @@ import { useTheme } from "@/app/context/theme";
 import { useAuth } from "@/app/context/auth";
 import { getApiBaseUrl } from "@/app/lib/api-base";
 
+import Link from "next/link";
+
 type UserPost = {
   id: string;
   section: string;
@@ -69,66 +71,66 @@ const DEFAULT_HERO_SLIDES: HeroSlide[] = [
   },
 ];
 
-const INSAAN_RECENT_CARDS = [
+export const INSAAN_RECENT_CARDS = [
   {
     title: "Why Urdu Sounds Like Love | Guftugu with Javed Jaferi",
     image:
       "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1000&q=80",
-    href: "https://www.youtube.com/",
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
   },
   {
     title: "Kal Chaudhvin Ki Raat Thi | Papon Live",
     image:
       "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=1000&q=80",
-    href: "https://www.youtube.com/",
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/friday.mp4",
   },
   {
     title: "Wasim Barelvi & Shakeel Azmi Mushaira | Best Moments",
     image:
       "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1000&q=80",
-    href: "https://www.youtube.com/",
+    video: "https://www.w3schools.com/html/mov_bbb.mp4",
   },
   {
     title: "Raj Babbar and Zeeshan Ayyub on Urdu Ishq and Cinema",
     image:
       "https://images.unsplash.com/photo-1460723237483-7a6dc9d0b212?auto=format&fit=crop&w=1000&q=80",
-    href: "https://www.youtube.com/",
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
   },
   {
     title: "Why Mirza Ghalib is Timeless | Javed Akhtar Special",
     image:
       "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1000&q=80",
-    href: "https://www.youtube.com/",
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/friday.mp4",
   },
   {
     title: "Rang-e-Ghazal: Voices That Shaped Modern Urdu",
     image:
       "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?auto=format&fit=crop&w=1000&q=80",
-    href: "https://www.youtube.com/",
+    video: "https://www.w3schools.com/html/mov_bbb.mp4",
   },
   {
     title: "Young Poet Mushaira feat. Himanshi Babbar & Ali",
     image:
       "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=1000&q=80",
-    href: "https://www.youtube.com/",
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
   },
   {
     title: "Soulful Ghazal Medley Live | Hariharan, Pratibha",
     image:
       "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1000&q=80",
-    href: "https://www.youtube.com/",
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/friday.mp4",
   },
   {
     title: "Javed Akhtar & Zehra Nigah on Poetry and Legacy",
     image:
       "https://images.unsplash.com/photo-1521335629791-ce4aec67dd53?auto=format&fit=crop&w=1000&q=80",
-    href: "https://www.youtube.com/",
+    video: "https://www.w3schools.com/html/mov_bbb.mp4",
   },
   {
     title: "Shabnam Virmani Sings Kabir Bhajans | Live Session",
     image:
       "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1000&q=80",
-    href: "https://www.youtube.com/",
+    video: "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
   },
 ];
 
@@ -316,8 +318,6 @@ export default function PublicFeed() {
     recentDragStateRef.current.startX = event.clientX;
     recentDragStateRef.current.startScrollLeft = container.scrollLeft;
     recentDragStateRef.current.didDrag = false;
-
-    container.setPointerCapture(event.pointerId);
   };
 
   const handleRecentPointerMove = (event: PointerEvent<HTMLDivElement>) => {
@@ -338,12 +338,6 @@ export default function PublicFeed() {
     const container = recentCarouselRef.current;
     if (!container) return;
     if (recentDragStateRef.current.pointerId !== event.pointerId) return;
-
-    try {
-      container.releasePointerCapture(event.pointerId);
-    } catch {
-      // Ignore if already released.
-    }
 
     recentDragStateRef.current.isDragging = false;
     recentDragStateRef.current.pointerId = -1;
@@ -695,7 +689,7 @@ export default function PublicFeed() {
                     className="mt-1 text-[20px] font-semibold leading-[1] tracking-[-0.02em] md:mt-2 md:text-[42px]"
                     style={{ fontFamily: "Georgia, Times New Roman, serif" }}
                   >
-                    Today's Top 5 
+                    Today&apos;s Top 5 
                   </h2>
                   <p className={`mt-1.5 max-w-2xl text-[11px] leading-relaxed md:mt-3 md:text-[15px] ${isDark ? "text-white/70" : "text-[#49624d]"}`}>
                     These posts are trending now based on total engagement from likes and comments.
@@ -1115,21 +1109,21 @@ export default function PublicFeed() {
                 <article 
                   key={card.title} 
                   className={`group relative shrink-0 snap-start 
-                    w-[calc((100%-0.35rem)/2)] min-w-[calc((100%-0.35rem)/2)] max-w-none 
-                    sm:w-[calc((100%-0.75rem)/2)] sm:min-w-[calc((100%-0.75rem)/2)]
-                    md:w-[calc((100%-3rem)/5)] md:min-w-[calc((100%-3rem)/5)]
-                    lg:w-[calc((100%-6rem)/5)] lg:min-w-[calc((100%-6rem)/5)] lg:max-w-none
+                    w-[140px] min-w-[140px] max-w-none 
+                    sm:w-[180px] sm:min-w-[180px]
+                    md:w-[220px] md:min-w-[220px]
+                    lg:w-[260px] lg:min-w-[260px]
                     ${idx === 0 ? "ml-0" : ""}
                     ${idx === INSAAN_RECENT_CARDS.length - 1 ? "mr-4 md:mr-0" : ""}
                   `}
                 >
-                  <a href={card.href} target="_blank" rel="noreferrer" className="block">
-                    <div className="relative aspect-[5/6] overflow-hidden rounded-2xl sm:aspect-4/6 sm:rounded-3xl">
+                  <Link href={`/shorts?v=${idx}`} className="block">
+                    <div className="relative aspect-[5/6] overflow-hidden rounded-2xl sm:aspect-[4/6] sm:rounded-3xl">
                       <Image
                         src={card.image}
                         alt={card.title}
                         fill
-                        sizes="(min-width: 1024px) 20vw, (min-width: 768px) 20vw, 50vw"
+                        sizes="(min-width: 1024px) 260px, (min-width: 768px) 220px, 140px"
                         unoptimized
                         className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
                       />
@@ -1147,7 +1141,7 @@ export default function PublicFeed() {
                     <h3 className={`mt-2 line-clamp-2 text-[13px] font-semibold leading-snug sm:mt-3 sm:text-[14px] md:text-[16px] ${isDark ? "text-white/92" : "text-[#0e2742]"}`} style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
                       {card.title}
                     </h3>
-                  </a>
+                  </Link>
                 </article>
               ))}
             </div>

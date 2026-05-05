@@ -1,0 +1,171 @@
+"use client";
+
+import { Suspense, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { INSAAN_RECENT_CARDS } from "@/app/page";
+
+function ShortsContent() {
+  const searchParams = useSearchParams();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+
+  useEffect(() => {
+    // Initial scroll based on search param
+    const vParam = searchParams.get("v");
+    if (vParam !== null) {
+      const idx = parseInt(vParam, 10);
+      if (!isNaN(idx) && idx >= 0 && idx < INSAAN_RECENT_CARDS.length) {
+        // Timeout to ensure DOM is ready
+        setTimeout(() => {
+          const container = containerRef.current;
+          if (container) {
+            const child = container.children[idx + 1] as HTMLElement; // +1 because Link is the first child
+            if (child) {
+              container.scrollTop = child.offsetTop;
+            }
+          }
+        }, 100);
+      }
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const observerOptions = {
+      root: containerRef.current,
+      rootMargin: "0px",
+      threshold: 0.7, // Trigger when 70% of video is visible
+    };
+
+    const observerCallback: IntersectionObserverCallback = (entries) => {
+      entries.forEach((entry) => {
+        const video = entry.target.querySelector("video");
+        if (!video) return;
+
+        if (entry.isIntersecting) {
+          const index = Number(entry.target.getAttribute("data-index"));
+          video.play().catch(() => {
+            // Autoplay was prevented
+            console.log("Autoplay prevented for video", index);
+          });
+        } else {
+          video.pause();
+          video.currentTime = 0; // Reset video when out of view
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    const container = containerRef.current;
+    if (container) {
+      Array.from(container.children).forEach((child) => {
+        observer.observe(child);
+      });
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  const togglePlayPause = (idx: number) => {
+    const video = videoRefs.current[idx];
+    if (!video) return;
+    if (video.paused) {
+      video.play().catch(console.error);
+    } else {
+      video.pause();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black text-white sm:bg-[#121212] sm:flex sm:items-center sm:justify-center">
+      {/* Mobile-optimized container */}
+      <div 
+        ref={containerRef}
+        className="h-[100dvh] w-full max-w-[480px] overflow-y-scroll overflow-x-hidden snap-y snap-mandatory bg-black relative scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:h-[90vh] sm:rounded-[30px] sm:border sm:border-white/10"
+      >
+        {/* Back Button */}
+        <Link 
+          href="/" 
+          className="absolute top-6 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/20 transition hover:bg-black/60"
+        >
+          <svg viewBox="0 0 24 24" className="h-6 w-6 text-white" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </Link>
+
+        {INSAAN_RECENT_CARDS.map((card, idx) => (
+          <div 
+            key={idx} 
+            data-index={idx}
+            className="h-[100dvh] w-full snap-start snap-always relative sm:h-full"
+            onClick={() => togglePlayPause(idx)}
+          >
+            {card.video ? (
+              <video
+                ref={(el) => {
+                  videoRefs.current[idx] = el;
+                }}
+                src={card.video}
+                className="h-full w-full object-cover"
+                loop
+                playsInline
+                muted // Muted to allow autoplay without user interaction, required by most browsers
+                poster={card.image}
+              />
+            ) : (
+              <div className="h-full w-full bg-zinc-900 flex items-center justify-center">
+                <p>No video source</p>
+              </div>
+            )}
+
+            {/* Overlays */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80 pointer-events-none" />
+            
+            {/* Bottom Content */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 pt-20 pointer-events-none">
+              <h2 className="text-xl font-bold mb-2 shadow-sm drop-shadow-md" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
+                {card.title}
+              </h2>
+              <p className="text-white/80 text-sm mb-4 drop-shadow-md">
+                Insaan Recent Shorts
+              </p>
+            </div>
+            
+            {/* Side Actions */}
+            <div className="absolute right-4 bottom-24 flex flex-col gap-6 items-center pointer-events-auto">
+              <button className="group flex flex-col items-center gap-1">
+                <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center transition group-hover:bg-white/20">
+                  <span className="text-2xl leading-none">♡</span>
+                </div>
+                <span className="text-xs font-medium drop-shadow-md">Like</span>
+              </button>
+              
+              <button className="group flex flex-col items-center gap-1">
+                <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center transition group-hover:bg-white/20">
+                  <span className="text-xl leading-none">💬</span>
+                </div>
+                <span className="text-xs font-medium drop-shadow-md">Comment</span>
+              </button>
+              
+              <button className="group flex flex-col items-center gap-1">
+                <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center transition group-hover:bg-white/20">
+                  <span className="text-xl leading-none">↗</span>
+                </div>
+                <span className="text-xs font-medium drop-shadow-md">Share</span>
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function ShortsPage() {
+  return (
+    <Suspense fallback={<div className="fixed inset-0 bg-black text-white flex items-center justify-center">Loading...</div>}>
+      <ShortsContent />
+    </Suspense>
+  );
+}
