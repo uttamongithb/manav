@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import Image from "next/image";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { getStoredAuthToken, useAuth } from "@/app/context/auth";
@@ -107,6 +108,7 @@ export default function AdminLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [adminServiceIssue, setAdminServiceIssue] = useState<string | null>(null);
   const [adminCheckTick, setAdminCheckTick] = useState(0);
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
 
   const role = user?.role?.toLowerCase?.() ?? "";
   const isAdmin = !!user && ["admin", "superadmin"].includes(role);
@@ -120,6 +122,10 @@ export default function AdminLayout({
     if (typeof window === "undefined") return;
     window.localStorage.setItem("INSAAN-admin-theme", isDarkMode ? "dark" : "light");
   }, [isDarkMode]);
+
+  useEffect(() => {
+    setAvatarLoadFailed(false);
+  }, [user?.avatarUrl]);
 
   useEffect(() => {
     if (isLoadingAuth) return;
@@ -423,9 +429,21 @@ export default function AdminLayout({
               className="admin-topnav-avatar"
               title={user?.displayName || user?.username || "Admin"}
             >
-              {(user?.displayName || user?.username || "A")
-                .charAt(0)
-                .toUpperCase()}
+              {user?.avatarUrl && !avatarLoadFailed ? (
+                <Image
+                  src={user.avatarUrl}
+                  alt={user?.displayName || user?.username || "Admin avatar"}
+                  fill
+                  sizes="40px"
+                  unoptimized
+                  style={{ objectFit: "cover" }}
+                  onError={() => setAvatarLoadFailed(true)}
+                />
+              ) : (
+                <span style={{ position: "relative", zIndex: 1 }}>
+                  {(user?.displayName || user?.username || "A").charAt(0).toUpperCase()}
+                </span>
+              )}
             </button>
           </div>
         </header>

@@ -375,6 +375,8 @@
   color: #fff;
   cursor: pointer;
   border: none;
+  position: relative;
+  overflow: hidden;
   transition: box-shadow 0.15s;
 }
 
