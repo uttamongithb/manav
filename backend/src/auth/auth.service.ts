@@ -138,6 +138,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    const normalizedStatus = user.status?.toLowerCase?.() ?? '';
+    if (normalizedStatus !== 'active') {
+      throw new UnauthorizedException('Account is suspended or inactive');
+    }
+
     const isPasswordValid = await bcrypt.compare(
       dto.password,
       user.passwordHash || '',

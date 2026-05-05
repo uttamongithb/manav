@@ -51,13 +51,7 @@ type AdminUserRecord = {
   contentCount: number;
 };
 
-type MediaAssetRecord = {
-  filename: string;
-  url: string;
-  size: number;
-  mimeType: string;
-  updatedAt: string;
-};
+
 
 type ManagementSummary = {
   unreadMessages: number;
@@ -617,57 +611,5 @@ export class AdminManagementService {
     return this.getPoets();
   }
 
-  async listMediaAssets(): Promise<MediaAssetRecord[]> {
-    const tenant = await this.ensurePublicTenant();
-    const settings = this.getSettingsObject(tenant.settings);
-    const media = (settings.media as MediaAssetRecord[] | undefined) ?? [];
-    
-    return media.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-  }
 
-  async addMediaAsset(
-    asset: Omit<MediaAssetRecord, 'updatedAt'>,
-    adminUserId: string,
-  ): Promise<MediaAssetRecord[]> {
-    const tenant = await this.ensurePublicTenant();
-    const settings = this.getSettingsObject(tenant.settings);
-    const media = Array.isArray(settings.media) ? settings.media : [];
-
-    const newAsset: MediaAssetRecord = {
-      ...asset,
-      updatedAt: new Date().toISOString(),
-    };
-
-    const nextSettings = {
-      ...settings,
-      media: [newAsset, ...media],
-      mediaMeta: {
-        updatedAt: new Date().toISOString(),
-        updatedBy: adminUserId,
-      },
-    };
-
-    await this.updateSettings(nextSettings);
-    return this.listMediaAssets();
-  }
-
-  async deleteMediaAsset(url: string, adminUserId: string): Promise<MediaAssetRecord[]> {
-    const tenant = await this.ensurePublicTenant();
-    const settings = this.getSettingsObject(tenant.settings);
-    const media = Array.isArray(settings.media) ? settings.media : [];
-
-    const filteredMedia = media.filter((asset) => asset.url !== url);
-
-    const nextSettings = {
-      ...settings,
-      media: filteredMedia,
-      mediaMeta: {
-        updatedAt: new Date().toISOString(),
-        updatedBy: adminUserId,
-      },
-    };
-
-    await this.updateSettings(nextSettings);
-    return this.listMediaAssets();
-  }
 }

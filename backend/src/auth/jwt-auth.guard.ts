@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import type { Request } from 'express';
+import { PrismaService } from '../prisma/prisma.service';
 
 type JwtPayload = {
   sub: string;
@@ -19,7 +20,10 @@ type RequestWithUser = Request & { user?: JwtPayload };
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest<RequestWithUser>();
@@ -34,14 +38,30 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('JWT token is missing');
     }
 
+    let payload: JwtPayload;
     try {
-      const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
+      payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
         secret: process.env.JWT_SECRET ?? 'dev-jwt-secret-change-me',
       });
-      req.user = payload;
-      return true;
     } catch {
       throw new UnauthorizedException('Invalid or expired JWT token');
     }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: { status: true },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const normalizedStatus = user.status?.toLowerCase?.() ?? '';
+    if (normalizedStatus !== 'active') {
+      throw new UnauthorizedException('Account is suspended or inactive');
+    }
+
+    req.user = payload;
+    return true;
   }
 }

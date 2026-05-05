@@ -29,7 +29,7 @@ export class AdminController {
   constructor(
     private readonly adminService: AdminService,
     private readonly adminManagementService: AdminManagementService,
-    private readonly mediaService: MediaService,
+     private readonly mediaService: MediaService,
   ) {}
 
   @Get('dashboard')
@@ -178,71 +178,7 @@ export class AdminController {
     return this.adminManagementService.updatePoets(body.poets, user.sub);
   }
 
-  @Get('media')
-  listMedia() {
-    return this.adminManagementService.listMediaAssets();
-  }
 
-  @Post('media/upload')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: memoryStorage(),
-      limits: { fileSize: 15 * 1024 * 1024 },
-      fileFilter: (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
-        // Allow images and videos
-        const allowedMimes = [
-          'image/jpeg',
-          'image/png',
-          'image/gif',
-          'image/webp',
-          'image/svg+xml',
-          'video/mp4',
-          'video/webm',
-          'application/pdf',
-        ];
-        if (allowedMimes.includes(file.mimetype)) {
-          cb(null, true);
-        } else {
-          cb(null, false);
-        }
-      },
-    }),
-  )
-  async uploadMedia(
-    @UploadedFile() file: Express.Multer.File,
-    @CurrentUser() user: { sub: string },
-  ) {
-    if (!file) {
-      throw new BadRequestException('file is required');
-    }
-
-    const fileName = `media-${Date.now()}-${Math.round(Math.random() * 1e9)}-${file.originalname}`;
-    const mediaUrl = await this.mediaService.uploadFile(
-      file,
-      fileName,
-      'media',
-    );
-
-    // Store in tenant settings
-    return this.adminManagementService.addMediaAsset(
-      {
-        url: mediaUrl,
-        filename: fileName,
-        mimeType: file.mimetype,
-        size: file.size,
-      },
-      user.sub,
-    );
-  }
-
-  @Delete('media/:url')
-  async deleteMedia(
-    @Param('url') encodedUrl: string,
-    @CurrentUser() user: { sub: string },
-  ) {
-    const url = decodeURIComponent(encodedUrl);
-    return this.adminManagementService.deleteMediaAsset(url, user.sub);
-  }
 
   @Post('articles/upload')
   @UseInterceptors(

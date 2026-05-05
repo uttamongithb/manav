@@ -40,6 +40,7 @@ export default function AdminUsersPage() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [pendingSuspend, setPendingSuspend] = useState<{ userId: string; nextStatus: string } | null>(null);
 
   const backendUrl = getApiBaseUrl();
   const authToken = getStoredAuthToken();
@@ -95,6 +96,30 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleStatusChange = (userId: string, currentStatus: string, nextStatus: string) => {
+    if (nextStatus === currentStatus) {
+      return;
+    }
+
+    if (nextStatus === "suspended") {
+      setPendingSuspend({ userId, nextStatus });
+      return;
+    }
+
+    void updateField(userId, "status", nextStatus);
+  };
+
+  const confirmSuspend = () => {
+    if (!pendingSuspend) return;
+    const { userId, nextStatus } = pendingSuspend;
+    setPendingSuspend(null);
+    void updateField(userId, "status", nextStatus);
+  };
+
+  const cancelSuspend = () => {
+    setPendingSuspend(null);
+  };
+
   const filteredUsers = users.filter((user) => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return true;
@@ -106,6 +131,59 @@ export default function AdminUsersPage() {
 
   return (
     <>
+
+      {pendingSuspend && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+            background: "rgba(8, 15, 10, 0.55)",
+            backdropFilter: "blur(8px)",
+          }}
+          onClick={cancelSuspend}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="suspend-user-title"
+            aria-describedby="suspend-user-description"
+            style={{
+              width: "min(100%, 460px)",
+              borderRadius: 24,
+              border: "1px solid rgba(255,255,255,0.18)",
+              background: "linear-gradient(180deg, #ffffff 0%, #f5f8f3 100%)",
+              boxShadow: "0 24px 80px rgba(7, 12, 8, 0.35)",
+              overflow: "hidden",
+            }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div style={{ padding: 24, borderBottom: "1px solid #e3e9df" }}>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", color: "#0a8a5b", textTransform: "uppercase" }}>
+                Confirm Action
+              </p>
+              <h2 id="suspend-user-title" style={{ margin: "10px 0 0", fontSize: 24, lineHeight: 1.2, color: "#102015" }}>
+                Suspend this account?
+              </h2>
+              <p id="suspend-user-description" style={{ margin: "10px 0 0", color: "#4d5f52", lineHeight: 1.6 }}>
+                This will immediately remove access for the selected user until the status is changed back to active.
+              </p>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: 20, background: "#fff" }}>
+              <button type="button" className="admin-btn admin-btn-outline" onClick={cancelSuspend}>
+                Cancel
+              </button>
+              <button type="button" className="admin-btn admin-btn-danger" onClick={confirmSuspend} disabled={savingId === pendingSuspend.userId}>
+                {savingId === pendingSuspend.userId ? "Suspending…" : "Suspend"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="admin-page-header">
         <p className="admin-page-subtitle">
           Manage roles, visibility, and account status for platform members.
@@ -209,7 +287,7 @@ export default function AdminUsersPage() {
                     <td>
                       <select
                         value={user.status}
-                        onChange={(event) => void updateField(user.id, "status", event.target.value)}
+                        onChange={(event) => handleStatusChange(user.id, user.status, event.target.value)}
                         disabled={savingId === user.id}
                         className="admin-input"
                         style={{ minWidth: 150 }}
