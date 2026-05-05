@@ -7,7 +7,7 @@ import { getApiBaseUrl } from "@/app/lib/api-base";
 import { DEFAULT_PAGE_CONTENTS, getDefaultPageContent, type PageContent, type PageSection } from "@/app/lib/page-content";
 import { Upload } from "lucide-react";
 
-const PAGE_SLUGS = Object.keys(DEFAULT_PAGE_CONTENTS);
+const PAGE_SLUGS = Object.keys(DEFAULT_PAGE_CONTENTS).filter((slug) => slug !== "links");
 
 type EditablePage = PageContent & {
   updatedAt?: string | null;
@@ -148,7 +148,7 @@ export default function AdminPagesPage() {
     <>
       <div className="admin-page-header">
         <p className="admin-page-subtitle">
-          Edit site pages from one place. These values drive the public About, Links, Archives, and Ebook screens.
+          Edit site pages from one place. These values drive the public About, Archives, Contact, and Ebook screens.
         </p>
       </div>
 
