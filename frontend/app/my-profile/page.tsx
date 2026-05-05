@@ -650,7 +650,7 @@ export function MyProfileContent() {
                       : "border-[#0a8a5b]/35 bg-[#eaf7ef] text-[#0a8a5b] hover:bg-[#dff2e7]"
                   }`}
                 >
-                  VIEW FEED
+                  Home
                 </Link>
               </div>
             </div>
