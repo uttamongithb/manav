@@ -326,12 +326,12 @@ export class PostsService {
           authorId: author.id,
           tenantId: this.defaultTenantId,
           collectionId: collection.id,
-          status: 'published',
-          publishedAt: new Date(),
+          status: 'review',
+          publishedAt: null,
           metadata: {
             section: normalizedSection,
             visibility: 'public',
-            moderated: true,
+            moderated: false,
           },
         },
         include: {
@@ -357,7 +357,7 @@ export class PostsService {
         commentCount: 0,
         likedByUser: false,
         favoritedByUser: false,
-        moderationStatus: 'published',
+        moderationStatus: 'review',
       };
     } catch (error) {
       this.logger.warn(`Failed to create post in database, using in-memory fallback: ${String(error)}`);
@@ -373,7 +373,7 @@ export class PostsService {
         commentCount: 0,
         likedByUser: false,
         favoritedByUser: false,
-        moderationStatus: 'published',
+        moderationStatus: 'review',
       };
       this.inMemoryPosts.unshift(fallback);
       return fallback;
