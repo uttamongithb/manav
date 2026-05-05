@@ -260,4 +260,39 @@ export class AdminService {
       moderationStatus: 'published' as const,
     };
   }
+
+  async rejectPost(postId: string) {
+    const updated = await this.prisma.content.update({
+      where: { id: postId },
+      data: {
+        status: 'rejected',
+        metadata: {
+          visibility: 'private',
+          moderated: true,
+        },
+      },
+      include: {
+        author: {
+          select: {
+            displayName: true,
+            username: true,
+          },
+        },
+        collection: {
+          select: {
+            title: true,
+          },
+        },
+      },
+    });
+
+    return {
+      id: updated.id,
+      section: updated.collection?.title ?? 'GENERAL',
+      author: updated.author.displayName ?? updated.author.username,
+      content: updated.body ?? updated.excerpt ?? updated.title,
+      createdAt: (updated.createdAt ?? new Date()).toISOString(),
+      moderationStatus: 'rejected' as const,
+    };
+  }
 }

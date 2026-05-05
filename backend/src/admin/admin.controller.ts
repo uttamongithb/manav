@@ -88,6 +88,14 @@ export class AdminController {
     return this.adminService.approvePost(id.trim());
   }
 
+  @Patch('posts/:id/reject')
+  rejectPost(@Param('id') id: string) {
+    if (!id?.trim()) {
+      throw new BadRequestException('id is required');
+    }
+    return this.adminService.rejectPost(id.trim());
+  }
+
   @Get('users')
   listUsers() {
     return this.adminManagementService.getUsers();

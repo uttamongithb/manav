@@ -25,6 +25,7 @@ export default function ModerationPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [apiError, setApiError] = useState<string | null>(null);
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const backendUrl = getApiBaseUrl();
@@ -65,12 +66,32 @@ export default function ModerationPage() {
       });
       if (!res.ok) throw new Error("approve_failed");
       setPosts((c) => c.filter((p) => p.id !== postId));
-      setSuccessMsg("Post approved successfully.");
+      setSuccessMsg("✓ Post approved successfully.");
       setTimeout(() => setSuccessMsg(null), 3000);
     } catch {
       setApiError("Unable to approve post.");
     } finally {
       setApprovingId(null);
+    }
+  };
+
+  const rejectPost = async (postId: string) => {
+    if (!authHeaders) return;
+    try {
+      setRejectingId(postId);
+      setSuccessMsg(null);
+      const res = await fetch(`${backendUrl}/admin/posts/${postId}/reject`, {
+        method: "PATCH",
+        headers: authHeaders,
+      });
+      if (!res.ok) throw new Error("reject_failed");
+      setPosts((c) => c.filter((p) => p.id !== postId));
+      setSuccessMsg("✗ Post rejected successfully.");
+      setTimeout(() => setSuccessMsg(null), 3000);
+    } catch {
+      setApiError("Unable to reject post.");
+    } finally {
+      setRejectingId(null);
     }
   };
 
@@ -227,14 +248,23 @@ export default function ModerationPage() {
                         Pending
                       </span>
                     </td>
-                    <td style={{ textAlign: "right" }}>
+                    <td style={{ textAlign: "right", display: "flex", gap: 8, justifyContent: "flex-end" }}>
                       <button
                         type="button"
                         className="admin-btn admin-btn-primary admin-btn-sm"
                         onClick={() => approvePost(post.id)}
-                        disabled={approvingId === post.id}
+                        disabled={approvingId === post.id || rejectingId === post.id}
                       >
                         {approvingId === post.id ? "Approving…" : "Approve"}
+                      </button>
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn-outline admin-btn-sm"
+                        onClick={() => rejectPost(post.id)}
+                        disabled={rejectingId === post.id || approvingId === post.id}
+                        style={{ color: "#dc2626" }}
+                      >
+                        {rejectingId === post.id ? "Rejecting…" : "Reject"}
                       </button>
                     </td>
                   </tr>
