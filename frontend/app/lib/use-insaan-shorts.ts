@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { getApiBaseUrl } from "./api-base";
-import { INSAAN_RECENT_CARDS } from "./insaan-recent-cards";
 
 export type ShortCard = {
   id?: string;
@@ -12,7 +11,7 @@ export type ShortCard = {
 };
 
 export function useInsaanShorts() {
-  const [shorts, setShorts] = useState<ShortCard[]>(INSAAN_RECENT_CARDS);
+  const [shorts, setShorts] = useState<ShortCard[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -32,7 +31,7 @@ export function useInsaanShorts() {
             video: post.videoUrl,
           })).filter((card) => !!card.video); // Only include posts with a video URL
 
-          setShorts([...dbShorts, ...INSAAN_RECENT_CARDS]);
+          setShorts(dbShorts);
         }
       } catch (err) {
         console.error("Failed to load Insaan shorts:", err);
