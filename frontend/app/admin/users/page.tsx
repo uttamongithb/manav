@@ -20,7 +20,7 @@ type AdminUser = {
   contentCount: number;
 };
 
-const ROLE_OPTIONS = ["superadmin", "admin", "editor", "publisher", "poet", "reader"];
+const ROLE_OPTIONS = ["superadmin", "admin", "poet", "reader"];
 const STATUS_OPTIONS = ["active", "inactive", "suspended", "pending_verification"];
 
 function formatDate(raw: string | null) {
@@ -41,6 +41,7 @@ export default function AdminUsersPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [pendingSuspend, setPendingSuspend] = useState<{ userId: string; nextStatus: string } | null>(null);
+  const [pendingRoleChange, setPendingRoleChange] = useState<{ userId: string; userName: string; nextRole: string } | null>(null);
 
   const backendUrl = getApiBaseUrl();
   const authToken = getStoredAuthToken();
@@ -96,6 +97,21 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleRoleChange = (userId: string, userName: string, nextRole: string) => {
+    setPendingRoleChange({ userId, userName, nextRole });
+  };
+
+  const confirmRoleChange = () => {
+    if (!pendingRoleChange) return;
+    const { userId, nextRole } = pendingRoleChange;
+    setPendingRoleChange(null);
+    void updateField(userId, "role", nextRole);
+  };
+
+  const cancelRoleChange = () => {
+    setPendingRoleChange(null);
+  };
+
   const handleStatusChange = (userId: string, currentStatus: string, nextStatus: string) => {
     if (nextStatus === currentStatus) {
       return;
@@ -131,6 +147,58 @@ export default function AdminUsersPage() {
 
   return (
     <>
+      {pendingRoleChange && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 16,
+            background: "rgba(8, 15, 10, 0.55)",
+            backdropFilter: "blur(8px)",
+          }}
+          onClick={cancelRoleChange}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="role-change-title"
+            aria-describedby="role-change-description"
+            style={{
+              width: "min(100%, 460px)",
+              borderRadius: 24,
+              border: "1px solid rgba(255,255,255,0.18)",
+              background: "linear-gradient(180deg, #ffffff 0%, #f5f8f3 100%)",
+              boxShadow: "0 24px 80px rgba(7, 12, 8, 0.35)",
+              overflow: "hidden",
+            }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div style={{ padding: 24, borderBottom: "1px solid #e3e9df" }}>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, letterSpacing: "0.14em", color: "#635bff", textTransform: "uppercase" }}>
+                Update Permissions
+              </p>
+              <h2 id="role-change-title" style={{ margin: "10px 0 0", fontSize: 24, lineHeight: 1.2, color: "#111927" }}>
+                Change user role?
+              </h2>
+              <p id="role-change-description" style={{ margin: "10px 0 0", color: "#4d5f52", lineHeight: 1.6 }}>
+                You are about to change <strong>{pendingRoleChange.userName}</strong>'s role to <strong>{pendingRoleChange.nextRole}</strong>. This will modify their access level across the platform.
+              </p>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: 20, background: "#fff" }}>
+              <button type="button" className="admin-btn admin-btn-outline" onClick={cancelRoleChange}>
+                Cancel
+              </button>
+              <button type="button" className="admin-btn admin-btn-primary" onClick={confirmRoleChange} disabled={savingId === pendingRoleChange.userId}>
+                {savingId === pendingRoleChange.userId ? "Saving…" : "Confirm Change"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {pendingSuspend && (
         <div
@@ -272,7 +340,7 @@ export default function AdminUsersPage() {
                     <td>
                       <select
                         value={user.role}
-                        onChange={(event) => void updateField(user.id, "role", event.target.value)}
+                        onChange={(event) => handleRoleChange(user.id, user.displayName || user.username, event.target.value)}
                         disabled={savingId === user.id}
                         className="admin-input"
                         style={{ minWidth: 130 }}

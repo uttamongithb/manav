@@ -145,7 +145,7 @@ export class PostsService {
           email: 'system@author.local',
           username: 'system_author',
           displayName: 'System Author',
-          role: 'publisher',
+          role: 'admin',
           status: 'active',
           tenantId: tenant.id,
           isVerified: true,

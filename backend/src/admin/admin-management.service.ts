@@ -500,7 +500,7 @@ export class AdminManagementService {
 
   async updateUserRole(userId: string, role: string) {
     const normalizedRole = role.trim().toLowerCase();
-    if (!['superadmin', 'admin', 'editor', 'publisher', 'poet', 'reader'].includes(normalizedRole)) {
+    if (!['superadmin', 'admin', 'poet', 'reader'].includes(normalizedRole)) {
       throw new NotFoundException('Invalid role');
     }
 

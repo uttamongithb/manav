@@ -57,7 +57,7 @@ const DEFAULT_PAGE_CONTENTS: Record<string, PageContent> = {
       },
       {
         heading: "Editorial & Partnerships",
-        body: "If you are a publisher, literary group, or editor interested in collaboration, reach out with your proposal and publishing goals.",
+        body: "If you are a literary group or organization interested in collaboration, reach out with your proposal and publishing goals.",
       },
       {
         heading: "Response Time",

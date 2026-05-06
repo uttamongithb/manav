@@ -9,8 +9,6 @@ datasource db {
 enum UserRole {
   superadmin
   admin
-  editor
-  publisher
   poet
   reader
 }
