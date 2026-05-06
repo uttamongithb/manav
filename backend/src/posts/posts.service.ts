@@ -328,8 +328,8 @@ export class PostsService {
           authorId: author.id,
           tenantId: this.defaultTenantId,
           collectionId: collection.id,
-          status: normalizedSection === 'INSAAN_RECENT' ? 'published' : 'review',
-          publishedAt: normalizedSection === 'INSAAN_RECENT' ? new Date() : null,
+          status: 'review',
+          publishedAt: null,
           videoUrl: input.videoUrl,
           metadata: {
             section: normalizedSection,

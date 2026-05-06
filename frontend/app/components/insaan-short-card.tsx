@@ -16,29 +16,40 @@ interface InsaanShortCardProps {
   idx: number;
   total: number;
   isDark: boolean;
+  isActive: boolean;
+  onActive: (active: boolean) => void;
 }
 
-export function InsaanShortCard({ card, idx, total, isDark }: InsaanShortCardProps) {
+export function InsaanShortCard({ card, idx, total, isDark, isActive, onActive }: InsaanShortCardProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isHovered, setIsHovered] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+
+  // Sync internal state with isActive prop
+  useEffect(() => {
+    if (isActive) {
+      handlePlay(isMuted);
+    } else {
+      handleStop();
+    }
+  }, [isActive]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (window.innerWidth < 768) { // Only for mobile/small screens
+          if (window.innerWidth < 768) { // Auto-play logic for mobile
             if (entry.isIntersecting) {
-              handlePlay(true); // Muted for mobile auto-play
-            } else {
-              handleStop();
+              onActive(true);
+              setIsMuted(true);
+            } else if (isActive) {
+              onActive(false);
             }
           }
         });
       },
-      { threshold: 0.6 } // Trigger when 60% of card is visible
+      { threshold: 0.6 }
     );
 
     if (containerRef.current) {
@@ -46,22 +57,19 @@ export function InsaanShortCard({ card, idx, total, isDark }: InsaanShortCardPro
     }
 
     return () => observer.disconnect();
-  }, []);
+  }, [isActive, onActive]);
 
   const handlePlay = (muted: boolean) => {
     if (videoRef.current) {
       videoRef.current.muted = muted;
-      setIsMuted(muted);
-      
       const playPromise = videoRef.current.play();
       
       if (playPromise !== undefined) {
-        playPromise.then(() => setIsPlaying(true)).catch(() => {
-          // Fallback to muted if unmuted was blocked
+        playPromise.catch(() => {
           if (videoRef.current) {
             videoRef.current.muted = true;
             setIsMuted(true);
-            void videoRef.current.play().then(() => setIsPlaying(true));
+            void videoRef.current.play();
           }
         });
       }
@@ -72,23 +80,18 @@ export function InsaanShortCard({ card, idx, total, isDark }: InsaanShortCardPro
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
-      setIsPlaying(false);
-      setIsMuted(true);
     }
   };
 
   const handleMouseEnter = () => {
-    if (window.innerWidth >= 768) {
-      setIsHovered(true);
-      handlePlay(false); // Try to play with sound on desktop hover
-    }
+    setIsHovered(true);
+    onActive(true);
+    setIsMuted(false);
   };
 
   const handleMouseLeave = () => {
-    if (window.innerWidth >= 768) {
-      setIsHovered(false);
-      handleStop();
-    }
+    setIsHovered(false);
+    onActive(false);
   };
 
   const toggleMute = (e: React.MouseEvent) => {
@@ -111,6 +114,7 @@ export function InsaanShortCard({ card, idx, total, isDark }: InsaanShortCardPro
         lg:w-[260px] lg:min-w-[260px]
         ${idx === 0 ? "ml-0" : ""}
         ${idx === total - 1 ? "mr-4 md:mr-0" : ""}
+        cursor-pointer
       `}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -135,7 +139,7 @@ export function InsaanShortCard({ card, idx, total, isDark }: InsaanShortCardPro
           <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/15 to-transparent pointer-events-none" />
 
           {/* Mute/Unmute toggle (only visible when playing) */}
-          {isPlaying && (
+          {isActive && (
             <button
               onClick={toggleMute}
               className="absolute bottom-3 right-3 z-30 flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md border border-white/10 transition hover:bg-black/60 sm:h-10 sm:w-10"
@@ -152,7 +156,7 @@ export function InsaanShortCard({ card, idx, total, isDark }: InsaanShortCardPro
             </button>
           )}
 
-          <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 pointer-events-none ${isHovered || isPlaying ? "opacity-0" : "opacity-100"}`}>
+          <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 pointer-events-none ${isHovered || isActive ? "opacity-0" : "opacity-100"}`}>
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/58 text-white backdrop-blur-sm transition group-hover:scale-105 sm:h-16 sm:w-16">
               <svg viewBox="0 0 24 24" className="h-5 w-5 sm:h-7 sm:w-7" fill="currentColor">
                 <path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l10.5-6.86a1 1 0 0 0 0-1.72L9.5 4.28A1 1 0 0 0 8 5.14z" />

@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import NextImage from "next/image";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/app/context/auth";
@@ -333,6 +333,8 @@ export function MyProfileContent() {
     })();
   };
 
+  const videoInputRef = useRef<HTMLInputElement>(null);
+
   const handleUploadShort = async () => {
     if (!shortTitle.trim() || !shortFile) {
       setApiError("Please provide both a title and a video file.");
@@ -383,6 +385,9 @@ export function MyProfileContent() {
       setShortTitle("");
       setShortFile(null);
       setShortDuration(0);
+      if (videoInputRef.current) {
+        videoInputRef.current.value = "";
+      }
       alert("Short uploaded successfully!");
       // Optionally reload posts to see the new short
       await loadPosts();
@@ -778,6 +783,7 @@ export function MyProfileContent() {
                         </label>
                         <input
                           type="file"
+                          ref={videoInputRef}
                           accept="video/*"
                           onChange={(e) => {
                             const file = e.target.files?.[0];

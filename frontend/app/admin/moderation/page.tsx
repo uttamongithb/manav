@@ -10,6 +10,7 @@ type PendingPost = {
   author: string;
   content: string;
   createdAt: string;
+  videoUrl?: string;
 };
 
 function formatDate(raw: string) {
@@ -174,6 +175,7 @@ export default function ModerationPage() {
                 <th>Author</th>
                 <th>Section</th>
                 <th>Preview</th>
+                <th>Video</th>
                 <th>Submitted</th>
                 <th>Status</th>
                 <th style={{ textAlign: "right" }}>Action</th>
@@ -183,7 +185,7 @@ export default function ModerationPage() {
               {filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     style={{
                       textAlign: "center",
                       padding: "48px 16px",
@@ -238,6 +240,24 @@ export default function ModerationPage() {
                           ? `${post.content.slice(0, 120).trim()}…`
                           : post.content}
                       </span>
+                    </td>
+                    <td>
+                      {post.videoUrl ? (
+                        <a 
+                          href={post.videoUrl} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="admin-badge success"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}
+                        >
+                          <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 14, height: 14 }}>
+                            <path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l10.5-6.86a1 1 0 0 0 0-1.72L9.5 4.28A1 1 0 0 0 8 5.14z" />
+                          </svg>
+                          View Video
+                        </a>
+                      ) : (
+                        <span className="admin-table-sub">No Video</span>
+                      )}
                     </td>
                     <td style={{ whiteSpace: "nowrap", color: "#6c737f" }}>
                       {formatDate(post.createdAt)}

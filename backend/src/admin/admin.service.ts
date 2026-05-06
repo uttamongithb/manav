@@ -23,6 +23,7 @@ type AdminPendingPost = {
   author: string;
   content: string;
   createdAt: string;
+  videoUrl?: string;
 };
 
 const DEFAULT_BANNER_SLIDES: BannerSlide[] = [
@@ -222,6 +223,7 @@ export class AdminService {
       author: row.author.displayName ?? row.author.username,
       content: row.body ?? row.excerpt ?? row.title,
       createdAt: (row.createdAt ?? new Date()).toISOString(),
+      videoUrl: row.videoUrl ?? undefined,
     }));
   }
 
@@ -258,6 +260,7 @@ export class AdminService {
       content: updated.body ?? updated.excerpt ?? updated.title,
       createdAt: (updated.createdAt ?? new Date()).toISOString(),
       moderationStatus: 'published' as const,
+      videoUrl: updated.videoUrl ?? undefined,
     };
   }
 
@@ -293,6 +296,7 @@ export class AdminService {
       content: updated.body ?? updated.excerpt ?? updated.title,
       createdAt: (updated.createdAt ?? new Date()).toISOString(),
       moderationStatus: 'rejected' as const,
+      videoUrl: updated.videoUrl ?? undefined,
     };
   }
 }

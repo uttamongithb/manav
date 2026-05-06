@@ -137,6 +137,7 @@ export default function PublicFeed() {
 
   const backendUrl = getApiBaseUrl();
   const { shorts } = useInsaanShorts();
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.username?.trim()) {
@@ -1011,7 +1012,7 @@ export default function PublicFeed() {
             )}
           </div>
       <section className={`mx-auto grid w-[92vw] md:w-[80vw] max-w-none gap-6 px-1 py-6 md:grid-cols-12 md:py-10 ${isDark ? "text-white" : "text-[#0e2138]"}`}>
-        <div className="md:col-span-12">
+        <div className="md:col-span-12 min-w-0">
           <header className="text-center">
           <p className={`text-[22px] font-semibold tracking-[0.28em] md:text-[26px] ${isDark ? "text-white/88" : "text-[#24384f]"}`} style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
             INSAAN RECENT
@@ -1035,23 +1036,26 @@ export default function PublicFeed() {
 
             <div
               ref={recentCarouselRef}
-              onPointerDown={handleRecentPointerDown}
-              onPointerMove={handleRecentPointerMove}
-              onPointerUp={handleRecentPointerEnd}
-              onPointerCancel={handleRecentPointerEnd}
-              onClickCapture={handleRecentClickCapture}
-              className="flex w-full snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden px-4 py-4 md:px-0 lg:gap-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex w-full snap-x snap-mandatory gap-3 overflow-x-auto px-4 py-4 md:px-0 lg:gap-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               style={{ WebkitOverflowScrolling: "touch", touchAction: "pan-x" }}
             >
-              {shorts.map((card, idx) => (
-                <InsaanShortCard
-                  key={card.id || card.title}
-                  card={card}
-                  idx={idx}
-                  total={shorts.length}
-                  isDark={isDark}
-                />
-              ))}
+              {shorts.map((card, idx) => {
+                const cardId = card.id || card.title;
+                return (
+                  <InsaanShortCard
+                    key={cardId}
+                    card={card}
+                    idx={idx}
+                    total={shorts.length}
+                    isDark={isDark}
+                    isActive={activeVideoId === cardId}
+                    onActive={(active) => {
+                      if (active) setActiveVideoId(cardId);
+                      else if (activeVideoId === cardId) setActiveVideoId(null);
+                    }}
+                  />
+                );
+              })}
             </div>
 
             <button
