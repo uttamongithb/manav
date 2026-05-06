@@ -212,8 +212,8 @@ export function MyProfileContent() {
       setProfile(data);
       setDraftProfile(data);
       saveCachedProfile(cacheKey, data); // Save fetched profile to cache
-    } catch {
-      setApiError("Unable to load profile from backend.");
+    } catch (err) {
+      console.warn("Profile sync skipped - using local cache.", err);
     }
   }, [authHeaders, backendUrl, cacheKey]);
 
@@ -259,9 +259,9 @@ export function MyProfileContent() {
       const publicData = (await publicRes.json()) as UserPost[];
 
       setAllPublicPosts(publicData);
-    } catch {
+    } catch (err) {
+      console.warn("Post service sync skipped.", err);
       setAllPublicPosts([]);
-      setApiError("Unable to reach post service. Start backend on port 3001.");
     }
   }, [backendUrl]);
 
