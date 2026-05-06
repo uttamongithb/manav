@@ -102,7 +102,11 @@ export class AdminController {
   }
 
   @Patch('users/:id/role')
-  updateUserRole(@Param('id') id: string, @Body() body: { role?: string }) {
+  updateUserRole(
+    @Param('id') id: string,
+    @Body() body: { role?: string },
+    @CurrentUser() adminUser: { role?: string },
+  ) {
     if (!id?.trim()) {
       throw new BadRequestException('id is required');
     }
@@ -111,7 +115,7 @@ export class AdminController {
       throw new BadRequestException('role is required');
     }
 
-    return this.adminManagementService.updateUserRole(id.trim(), body.role.trim());
+    return this.adminManagementService.updateUserRole(id.trim(), body.role.trim(), adminUser.role);
   }
 
   @Patch('users/:id/status')

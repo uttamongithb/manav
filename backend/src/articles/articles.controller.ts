@@ -15,6 +15,8 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminRoleGuard } from '../admin/admin-role.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { ArticleSection } from '@prisma/client';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 @Controller('articles')
 export class ArticlesController {
@@ -177,9 +179,8 @@ export class ArticlesController {
   }
 
   @Get(':id/comments')
-  async getComments(@Param('id') id: string) {
-    const comments = await this.articlesService.getComments(id);
-    return { comments };
+  async listComments(@Param('id') id: string) {
+    return this.articlesService.getComments(id);
   }
 
   @Post(':id/comments')

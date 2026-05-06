@@ -24,6 +24,9 @@ export default function LoginPage() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
   const [rememberMe, setRememberMe] = useState(false);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Redirect to home if already authenticated
   useEffect(() => {
@@ -302,24 +305,44 @@ export default function LoginPage() {
                 >
                   Password
                 </label>
-                <input
-                  id="login-password"
-                  type="password"
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
-                  value={loginForm.password}
-                  onChange={(e) =>
-                    setLoginForm((prev) => ({
-                      ...prev,
-                      password: e.target.value,
-                    }))
-                  }
-                  className={`mt-2 w-full rounded-xl border px-4 py-3 text-[14px] outline-none transition ${
-                    isDark
-                      ? "border-white/15 bg-white/5 text-white placeholder-white/40 focus:border-[#2ce88f]/50 focus:bg-white/10"
-                      : "border-black/10 bg-[#f8f9fb] text-[#10131a] placeholder-[#a0aac3] focus:border-[#2ce88f] focus:bg-white"
-                  }`}
-                  disabled={isLoading}
-                />
+                <div className="relative">
+                  <input
+                    id="login-password"
+                    type={showLoginPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={loginForm.password}
+                    onChange={(e) =>
+                      setLoginForm((prev) => ({
+                        ...prev,
+                        password: e.target.value,
+                      }))
+                    }
+                    className={`mt-2 w-full rounded-xl border px-4 py-3 pr-12 text-[14px] outline-none transition ${
+                      isDark
+                        ? "border-white/15 bg-white/5 text-white placeholder-white/40 focus:border-[#2ce88f]/50 focus:bg-white/10"
+                        : "border-black/10 bg-[#f8f9fb] text-[#10131a] placeholder-[#a0aac3] focus:border-[#2ce88f] focus:bg-white"
+                    }`}
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                    className={`absolute right-4 top-1/2 transform -translate-y-1/2 mt-1 transition ${
+                      isDark ? "text-white/50 hover:text-white/70" : "text-[#a0aac3] hover:text-[#596680]"
+                    }`}
+                    tabIndex={-1}
+                  >
+                    {showLoginPassword ? (
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 5c-7 0-10.5 5.5-10.5 7 0 1.5 3.5 7 10.5 7s10.5-5.5 10.5-7-3.5-7-10.5-7zm0 11c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zm11-6c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10.54 9.54l1.42-1.42-3.54-3.54.72-2 4-4-1.41-1.41-4 4-2 .72-3.54-3.54-1.42 1.42 18 18z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-center justify-between">
@@ -451,24 +474,44 @@ export default function LoginPage() {
                 >
                   Password
                 </label>
-                <input
-                  id="register-password"
-                  type="password"
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
-                  value={registerForm.password}
-                  onChange={(e) =>
-                    setRegisterForm((prev) => ({
-                      ...prev,
-                      password: e.target.value,
-                    }))
-                  }
-                  className={`mt-2 w-full rounded-xl border px-4 py-3 text-[14px] outline-none transition ${
-                    isDark
-                      ? "border-white/15 bg-white/5 text-white placeholder-white/40 focus:border-[#2ce88f]/50 focus:bg-white/10"
-                      : "border-black/10 bg-[#f8f9fb] text-[#10131a] placeholder-[#a0aac3] focus:border-[#2ce88f] focus:bg-white"
-                  }`}
-                  disabled={isLoading}
-                />
+                <div className="relative">
+                  <input
+                    id="register-password"
+                    type={showRegisterPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={registerForm.password}
+                    onChange={(e) =>
+                      setRegisterForm((prev) => ({
+                        ...prev,
+                        password: e.target.value,
+                      }))
+                    }
+                    className={`mt-2 w-full rounded-xl border px-4 py-3 pr-12 text-[14px] outline-none transition ${
+                      isDark
+                        ? "border-white/15 bg-white/5 text-white placeholder-white/40 focus:border-[#2ce88f]/50 focus:bg-white/10"
+                        : "border-black/10 bg-[#f8f9fb] text-[#10131a] placeholder-[#a0aac3] focus:border-[#2ce88f] focus:bg-white"
+                    }`}
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                    className={`absolute right-4 top-1/2 transform -translate-y-1/2 mt-1 transition ${
+                      isDark ? "text-white/50 hover:text-white/70" : "text-[#a0aac3] hover:text-[#596680]"
+                    }`}
+                    tabIndex={-1}
+                  >
+                    {showRegisterPassword ? (
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 5c-7 0-10.5 5.5-10.5 7 0 1.5 3.5 7 10.5 7s10.5-5.5 10.5-7-3.5-7-10.5-7zm0 11c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zm11-6c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10.54 9.54l1.42-1.42-3.54-3.54.72-2 4-4-1.41-1.41-4 4-2 .72-3.54-3.54-1.42 1.42 18 18z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div>
@@ -480,24 +523,44 @@ export default function LoginPage() {
                 >
                   Confirm Password
                 </label>
-                <input
-                  id="register-confirm-password"
-                  type="password"
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
-                  value={registerForm.confirmPassword}
-                  onChange={(e) =>
-                    setRegisterForm((prev) => ({
-                      ...prev,
-                      confirmPassword: e.target.value,
-                    }))
-                  }
-                  className={`mt-2 w-full rounded-xl border px-4 py-3 text-[14px] outline-none transition ${
-                    isDark
-                      ? "border-white/15 bg-white/5 text-white placeholder-white/40 focus:border-[#2ce88f]/50 focus:bg-white/10"
-                      : "border-black/10 bg-[#f8f9fb] text-[#10131a] placeholder-[#a0aac3] focus:border-[#2ce88f] focus:bg-white"
-                  }`}
-                  disabled={isLoading}
-                />
+                <div className="relative">
+                  <input
+                    id="register-confirm-password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={registerForm.confirmPassword}
+                    onChange={(e) =>
+                      setRegisterForm((prev) => ({
+                        ...prev,
+                        confirmPassword: e.target.value,
+                      }))
+                    }
+                    className={`mt-2 w-full rounded-xl border px-4 py-3 pr-12 text-[14px] outline-none transition ${
+                      isDark
+                        ? "border-white/15 bg-white/5 text-white placeholder-white/40 focus:border-[#2ce88f]/50 focus:bg-white/10"
+                        : "border-black/10 bg-[#f8f9fb] text-[#10131a] placeholder-[#a0aac3] focus:border-[#2ce88f] focus:bg-white"
+                    }`}
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className={`absolute right-4 top-1/2 transform -translate-y-1/2 mt-1 transition ${
+                      isDark ? "text-white/50 hover:text-white/70" : "text-[#a0aac3] hover:text-[#596680]"
+                    }`}
+                    tabIndex={-1}
+                  >
+                    {showConfirmPassword ? (
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 5c-7 0-10.5 5.5-10.5 7 0 1.5 3.5 7 10.5 7s10.5-5.5 10.5-7-3.5-7-10.5-7zm0 11c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zm11-6c2.2 0 4 1.8 4 4s-1.8 4-4 4-4-1.8-4-4 1.8-4 4-4zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10.54 9.54l1.42-1.42-3.54-3.54.72-2 4-4-1.41-1.41-4 4-2 .72-3.54-3.54-1.42 1.42 18 18z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <button

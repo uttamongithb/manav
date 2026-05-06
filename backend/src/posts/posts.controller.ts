@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Param, Post, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Post, Query, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PostsService } from './posts.service';
 import { MediaService } from '../shared/media.service';
@@ -7,6 +7,7 @@ import type { Request } from 'express';
 import type { FileFilterCallback } from 'multer';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { PoetRoleGuard } from '../auth/poet-role.guard';
 
 @Controller('posts')
 export class PostsController {
@@ -31,6 +32,7 @@ export class PostsController {
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard, PoetRoleGuard)
   async create(@Body() body: { section?: string; content?: string; author?: string }) {
     if (!body.section?.trim()) {
       throw new BadRequestException('section is required');
@@ -47,8 +49,60 @@ export class PostsController {
     });
   }
 
+  @Get('media-auth')
+  @UseGuards(JwtAuthGuard, PoetRoleGuard)
+  getMediaAuth() {
+    return this.mediaService.getClientUploadAuth();
+  }
+
   @Post('shorts')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PoetRoleGuard)
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 200 * 1024 * 1024 },
+      fileFilter: (req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
+        if (file.mimetype.startsWith('video/')) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Only video files are allowed'));
+        }
+      },
+    }),
+  )
+  async saveShort(
+    @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: { displayName?: string | null; username?: string | null },
+    @Query('title') titleFromQuery?: string,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Video file is required');
+    }
+
+    const title = titleFromQuery?.trim() || 'Untitled';
+    
+    try {
+      const videoUrl = await this.mediaService.uploadFile(
+        file,
+        `short-${Date.now()}`,
+        'shorts',
+      );
+
+      return this.postsService.create({
+        section: 'INSAAN_RECENT',
+        content: title,
+        author: user.displayName ?? user.username ?? 'User',
+        videoUrl: videoUrl,
+      });
+    } catch (error) {
+      throw new BadRequestException(
+        `Video upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
+  @Post('shorts/legacy-upload')
+  @UseGuards(JwtAuthGuard, PoetRoleGuard)
   @UseInterceptors(
     FileInterceptor('file', {
       storage: memoryStorage(),
@@ -114,6 +168,7 @@ export class PostsController {
   }
 
   @Post(':id/comments')
+  @UseGuards(JwtAuthGuard)
   async addComment(
     @Param('id') id: string,
     @Body() body: { content?: string; author?: string },

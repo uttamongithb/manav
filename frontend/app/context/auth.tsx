@@ -26,6 +26,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   login: (user: AuthUser, token?: string) => void;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -64,6 +65,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem(AUTH_TOKEN_KEY);
     }
   }, []);
+
+  const refreshUser = useCallback(async () => {
+    if (!authToken) return;
+    try {
+      const backendUrl = getApiBaseUrl();
+      const res = await fetch(`${backendUrl}/profile`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      if (res.ok) {
+        const profile = await res.json();
+        const updatedUser: AuthUser = {
+          id: user?.id || "",
+          email: user?.email || "",
+          username: user?.username || "",
+          displayName: profile.name || user?.displayName || "",
+          role: profile.role || user?.role || "",
+          avatarUrl: profile.avatarUrl || user?.avatarUrl,
+        };
+        setUser(updatedUser);
+        localStorage.setItem(USER_CACHE_KEY, JSON.stringify(updatedUser));
+      }
+    } catch (err) {
+      console.warn("User refresh failed:", err);
+    }
+  }, [authToken, user]);
 
   // Intercept fetch to handle 401s globally
   useEffect(() => {
@@ -138,6 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated: !!user,
     login,
     logout,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

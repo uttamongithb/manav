@@ -47,6 +47,14 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('Invalid or expired JWT token');
     }
 
+    // Check if this is superadmin (env-based user, not in database)
+    if (payload.role?.toLowerCase() === 'superadmin' && payload.sub === 'superadmin-system') {
+      // Superadmin is valid - no database check needed
+      req.user = payload;
+      return true;
+    }
+
+    // For regular database users, validate they exist and are active
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
       select: { status: true },

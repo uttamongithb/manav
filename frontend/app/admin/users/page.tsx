@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getStoredAuthToken } from "@/app/context/auth";
+import { useAuth, getStoredAuthToken } from "@/app/context/auth";
 import { getApiBaseUrl } from "@/app/lib/api-base";
 
 type AdminUser = {
@@ -20,7 +20,6 @@ type AdminUser = {
   contentCount: number;
 };
 
-const ROLE_OPTIONS = ["superadmin", "admin", "poet", "reader"];
 const STATUS_OPTIONS = ["active", "inactive", "suspended", "pending_verification"];
 
 function formatDate(raw: string | null) {
@@ -35,6 +34,7 @@ function formatDate(raw: string | null) {
 }
 
 export default function AdminUsersPage() {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [apiError, setApiError] = useState<string | null>(null);
@@ -42,6 +42,14 @@ export default function AdminUsersPage() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [pendingSuspend, setPendingSuspend] = useState<{ userId: string; nextStatus: string } | null>(null);
   const [pendingRoleChange, setPendingRoleChange] = useState<{ userId: string; userName: string; nextRole: string } | null>(null);
+
+  const availableRoles = useMemo(() => {
+    if (currentUser?.role?.toLowerCase() === "superadmin") {
+      return ["superadmin", "admin", "poet", "reader"];
+    }
+    // Regular admins can only assign poet and reader roles
+    return ["poet", "reader"];
+  }, [currentUser]);
 
   const backendUrl = getApiBaseUrl();
   const authToken = getStoredAuthToken();
@@ -345,7 +353,7 @@ export default function AdminUsersPage() {
                         className="admin-input"
                         style={{ minWidth: 130 }}
                       >
-                        {ROLE_OPTIONS.map((role) => (
+                        {availableRoles.map((role) => (
                           <option key={role} value={role}>
                             {role}
                           </option>

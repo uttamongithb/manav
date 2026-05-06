@@ -133,7 +133,7 @@ const saveCachedProfile = (cacheKey: string, profile: UserProfile): void => {
 
 export function MyProfileContent() {
   const router = useRouter();
-  const { logout, user, authToken } = useAuth();
+  const { logout, user, authToken, refreshUser } = useAuth();
   const { isDark, setIsDark } = useTheme();
   const [activeTab, setActiveTab] = useState("POETRY");
 
@@ -212,10 +212,13 @@ export function MyProfileContent() {
       setProfile(data);
       setDraftProfile(data);
       saveCachedProfile(cacheKey, data); // Save fetched profile to cache
+      
+      // Refresh global auth user object to sync roles/names
+      void refreshUser();
     } catch (err) {
       console.warn("Profile sync skipped - using local cache.", err);
     }
-  }, [authHeaders, backendUrl, cacheKey]);
+  }, [authHeaders, backendUrl, cacheKey, refreshUser]);
 
   const toggleProfileVisibility = () => {
     void (async () => {
@@ -368,12 +371,13 @@ export function MyProfileContent() {
 
       const formData = new FormData();
       formData.append("file", shortFile);
-      formData.append("title", shortTitle.trim());
-      formData.append("durationSeconds", String(shortDuration));
 
-      const res = await fetch(`${backendUrl}/posts/shorts`, {
+      const titleParam = encodeURIComponent(shortTitle.trim());
+      const res = await fetch(`${backendUrl}/posts/shorts?title=${titleParam}`, {
         method: "POST",
-        headers: authHeaders,
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
         body: formData,
       });
 
@@ -740,10 +744,10 @@ export function MyProfileContent() {
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className={`text-[12px] uppercase tracking-[0.16em] ${isDark ? "text-white/55" : "text-[#748196]"}`}>
-                      Composer
+                      {profile.role.toLowerCase() === "reader" ? "Reader Access" : "Composer"}
                     </p>
                     <h2 className={`mt-1 text-[28px] font-semibold leading-tight ${isDark ? "text-white/92" : "text-[#202634]"}`}>
-                      Share in {activeTab}
+                      {profile.role.toLowerCase() === "reader" ? "Reading Mode" : `Share in ${activeTab}`}
                     </h2>
                   </div>
                   <span
@@ -757,7 +761,21 @@ export function MyProfileContent() {
                   </span>
                 </div>
 
-                {activeTab === "UPLOAD SHORT" ? (
+                {profile.role.toLowerCase() === "reader" ? (
+                  <div className={`mt-6 rounded-xl border border-dashed p-8 text-center ${isDark ? "border-white/10 bg-white/5" : "border-black/5 bg-black/5"}`}>
+                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#2ce88f]/20 text-[#2ce88f]">
+                      <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                    </div>
+                    <p className={`text-[15px] font-medium ${isDark ? "text-white/80" : "text-[#3f4656]"}`}>
+                      You are in Reading Mode
+                    </p>
+                    <p className={`mt-1 text-[13px] ${isDark ? "text-white/50" : "text-[#636e84]"}`}>
+                      Readers have exclusive access to explore and follow creators. To post your own work, please contact an admin to become a Poet.
+                    </p>
+                  </div>
+                ) : activeTab === "UPLOAD SHORT" ? (
                   <>
                     <div className="mt-4 flex flex-col gap-4">
                       <div className="flex-1">

@@ -9,6 +9,7 @@ import { getApiBaseUrl } from '@/app/lib/api-base';
 import { SiteNavbar } from '@/app/components/site-navbar';
 import { SiteFooter } from '@/app/components/site-footer';
 import { useTheme } from '@/app/context/theme';
+import { useAuth } from '@/app/context/auth';
 
 interface Article {
   id: string;
@@ -70,6 +71,7 @@ function renderContentBlocks(content: string) {
 
 export default function ArticleDetailPage() {
   const { isDark, setIsDark } = useTheme();
+  const { user: authUser } = useAuth();
   const params = useParams();
   const section = params.section as string;
   const slug = params.slug as string;

@@ -1,15 +1,25 @@
 "use client";
 
-import { Suspense, useEffect, useRef } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useInsaanShorts } from "@/app/lib/use-insaan-shorts";
+import { useAuth } from "@/app/context/auth";
 
 function ShortsContent() {
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const { shorts } = useInsaanShorts();
+  const [showRestriction, setShowRestriction] = useState(false);
+
+  useEffect(() => {
+    if (showRestriction) {
+      const timer = setTimeout(() => setShowRestriction(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showRestriction]);
 
   useEffect(() => {
     // Initial scroll based on search param
@@ -152,21 +162,25 @@ function ShortsContent() {
             
             {/* Side Actions */}
             <div className="absolute right-4 bottom-24 flex flex-col gap-6 items-center pointer-events-auto">
-              <button className="group flex flex-col items-center gap-1">
+              <button 
+                className="group flex flex-col items-center gap-1"
+              >
                 <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center transition group-hover:bg-white/20">
                   <span className="text-2xl leading-none">♡</span>
                 </div>
                 <span className="text-xs font-medium drop-shadow-md">Like</span>
               </button>
               
-              <button className="group flex flex-col items-center gap-1">
+              <button 
+                className="group flex flex-col items-center gap-1"
+              >
                 <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center transition group-hover:bg-white/20">
                   <span className="text-xl leading-none">💬</span>
                 </div>
                 <span className="text-xs font-medium drop-shadow-md">Comment</span>
               </button>
               
-              <button className="group flex flex-col items-center gap-1">
+              <button className="group flex flex-col items-center gap-1" onClick={(e) => e.stopPropagation()}>
                 <div className="h-12 w-12 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 flex items-center justify-center transition group-hover:bg-white/20">
                   <span className="text-xl leading-none">↗</span>
                 </div>

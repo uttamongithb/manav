@@ -114,12 +114,42 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const email = dto.email?.trim().toLowerCase();
+    const password = dto.password?.trim();
     const username = dto.username?.trim();
 
     if (!email && !username) {
       throw new BadRequestException('email or username is required');
     }
 
+    if (!password) {
+      throw new BadRequestException('password is required');
+    }
+
+    // Check env-based superadmin FIRST (no database query needed)
+    const superadminEmail = process.env.SUPERADMIN_EMAIL?.toLowerCase();
+    const superadminPassword = process.env.SUPERADMIN_PASSWORD;
+
+    if (superadminEmail && superadminPassword && email === superadminEmail && password === superadminPassword) {
+      // Superadmin login successful - return token with superadmin role
+      return {
+        id: 'superadmin-system',
+        email: superadminEmail,
+        username: 'INSAAN_superadmin',
+        displayName: 'INSAAN SuperAdmin',
+        role: 'superadmin',
+        avatarUrl: null,
+        bio: null,
+        token: this.signAccessToken({
+          id: 'superadmin-system',
+          email: superadminEmail,
+          username: 'INSAAN_superadmin',
+          displayName: 'INSAAN SuperAdmin',
+          role: 'superadmin',
+        }),
+      };
+    }
+
+    // Not superadmin - check database for regular users
     let user: Awaited<ReturnType<typeof this.prisma.user.findFirst>>;
     try {
       user = await this.prisma.user.findFirst({
@@ -144,7 +174,7 @@ export class AuthService {
     }
 
     const isPasswordValid = await bcrypt.compare(
-      dto.password,
+      password,
       user.passwordHash || '',
     );
 

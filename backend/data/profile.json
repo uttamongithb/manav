@@ -27,7 +27,7 @@
   },
   "2f0721f6-a992-4355-b7b1-5c150a12cae6": {
     "name": "Ram",
-    "role": "reader",
+    "role": "admin",
     "visibility": "public",
     "city": "",
     "state": "",

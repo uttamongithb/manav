@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -498,16 +498,37 @@ export class AdminManagementService {
     return rows.map((row) => this.mapUserRecord(row));
   }
 
-  async updateUserRole(userId: string, role: string) {
+  async updateUserRole(userId: string, role: string, adminRole?: string) {
     const normalizedRole = role.trim().toLowerCase();
-    if (!['superadmin', 'admin', 'poet', 'reader'].includes(normalizedRole)) {
-      throw new NotFoundException('Invalid role');
+    
+    // Role Hierarchy Validation - Check who is making the change
+    if (adminRole === 'superadmin') {
+      // Superadmin can assign any role: admin, poet, reader
+      if (!['admin', 'poet', 'reader'].includes(normalizedRole)) {
+        throw new ForbiddenException('Invalid role. Allowed roles: admin, poet, reader');
+      }
+    } else if (adminRole === 'admin') {
+      // Regular admins can only assign poet or reader roles (NOT admin)
+      if (!['poet', 'reader'].includes(normalizedRole)) {
+        throw new ForbiddenException('Admins can only assign poet or reader roles');
+      }
+    } else {
+      throw new ForbiddenException('Unauthorized to change roles');
     }
 
     await this.prisma.user.update({
       where: { id: userId },
       data: { role: normalizedRole as never },
     });
+
+    try {
+      await this.prisma.userProfile.update({
+        where: { userId },
+        data: { role: normalizedRole },
+      });
+    } catch (err) {
+      // Ignore if user profile doesn't exist yet
+    }
 
     return this.getUsers().then((users) => users.find((user) => user.id === userId) ?? null);
   }

@@ -1,14 +1,46 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import ImageKit, { toFile } from '@imagekit/nodejs';
+import { createHmac } from 'crypto';
 
 @Injectable()
 export class MediaService {
   private imageKit: ImageKit;
+  private readonly publicKey: string;
+  private readonly urlEndpoint: string;
 
   constructor() {
+    const privateKey = process.env.IMAGEKIT_PRIVATE_KEY || '';
+    this.publicKey = process.env.IMAGEKIT_PUBLIC_KEY || '';
+    this.urlEndpoint = process.env.IMAGEKIT_URL_ENDPOINT || '';
+
     this.imageKit = new ImageKit({
-      privateKey: process.env.IMAGEKIT_PRIVATE_KEY || '',
-    });
+      privateKey,
+      publicKey: this.publicKey,
+      urlEndpoint: this.urlEndpoint,
+    } as any);
+  }
+
+  getAuthenticationParameters() {
+    const token = Math.random().toString(36).substring(2, 15);
+    const expire = Math.floor(Date.now() / 1000) + 3600;
+    const signature = createHmac('sha1', process.env.IMAGEKIT_PRIVATE_KEY || '')
+      .update(`${token}${expire}`)
+      .digest('hex');
+
+    return { token, expire, signature };
+  }
+
+  getClientUploadAuth() {
+    if (!this.publicKey || !this.urlEndpoint) {
+      throw new InternalServerErrorException('ImageKit upload configuration is incomplete');
+    }
+
+    const authParams = this.getAuthenticationParameters();
+    return {
+      ...authParams,
+      publicKey: this.publicKey,
+      urlEndpoint: this.urlEndpoint,
+    };
   }
 
   async uploadFile(
