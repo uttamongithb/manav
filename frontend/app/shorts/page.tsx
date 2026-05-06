@@ -45,13 +45,16 @@ function ShortsContent() {
 
         if (entry.isIntersecting) {
           const index = Number(entry.target.getAttribute("data-index"));
+          video.muted = false; // Try with sound
           video.play().catch(() => {
-            // Autoplay was prevented
-            console.log("Autoplay prevented for video", index);
+            // Autoplay with audio was prevented, fallback to muted
+            video.muted = true;
+            void video.play().catch(console.error);
           });
         } else {
           video.pause();
           video.currentTime = 0; // Reset video when out of view
+          video.muted = true; // Reset to muted for next entry
         }
       });
     };
@@ -72,6 +75,7 @@ function ShortsContent() {
     const video = videoRefs.current[idx];
     if (!video) return;
     if (video.paused) {
+      video.muted = false; // Unmute on manual play
       video.play().catch(console.error);
     } else {
       video.pause();
@@ -107,12 +111,10 @@ function ShortsContent() {
                 ref={(el) => {
                   videoRefs.current[idx] = el;
                 }}
-                src={card.video}
+                src={`${card.video}#t=0.1`}
                 className="h-full w-full object-cover"
                 loop
                 playsInline
-                muted // Muted to allow autoplay without user interaction, required by most browsers
-                poster={card.image}
               />
             ) : (
               <div className="h-full w-full bg-zinc-900 flex items-center justify-center">

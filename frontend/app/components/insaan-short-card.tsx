@@ -25,9 +25,18 @@ export function InsaanShortCard({ card, idx, total, isDark }: InsaanShortCardPro
   const handleMouseEnter = () => {
     setIsHovered(true);
     if (videoRef.current) {
-      void videoRef.current.play().catch((err) => {
-        console.error("Video playback failed:", err);
-      });
+      videoRef.current.muted = false;
+      const playPromise = videoRef.current.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Autoplay with audio was prevented, fallback to muted
+          if (videoRef.current) {
+            videoRef.current.muted = true;
+            void videoRef.current.play();
+          }
+        });
+      }
     }
   };
 
@@ -36,6 +45,7 @@ export function InsaanShortCard({ card, idx, total, isDark }: InsaanShortCardPro
     if (videoRef.current) {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
+      videoRef.current.muted = true; // Reset to muted for next hover
     }
   };
 
@@ -53,34 +63,25 @@ export function InsaanShortCard({ card, idx, total, isDark }: InsaanShortCardPro
       onMouseLeave={handleMouseLeave}
     >
       <Link href={`/shorts?v=${idx}`} className="block">
-        <div className="relative aspect-[5/6] overflow-hidden rounded-2xl sm:aspect-[4/6] sm:rounded-3xl">
-          <Image
-            src={card.image}
-            alt={card.title}
-            fill
-            sizes="(min-width: 1024px) 260px, (min-width: 768px) 220px, 140px"
-            unoptimized
-            className={`h-full w-full object-cover transition duration-500 group-hover:scale-[1.04] ${
-              isHovered ? "opacity-0" : "opacity-100"
-            }`}
-          />
-          
-          {card.video && (
+        <div className="relative aspect-[5/6] overflow-hidden rounded-2xl bg-[#0a0a0a] sm:aspect-[4/6] sm:rounded-3xl">
+          {card.video ? (
             <video
               ref={videoRef}
-              src={card.video}
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
-                isHovered ? "opacity-100" : "opacity-0"
-              }`}
+              src={`${card.video}#t=0.1`}
+              className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
               loop
-              muted
               playsInline
+              preload="metadata"
             />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-zinc-900">
+              <span className="text-white/20">No Video</span>
+            </div>
           )}
 
-          <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/15 to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/15 to-transparent pointer-events-none" />
 
-          <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${isHovered ? "opacity-0" : "opacity-100"}`}>
+          <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 pointer-events-none ${isHovered ? "opacity-0" : "opacity-100"}`}>
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/58 text-white backdrop-blur-sm transition group-hover:scale-105 sm:h-16 sm:w-16">
               <svg viewBox="0 0 24 24" className="h-5 w-5 sm:h-7 sm:w-7" fill="currentColor">
                 <path d="M8 5.14v13.72a1 1 0 0 0 1.5.86l10.5-6.86a1 1 0 0 0 0-1.72L9.5 4.28A1 1 0 0 0 8 5.14z" />

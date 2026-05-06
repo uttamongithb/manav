@@ -27,7 +27,7 @@ export function useInsaanShorts() {
           const dbShorts: ShortCard[] = data.map((post: any) => ({
             id: post.id,
             title: post.content || "Untitled Short",
-            image: post.avatarUrl || "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1000&q=80",
+            image: "", // We use the video itself as the thumbnail now
             video: post.videoUrl,
           })).filter((card) => !!card.video); // Only include posts with a video URL
 
