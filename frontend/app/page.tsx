@@ -1064,30 +1064,6 @@ export default function PublicFeed() {
                 <path d="M9 6l6 6-6 6" />
               </svg>
             </button>
-
-            <div className="mt-3 flex items-center justify-center gap-4 px-3 md:hidden">
-              <button
-                type="button"
-                onClick={() => scrollRecentCards("prev")}
-                aria-label="Scroll previous cards mobile"
-                className={`inline-flex h-10 w-10 items-center justify-center rounded-full border shadow-sm ${isDark ? "border-white/25 bg-[#0f131a]/92 text-white" : "border-black/12 bg-white text-[#4b5d74]"}`}
-              >
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
-                  <path d="M15 18l-6-6 6-6" />
-                </svg>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => scrollRecentCards("next")}
-                aria-label="Scroll next cards mobile"
-                className={`inline-flex h-10 w-10 items-center justify-center rounded-full border shadow-sm ${isDark ? "border-white/25 bg-[#0f131a]/92 text-white" : "border-black/12 bg-white text-[#4b5d74]"}`}
-              >
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
-                  <path d="M9 6l6 6-6 6" />
-                </svg>
-              </button>
-            </div>
           </div>
         </div>
       </section>

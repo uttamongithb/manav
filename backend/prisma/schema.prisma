@@ -137,9 +137,9 @@ model Content {
   tenant          Tenant         @relation(fields: [tenantId], references: [id])
   collectionId    String?        @map("collection_id")
   collection      Collection?    @relation(fields: [collectionId], references: [id])
-  coverImageUrl   String?        @map("cover_image_url")
-  audioUrl        String?        @map("audio_url")
-  videoUrl        String?        @map("video_url")
+  coverImageUrl   String?        @map("cover_image_url") @db.LongText
+  audioUrl        String?        @map("audio_url") @db.LongText
+  videoUrl        String?        @map("video_url") @db.LongText
   status          ContentStatus  @default(draft)
   isPremium       Boolean?       @default(false) @map("is_premium")
   isFeatured      Boolean?       @default(false) @map("is_featured")

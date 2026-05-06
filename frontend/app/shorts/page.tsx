@@ -125,6 +125,21 @@ function ShortsContent() {
             {/* Overlays */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/80 pointer-events-none" />
             
+            {/* Mute toggle button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                const video = videoRefs.current[idx];
+                if (video) video.muted = !video.muted;
+                // Force a re-render or just let the native state handle it
+              }}
+              className="absolute top-6 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-black/40 backdrop-blur-md border border-white/20 transition hover:bg-black/60"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5 text-white" fill="currentColor">
+                <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+              </svg>
+            </button>
+            
             {/* Bottom Content */}
             <div className="absolute bottom-0 left-0 right-0 p-6 pt-20 pointer-events-none">
               <h2 className="text-xl font-bold mb-2 shadow-sm drop-shadow-md" style={{ fontFamily: "Georgia, Times New Roman, serif" }}>
